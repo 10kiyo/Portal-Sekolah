@@ -276,6 +276,7 @@
 
   <section class="card">
     <div class="tabs noprint">
+      <button type="button" data-mode="acara">Detail acara</button>
       <button type="button" class="on" data-mode="rekap">Rekap</button>
       <button type="button" data-mode="bagi">Pembagian</button>
       <button type="button" data-mode="doorprize">Doorprize</button>
@@ -287,8 +288,7 @@
       <div><label for="fSearch">Cari nama</label><input id="fSearch" placeholder="Ketik nama tamu…" /></div>
     </div>
 
-    <details class="event noprint">
-      <summary>Detail acara</summary>
+    <div id="evPanel" class="event noprint hidden" style="margin-top:0;padding-top:0;border-top:0">
       <form id="evForm">
         <div><label for="evName">Acara</label><input id="evName" required /></div>
         <div><label for="evPlace">Tempat</label><input id="evPlace" required /></div>
@@ -296,7 +296,7 @@
         <button class="primary" type="submit">Simpan</button>
       </form>
       <p class="sub" style="margin-top:8px">Detail ini tersimpan di browser perangkat ini (sama seperti sebelumnya).</p>
-    </details>
+    </div>
 
     <div class="ph"><div class="kop"><img src="logo-at-taqwa.png" alt=""><div><div class="k1">SDS Islam At-Taqwa Rawamangun</div><b id="phTitle">Rekap Kehadiran Buku Tamu Sekolah</b></div></div><div id="phInfo"></div><div id="phFilter"></div><div id="phSum"></div></div>
     <div id="door" class="door hidden noprint"><p class="state" id="doorInfo"></p><div class="drawbox" id="drawBox">—</div><div class="bar2"><button class="primary" id="drawBtn" type="button">Undi pemenang</button><button class="secondary hidden" id="saveWin" type="button">Simpan pemenang</button></div></div>
@@ -748,7 +748,10 @@ document.querySelector('.tabs').addEventListener('click',e=>{
   const b=e.target.closest('[data-mode]');if(!b)return;
   mode=b.dataset.mode;pending=null;$('#drawBox').textContent='—';$('#saveWin').classList.add('hidden');
   document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
-  $('#fStatus').value=mode==='rekap'?'':'Hadir';render();
+  const acara=mode==='acara';
+  ['.stats','.filters','#list','#prog'].forEach(q=>document.querySelector('#adminRoot '+q).classList.toggle('hidden',acara));
+  $('#evPanel').classList.toggle('hidden',!acara);
+  $('#fStatus').value=(mode==='bagi'||mode==='doorprize')?'Hadir':'';render();
 });
 $('#drawBtn').addEventListener('click',()=>{
   const type=$('#fType').value,org=$('#fOrg').value;
