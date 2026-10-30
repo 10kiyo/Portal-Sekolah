@@ -80,6 +80,10 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px
       <div class="full"><label>Deskripsi / info untuk orang tua</label><textarea name="deskripsi" rows="3" maxlength="1000" placeholder="Tempat, jam kumpul, barang bawaan…"></textarea></div>
       <div><label>Biaya (Rp)</label><input name="biaya" type="number" min="0" step="1000" required value="0"></div>
       <div><label>Kuota (kosongkan jika tidak dibatasi)</label><input name="kuota" type="number" min="1"></div>
+      <div class="full"><label>Data tambahan di formulir orang tua</label>
+        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" name="tanya_kaos" style="width:auto"> Tanya ukuran kaos</label>
+        <label style="font-weight:400;display:flex;gap:8px;align-items:center"><input type="checkbox" name="tanya_kesehatan" style="width:auto"> Tanya alergi / kondisi kesehatan</label>
+        <div class="mut" style="margin-top:6px">Nama pengirim, tanggal transfer, foto bukti, dan kontak darurat selalu ada.</div></div>
       <div class="full"><label>Rekening tujuan transfer</label><textarea name="rekening" rows="2" maxlength="300" placeholder="Bank … 1234567890 a.n. …"></textarea></div>
       <div><label>Pendaftaran dibuka</label><input name="buka_daftar" type="date" required></div>
       <div><label>Pendaftaran ditutup</label><input name="tutup_daftar" type="date" required></div>
@@ -126,7 +130,8 @@ async function masuk() {
 }
 async function mulai() {
   if (!sessionStorage.getItem(TOKEN_KEY)) return showLogin();
-  try { await muat(); $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); } catch (e) { if (!$('#login').classList.contains('hidden')) $('#loginErr').textContent = e.message; }
+  try { await muat(); $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); }
+  catch (e) { if (sessionStorage.getItem(TOKEN_KEY)) $('#loginErr').textContent = 'PIN benar, tetapi data kegiatan gagal dimuat: ' + e.message; }
 }
 async function muat() { D = await api(); if (sel && !D.kegiatan.find(k => k.id === sel)) sel = null; renderList(); renderDetail(); }
 
@@ -160,6 +165,7 @@ function formK(k) {
   $('#dlgKt').textContent = editId ? 'Edit kegiatan' : 'Tambah kegiatan';
   const v = k || { biaya: 0, buka_daftar: D.today };
   ['nama', 'deskripsi', 'biaya', 'kuota', 'rekening', 'buka_daftar', 'tutup_daftar', 'tanggal_kegiatan'].forEach(n => f[n].value = v[n] ?? '');
+  f.tanya_kaos.checked = !!v.tanya_kaos; f.tanya_kesehatan.checked = !!v.tanya_kesehatan;
   $('#dlgK').showModal();
 }
 $('#tambah').onclick = () => formK(null);
@@ -168,6 +174,7 @@ $('#fK').onsubmit = async e => {
   e.preventDefault(); const f = e.target, b = $('#simpanK'); b.disabled = true; $('#errK').textContent = '';
   try {
     await api({ action: 'simpan', id: editId, nama: f.nama.value, deskripsi: f.deskripsi.value, biaya: Number(f.biaya.value), kuota: f.kuota.value === '' ? null : Number(f.kuota.value),
+      tanya_kaos: f.tanya_kaos.checked, tanya_kesehatan: f.tanya_kesehatan.checked,
       rekening: f.rekening.value, buka_daftar: f.buka_daftar.value, tutup_daftar: f.tutup_daftar.value, tanggal_kegiatan: f.tanggal_kegiatan.value });
     $('#dlgK').close(); await muat();
   } catch (err) { $('#errK').textContent = err.message; } finally { b.disabled = false; }
@@ -200,9 +207,9 @@ function renderDetail() {
   const draw = () => {
     const q = $('#fq').value.trim().toLowerCase(), fs = $('#fs').value, fk = $('#fk').value;
     const rows = ps.filter(x => (!fs || x.status === fs) && (!fk || x.kelas === fk) && (!q || x.nama_anak.toLowerCase().includes(q)));
-    $('#tbl').innerHTML = rows.length ? `<div class="scroll"><table><tr><th>Anak</th><th>Status</th><th>Transfer</th><th>Kaos</th><th>Kesehatan</th><th>Kontak darurat</th><th class="noprint"></th></tr>
+    $('#tbl').innerHTML = rows.length ? `<div class="scroll"><table><tr><th>Anak</th><th>Status</th><th>Transfer</th>${k.tanya_kaos ? '<th>Kaos</th>' : ''}${k.tanya_kesehatan ? '<th>Kesehatan</th>' : ''}<th>Kontak darurat</th><th class="noprint"></th></tr>
       ${rows.map(x => `<tr><td><b>${esc(x.nama_anak)}</b><div class="mut">${esc(x.kelas)}</div></td><td><span class="pill ${ST[x.status][1]}">${ST[x.status][0]}</span>${x.catatan_panitia ? `<div class="mut">${esc(x.catatan_panitia)}</div>` : ''}</td>
-      <td>${esc(x.nama_pengirim)}<div class="mut">${tgl(x.tanggal_transfer)}</div></td><td>${esc(x.data.kaos || '-')}</td><td>${esc(x.data.kesehatan || '-')}</td><td>${esc(x.data.kontak || '-')}</td>
+      <td>${esc(x.nama_pengirim)}<div class="mut">${tgl(x.tanggal_transfer)}</div></td>${k.tanya_kaos ? `<td>${esc(x.data.kaos || '-')}</td>` : ''}${k.tanya_kesehatan ? `<td>${esc(x.data.kesehatan || '-')}</td>` : ''}<td>${esc(x.data.kontak || '-')}</td>
       <td class="noprint"><button class="sm ${x.status === 'menunggu' ? '' : 'sec'}" data-p="${x.id}">${x.status === 'menunggu' ? 'Periksa' : 'Lihat'}</button></td></tr>`).join('')}</table></div>` : '<p class="mut">Tidak ada data.</p>';
   };
   ['#fq', '#fs', '#fk'].forEach(q => $(q).oninput = draw); draw();
@@ -229,8 +236,8 @@ async function periksa(p, k) {
 
 function csv(k, ps) {
   const c = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const rows = [['Nama', 'Kelas', 'Status', 'Pengirim', 'Tanggal transfer', 'Ukuran kaos', 'Kesehatan', 'Kontak darurat', 'Catatan panitia', 'Waktu daftar'],
-    ...ps.map(x => [x.nama_anak, x.kelas, x.status, x.nama_pengirim, x.tanggal_transfer, x.data.kaos, x.data.kesehatan, x.data.kontak, x.catatan_panitia, x.created_at])];
+  const rows = [['Nama', 'Kelas', 'Status', 'Pengirim', 'Tanggal transfer', ...(k.tanya_kaos ? ['Ukuran kaos'] : []), ...(k.tanya_kesehatan ? ['Kesehatan'] : []), 'Kontak darurat', 'Catatan panitia', 'Waktu daftar'],
+    ...ps.map(x => [x.nama_anak, x.kelas, x.status, x.nama_pengirim, x.tanggal_transfer, ...(k.tanya_kaos ? [x.data.kaos] : []), ...(k.tanya_kesehatan ? [x.data.kesehatan] : []), x.data.kontak, x.catatan_panitia, x.created_at])];
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.map(r => r.map(c).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = 'pendaftar-' + k.nama.replace(/[^\w]+/g, '-').toLowerCase() + '.csv'; a.click(); URL.revokeObjectURL(a.href);

@@ -18,7 +18,8 @@ export async function onRequest({ request, env }) {
         get('/kegiatan?order=tanggal_kegiatan.desc&select=*'),
         get('/pendaftaran_kegiatan?order=created_at.desc&limit=10000&select=id,kegiatan_id,anak_key,nama_anak,kelas,status,nama_pengirim,tanggal_transfer,data,catatan_panitia,created_at,verified_at,bukti_path'),
         get('/kelas_murid?aktif=eq.true&select=id,guest_id,nama,kelas_kelas(nama)&limit=5000').catch(() => [])
-      ]);
+      ]).catch(() => null);
+      if (!ks) return json(500, { error: 'Tabel kegiatan belum ada atau tidak terbaca. Jalankan supabase-kegiatan.sql di Supabase SQL Editor.' });
       const tp = {}; ps.forEach(p => { if (p.status !== 'ditolak') tp[p.kegiatan_id] = (tp[p.kegiatan_id] || 0) + 1; });
       // Daftar murid unik (satu anak bisa punya beberapa baris dari beberapa guru).
       const mm = new Map();
@@ -45,7 +46,8 @@ export async function onRequest({ request, env }) {
         biaya: Number(b.biaya), buka_daftar: String(b.buka_daftar || ''), tutup_daftar: String(b.tutup_daftar || ''),
         tanggal_kegiatan: String(b.tanggal_kegiatan || ''),
         kuota: b.kuota === null || b.kuota === '' || b.kuota === undefined ? null : Number(b.kuota),
-        aktif: b.aktif !== false
+        aktif: b.aktif !== false,
+        tanya_kaos: b.tanya_kaos === true, tanya_kesehatan: b.tanya_kesehatan === true
       };
       if (!k.nama) return json(400, { error: 'Nama kegiatan wajib diisi.' });
       if (!Number.isInteger(k.biaya) || k.biaya < 0 || k.biaya > 100000000) return json(400, { error: 'Biaya tidak valid.' });
@@ -57,7 +59,7 @@ export async function onRequest({ request, env }) {
       const r = id
         ? await fetch(`${c.REST}/kegiatan?id=eq.${id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(k) })
         : await fetch(`${c.REST}/kegiatan`, { method: 'POST', headers: jh, body: JSON.stringify(k) });
-      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan SQL supabase-kegiatan.sql sudah dijalankan.' });
+      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan supabase-kegiatan.sql dan supabase-kegiatan-opsi.sql sudah dijalankan.' });
       return json(200, { ok: true });
     }
 

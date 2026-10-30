@@ -39,6 +39,7 @@ export async function onRequestPost({ request, env }) {
           id: k.id, nama: k.nama, deskripsi: k.deskripsi, biaya: k.biaya, rekening: k.rekening,
           buka_daftar: k.buka_daftar, tutup_daftar: k.tutup_daftar, tanggal_kegiatan: k.tanggal_kegiatan,
           sisa: k.kuota != null ? Math.max(0, k.kuota - (tp[k.id] || 0)) : null,
+          tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan,
           fase: fase(k, tp[k.id] || 0, today), daftar: mm[k.id] || null
         }))
       });
@@ -61,6 +62,8 @@ export async function onRequestPost({ request, env }) {
       const tanggal_transfer = String(b.tanggal_transfer || '');
       const kontak = String(b.kontak || '').trim().slice(0, 40);
       if (!nama_pengirim || !/^\d{4}-\d{2}-\d{2}$/.test(tanggal_transfer) || !kontak) return json(400, { error: 'Lengkapi nama pengirim, tanggal transfer, dan kontak darurat.' });
+      const kaos = k.tanya_kaos ? String(b.kaos || '').trim().slice(0, 20) : '';
+      if (k.tanya_kaos && !kaos) return json(400, { error: 'Isi ukuran kaos.' });
       if (b.setuju !== true) return json(400, { error: 'Centang persetujuan orang tua terlebih dahulu.' });
 
       // Bukti transfer: hanya gambar JPEG/PNG/WEBP, maksimal ~2 MB, dicek juga dari byte awal file.
@@ -79,7 +82,9 @@ export async function onRequestPost({ request, env }) {
       const up = await fetch(`${c.URL}/storage/v1/object/bukti/${path}`, { method: 'POST', headers: { ...c.h, 'Content-Type': `image/${mt[1]}` }, body: bytes });
       if (!up.ok) return json(500, { error: 'Gagal mengunggah bukti. Pastikan bucket "bukti" sudah dibuat (lihat SQL).' });
 
-      const data = { kaos: String(b.kaos || '').trim().slice(0, 20), kesehatan: String(b.kesehatan || '').trim().slice(0, 200), kontak };
+      const data = { kontak };
+      if (k.tanya_kaos) data.kaos = kaos;
+      if (k.tanya_kesehatan) data.kesehatan = String(b.kesehatan || '').trim().slice(0, 200);
       const row = { nama_pengirim, tanggal_transfer, data, bukti_path: path, status: 'menunggu', catatan_panitia: null, verified_at: null, created_at: new Date().toISOString() };
       const jh = { ...c.h, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
       const w = old
