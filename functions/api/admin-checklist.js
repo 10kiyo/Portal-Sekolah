@@ -42,7 +42,9 @@ export async function onRequest({ request, env }) {
 
   try {
     if (request.method === 'GET') {
-      const r = await fetch(`${REST}/distribusi_tamu?select=guest_id,item,given_at&limit=10000`, { headers: h });
+      // Kolom "catatan" ditambahkan belakangan; kalau belum ada di database, baca tanpa kolom itu.
+      let r = await fetch(`${REST}/distribusi_tamu?select=guest_id,item,given_at,catatan&limit=10000`, { headers: h });
+      if (!r.ok) r = await fetch(`${REST}/distribusi_tamu?select=guest_id,item,given_at&limit=10000`, { headers: h });
       const rows = await r.json();
       if (!r.ok) return json(500, { error: rows.message || 'Gagal membaca tabel distribusi_tamu.' });
       return json(200, { rows, items: await getItems() });
@@ -65,6 +67,14 @@ export async function onRequest({ request, env }) {
         if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan SQL terbaru (supabase-update.sql) sudah dijalankan.' });
         const removed = old.map(x => x.key).filter(k => !seen.has(k) && KEY_RE.test(k));
         if (removed.length) await fetch(`${REST}/distribusi_tamu?item=in.(${removed.join(',')})`, { method: 'DELETE', headers: h });
+        return json(200, { ok: true });
+      }
+
+      if (body.action === 'setNote') {
+        const gid = String(body.guestId || ''), catatan = String(body.catatan || '').trim().slice(0, 200);
+        if (!gid) return json(400, { error: 'Data tidak valid.' });
+        const r = await fetch(`${REST}/distribusi_tamu?guest_id=eq.${encodeURIComponent(gid)}&item=eq.doorprize`, { method: 'PATCH', headers: h, body: JSON.stringify({ catatan: catatan || null }) });
+        if (!r.ok) return json(500, { error: 'Gagal menyimpan catatan. Pastikan kolom "catatan" sudah dibuat di Supabase (lihat petunjuk SQL).' });
         return json(200, { ok: true });
       }
 

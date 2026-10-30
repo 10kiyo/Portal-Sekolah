@@ -199,6 +199,8 @@
       #adminRoot .ttd>div{flex:1;text-align:center}
       #adminRoot .ttd p{height:78px;margin:0}
     }
+    #adminRoot input.note{padding:7px 10px;font-size:14px;min-width:200px}
+    @media print{#adminRoot input.note{border:0;padding:0;background:none;box-shadow:none;min-width:0;font-size:11.5px;color:#000}#adminRoot input.note::placeholder{color:transparent}}
     #adminRoot .bar2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
   </style>
 </head>
@@ -571,7 +573,7 @@
 const $=s=>document.querySelector(s);
 const TOKEN_KEY='bukuTamuSekolah.adminToken';
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-let guests=[], recs={}, view=[], dist={}, distErr="", mode="rekap", pending=null;
+let guests=[], recs={}, view=[], dist={}, notes={}, distErr="", mode="rekap", pending=null;
 const FN="/api/admin-checklist", DEFAULT_ITEMS=[{key:"bingkisan",label:"Bingkisan"},{key:"snack",label:"Snack"}];
 let items=DEFAULT_ITEMS.slice();
 
@@ -638,8 +640,9 @@ async function fetchDist(){
   const d=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(d.error||('HTTP '+r.status));
   const rows=Array.isArray(d)?d:(d.rows||[]),m={};
-  rows.forEach(x=>m[x.guest_id+'|'+x.item]=fmt(x.given_at));
-  return{map:m,items:Array.isArray(d.items)?d.items:null};
+  const nt={};
+  rows.forEach(x=>{m[x.guest_id+'|'+x.item]=fmt(x.given_at);if(x.item==='doorprize'&&x.catatan)nt[x.guest_id]=x.catatan});
+  return{map:m,notes:nt,items:Array.isArray(d.items)?d.items:null};
 }
 async function fetchAttendance(){
   const r=await fetch('/api/get-attendance');
@@ -651,7 +654,7 @@ async function loadAll(){
   try{
     distErr='';
     const[g,a,m]=await Promise.all([fetchGuests(),fetchAttendance(),fetchDist().catch(e=>{distErr=e.message;return{map:{},items:null}})]);
-    guests=g;recs={};dist=m.map;if(m.items)items=m.items;renderManage();
+    guests=g;recs={};dist=m.map;notes=m.notes||{};if(m.items)items=m.items;renderManage();
     a.forEach(x=>{
       const id=x.guestId||x.guest_id;if(!id)return;
       recs[id]={status:x.attendance||((x.statusHadir??x.status_hadir)?'Hadir':'Tidak hadir'),sig:x.signature||x.tandaTangan||x.tanda_tangandata||null,at:fmt(x.confirmedAt||x.confirmed_at)};
@@ -674,7 +677,7 @@ async function api(body){
 }
 async function setItem(id,item,val){
   const k=id+'|'+item,old=dist[k];
-  if(val)dist[k]=fmt(new Date().toISOString());else delete dist[k];
+  if(val)dist[k]=fmt(new Date().toISOString());else{delete dist[k];if(item==='doorprize')delete notes[id]}
   render();
   try{await api({guestId:id,item,value:val})}
   catch(e){if(old)dist[k]=old;else delete dist[k];render();alert('Gagal menyimpan: '+e.message)}
@@ -720,7 +723,7 @@ function render(){
   if(door){
     const pool=hadir.filter(x=>!has(x.id,'doorprize')),win=view.filter(x=>has(x.id,'doorprize'));
     $('#doorInfo').textContent=`Peserta layak undi: ${pool.length} (hadir dan belum menang) · Pemenang: ${base.filter(x=>has(x.id,'doorprize')).length}`;
-    $('#list').innerHTML=win.length?`<div class="scroll"><table><thead><tr><th>Pemenang</th><th>Instansi / Kelas</th><th>Waktu</th><th class="noprint"></th></tr></thead><tbody>${win.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.origin)}</td><td class="t">${esc(has(x.id,'doorprize'))}</td><td class="noprint"><button class="secondary" data-undo="${esc(x.id)}" type="button">Batalkan</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="state">Belum ada pemenang.</p>';
+    $('#list').innerHTML=win.length?`<div class="scroll"><table><thead><tr><th>Pemenang</th><th>Instansi / Kelas</th><th>Waktu</th><th>Hadiah / catatan</th><th class="noprint"></th></tr></thead><tbody>${win.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.origin)}</td><td class="t">${esc(has(x.id,'doorprize'))}</td><td><input class="note" data-note="${esc(x.id)}" value="${esc(notes[x.id]||'')}" maxlength="200" placeholder="mis. Sepeda, voucher…" aria-label="Hadiah untuk ${esc(x.name)}"></td><td class="noprint"><button class="secondary" data-undo="${esc(x.id)}" type="button">Batalkan</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="state">Belum ada pemenang.</p>';
     return;
   }
   if(bagi&&!items.length){$('#list').innerHTML='';return}
@@ -736,6 +739,13 @@ function render(){
   }).join('');
 }
 $('#list').addEventListener('change',e=>{const c=e.target.closest('[data-g]');if(c&&mode==='bagi')setItem(c.dataset.g,c.dataset.i,c.checked)});
+$('#list').addEventListener('change',async e=>{
+  const i=e.target.closest('[data-note]');if(!i)return;
+  const id=i.dataset.note,v=i.value.trim(),old=notes[id]||'';if(v===old)return;
+  if(v)notes[id]=v;else delete notes[id];
+  try{await api({action:'setNote',guestId:id,catatan:v})}
+  catch(err){if(old)notes[id]=old;else delete notes[id];i.value=old;alert('Gagal menyimpan catatan: '+err.message)}
+});
 $('#list').addEventListener('click',e=>{const u=e.target.closest('[data-undo]');if(u&&confirm('Batalkan pemenang ini?'))setItem(u.dataset.undo,'doorprize',false)});
 $('#itemList').addEventListener('change',e=>{const i=e.target.closest('[data-k]');if(!i)return;const v=i.value.trim();if(!v){renderManage();return}saveItems(items.map(x=>x.key===i.dataset.k?{...x,label:v}:x))});
 $('#itemList').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;const it=items.find(x=>x.key===b.dataset.del);if(it&&confirm(`Hapus item "${it.label}"? Centang yang sudah tercatat untuk item ini ikut terhapus.`))saveItems(items.filter(x=>x!==it))});
@@ -783,7 +793,7 @@ $('#csv').addEventListener('click',()=>{
   if(!view.length){alert('Tidak ada data untuk diekspor.');return}
   const cell=v=>`"${String(v??'').replace(/"/g,'""')}"`;
   const yn=(x,i)=>has(x.id,i)?'Ya':'';
-  const rows=[['Nama','Jenis undangan','Instansi / Kelas','Nomor WhatsApp','Status','Waktu konfirmasi',...items.map(i=>i.label),'Doorprize'],...view.map(x=>[x.name,x.type,x.origin,x.phone,x.status,x.at,...items.map(i=>yn(x,i.key)),yn(x,'doorprize')])];
+  const rows=[['Nama','Jenis undangan','Instansi / Kelas','Nomor WhatsApp','Status','Waktu konfirmasi',...items.map(i=>i.label),'Doorprize','Hadiah / catatan doorprize'],...view.map(x=>[x.name,x.type,x.origin,x.phone,x.status,x.at,...items.map(i=>yn(x,i.key)),yn(x,'doorprize'),notes[x.id]||''])];
   const blob=new Blob(['\ufeff'+rows.map(r=>r.map(cell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=`rekap-kehadiran-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(a.href);
