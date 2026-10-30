@@ -5,13 +5,17 @@ import * as adminChecklist from '../functions/api/admin-checklist.js';
 import * as getAttendance from '../functions/api/get-attendance.js';
 import * as submitAttendance from '../functions/api/submit-attendance.js';
 import * as ortuLookup from '../functions/api/ortu-lookup.js';
+import * as ortuKegiatan from '../functions/api/ortu-kegiatan.js';
+import * as adminKegiatan from '../functions/api/admin-kegiatan.js';
 
 const routes = {
   '/api/admin-auth': adminAuth,
   '/api/admin-checklist': adminChecklist,
   '/api/get-attendance': getAttendance,
   '/api/submit-attendance': submitAttendance,
-  '/api/ortu-lookup': ortuLookup
+  '/api/ortu-lookup': ortuLookup,
+  '/api/ortu-kegiatan': ortuKegiatan,
+  '/api/admin-kegiatan': adminKegiatan
 };
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
