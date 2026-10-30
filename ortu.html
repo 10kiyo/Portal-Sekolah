@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pantau Belajar Anak</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--danger:#bc3d33;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(720px,calc(100% - 24px));margin:0 auto;padding:28px 0 48px}
+header{text-align:center;margin-bottom:14px}
+header img{width:64px;height:64px;background:#fff;border-radius:16px;padding:6px;box-shadow:0 8px 20px #102a4325}
+h1{margin:10px 0 2px;color:var(--navy);font-size:clamp(22px,5vw,28px);letter-spacing:-.03em}
+header p{margin:0;color:var(--mute);font-size:14px}
+.emb .wrap{padding-top:16px}.emb header img{display:none}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:12px;overflow:auto}
+label{display:block;font-weight:700;color:var(--navy);margin:0 0 6px}
+input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+input::placeholder{letter-spacing:0;text-transform:none;font-size:15px}
+input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+button{border:0;cursor:pointer;font:inherit;font-weight:750;padding:12px 18px;border-radius:10px;background:var(--blue);color:#fff}
+button.ghost{background:#fff;color:var(--navy);border:1px solid var(--line);padding:8px 12px;font-size:14px}
+button:disabled{opacity:.6;cursor:wait}
+.err{margin-top:10px;color:var(--danger);font-weight:650}
+.hidden{display:none!important}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h2{margin:0;color:var(--navy);font-size:20px}
+h3{margin:0 0 8px;color:var(--navy);font-size:16px}
+.mut{color:var(--mute);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+.stats button{background:var(--soft);color:var(--ink);font-weight:400;padding:8px;border-radius:12px;text-align:center}
+.stats button:not(:disabled):hover{box-shadow:0 0 0 2px #1677c860}
+.stats button.on{box-shadow:0 0 0 2px var(--blue)}
+.stats button:disabled{cursor:default;opacity:.75}
+.stats div{background:var(--soft);border-radius:12px;padding:8px;text-align:center}
+.stats b{display:block;font-size:20px;color:var(--navy)}
+.stats span{font-size:12px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid #e6eef5;text-align:left;vertical-align:top}
+th{color:var(--mute);font-size:12px}
+summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:14px;margin-top:8px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
+.pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.bad{background:#fbeceb;color:var(--danger)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.gal a{text-decoration:none;color:var(--mute);font-size:12px}
+.gal img{display:block;width:100%;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="logo-at-taqwa.png" alt="">
+  <h1>Pantau Belajar Anak</h1>
+  <p>Kehadiran, tugas, dan nilai</p>
+</header>
+
+<div class="card" id="form">
+  <label for="kode">Kode akses anak</label>
+  <input id="kode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Masukkan kode dari guru">
+  <p style="margin:12px 0 0"><button id="cari">Lihat data</button></p>
+  <div id="err" class="err"></div>
+</div>
+
+<div id="hasil" class="hidden"></div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tgl = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+const NS = { H: 'Hadir', I: 'Izin', S: 'Sakit', A: 'Alpa' };
+if (self !== top) document.body.classList.add('emb');
+
+async function cari() {
+  const kode = $('#kode').value.trim(); if (!kode) return;
+  $('#err').textContent = ''; const b = $('#cari'); b.disabled = true;
+  try {
+    const r = await fetch('/api/ortu-lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kode }) });
+    const d = await r.json();
+    if (!r.ok) { $('#err').textContent = d.error || 'Gagal memuat data.'; return; }
+    tampil(d);
+  } catch (e) { $('#err').textContent = 'Tidak bisa terhubung. Periksa koneksi internet.'; }
+  finally { b.disabled = false; }
+}
+
+function tampil(d) {
+  const c = { H: 0, I: 0, S: 0, A: 0 }; d.kehadiran.forEach(k => c[k.status]++);
+  const total = d.kehadiran.length, kelas = /^kelas/i.test(d.kelas || '') ? d.kelas : 'Kelas ' + (d.kelas || '-');
+  const grup = ts => {
+    const by = {}; ts.forEach(t => (by[(t.mapel || 'Lainnya') + '|' + (t.guru || '')] = by[(t.mapel || 'Lainnya') + '|' + (t.guru || '')] || []).push(t));
+    return Object.keys(by).sort().map(k => {
+      const [m, g] = k.split('|'), l = by[k], ns = l.filter(t => t.nilai != null).map(t => Number(t.nilai)), avg = ns.length ? Math.round(ns.reduce((x, y) => x + y, 0) / ns.length) : null;
+      return `<div class="card"><div class="top"><h3 style="margin:0">${esc(m)}</h3><span class="mut">${esc(g)}${avg !== null ? ' · rata-rata nilai <b>' + avg + '</b>' : ''}</span></div>
+      <table style="margin-top:8px"><tr><th>Tugas</th><th>Tenggat</th><th>Status</th><th>Nilai</th></tr>${l.map(t => `<tr><td><b>${esc(t.judul)}</b>${t.catatan ? `<div class="mut">Catatan guru: ${esc(t.catatan)}</div>` : ''}</td><td>${t.tenggat ? tgl(t.tenggat) : '-'}</td><td>${pill(t.status)}</td><td><b>${t.nilai ?? '-'}</b></td></tr>`).join('')}</table></div>`;
+    }).join('');
+  };
+  const pill = s => `<span class="pill ${s === 'dinilai' ? 'ok' : s === 'dikumpulkan' ? 'warn' : ''}">${s}</span>`;
+  $('#hasil').innerHTML = `
+  <div class="card top"><div><h2>${esc(d.nama)}</h2><div class="mut">${esc(kelas)}</div></div><button class="ghost" id="lagi">Ganti kode</button></div>
+  <div class="card"><h3>Kehadiran${d.walas ? ' <span class="mut" style="font-weight:600">· dicatat wali kelas ' + esc(d.walas) + '</span>' : ''}</h3>
+    <div class="stats">${['H', 'I', 'S', 'A'].map(k => `<button data-st="${k}" ${c[k] ? '' : 'disabled'}><b>${c[k]}</b><span>${NS[k]}</span></button>`).join('')}</div>
+    <div class="mut">${total ? 'Hadir ' + Math.round(c.H / total * 100) + '% dari ' + total + ' pertemuan. Ketuk angka untuk melihat tanggalnya.' : (d.adaWalas ? 'Belum ada data kehadiran.' : 'Rekap kehadiran dari wali kelas belum tersedia.')}</div>
+    <div id="tglbox" class="hidden" style="margin-top:10px"></div>
+  </div>
+  ${d.karya && d.karya.length ? `<div class="card"><h3>Karya anak</h3><div class="gal">${d.karya.map(k => `<a href="${esc(k.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(k.url)}" alt="Karya: ${esc(k.judul)}"><span>${esc(k.judul)}</span></a>`).join('')}</div></div>` : ''}
+  ${d.tugas.length ? grup(d.tugas) : '<div class="card"><h3>Tugas dan nilai</h3><div class="mut">Belum ada tugas.</div></div>'}`;
+  document.querySelectorAll('.stats button').forEach(b => b.onclick = () => {
+    const k = b.dataset.st, box = $('#tglbox'), buka = b.classList.contains('on');
+    document.querySelectorAll('.stats button').forEach(x => x.classList.remove('on'));
+    if (buka) { box.classList.add('hidden'); return; }
+    b.classList.add('on');
+    const ds = [...new Set(d.kehadiran.filter(x => x.status === k).map(x => x.tanggal))].sort().reverse();
+    box.innerHTML = `<div class="mut" style="margin-bottom:6px">Tanggal ${NS[k].toLowerCase()}:</div>` + ds.map(x => `<span class="pill">${tgl(x)}</span>`).join(' ');
+    box.classList.remove('hidden');
+  });
+  $('#form').classList.add('hidden'); $('#hasil').classList.remove('hidden');
+  $('#lagi').onclick = () => { $('#hasil').classList.add('hidden'); $('#hasil').innerHTML = ''; $('#form').classList.remove('hidden'); $('#kode').value = ''; $('#kode').focus(); };
+}
+$('#cari').onclick = cari;
+$('#kode').onkeydown = e => { if (e.key === 'Enter') cari(); };
+</script>
+</body>
+</html>

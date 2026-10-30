@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDS Islam At-Taqwa Rawamangun</title>
+<link rel="icon" type="image/png" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--mute:#627d98}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+nav{flex:none;display:flex;align-items:center;gap:14px;padding:8px 16px;background:#fff;border-bottom:1px solid #dbe8f2;box-shadow:0 4px 16px #102a4310}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--navy);font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.brand img{width:38px;height:38px;object-fit:contain}
+.menu{display:flex;gap:6px;overflow-x:auto;margin-left:auto;scrollbar-width:none}
+.menu::-webkit-scrollbar{display:none}
+.menu a{white-space:nowrap;text-decoration:none;color:var(--navy);font-weight:700;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid transparent}
+.menu a:hover{background:var(--soft)}
+.menu a.on{background:var(--navy);color:#fff}
+.menu a:focus-visible,.brand:focus-visible,a.tile:focus-visible{outline:3px solid #1677c850}
+@media(max-width:760px){.brand span{display:none}}
+main{flex:1;position:relative;min-height:0}
+#beranda{height:100%;overflow:auto;padding:clamp(24px,6vw,64px) 16px}
+.hero{max-width:760px;margin:0 auto;text-align:center}
+.hero img{width:92px;height:92px;background:#fff;border-radius:24px;padding:9px;box-shadow:0 10px 26px #102a4325}
+h1{margin:18px 0 10px;color:var(--navy);font-size:clamp(28px,5.5vw,44px);letter-spacing:-.04em;line-height:1.1}
+.hero p{margin:0;color:var(--mute);font-size:clamp(15px,2.2vw,18px)}
+.tiles{max-width:900px;margin:34px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+a.tile{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:24px;box-shadow:0 14px 36px #102a4310;transition:border-color .18s,transform .18s}
+a.tile:hover{border-color:var(--blue);transform:translateY(-2px)}
+a.tile h2{margin:0 0 8px;color:var(--navy);font-size:20px}
+a.tile span{color:var(--mute);font-size:15px}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="#beranda"><img src="logo-at-taqwa.png" alt=""><span>SDS Islam At-Taqwa</span></a>
+  <div class="menu">
+    <a href="#beranda" data-r="beranda">Beranda</a>
+    <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
+    <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
+    <a href="#ortu" data-r="ortu">Pantau Belajar Anak</a>
+  </div>
+</nav>
+
+<main>
+  <section id="beranda">
+    <div class="hero">
+      <img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa">
+      <h1>Selamat datang di SDS Islam At-Taqwa Rawamangun</h1>
+      <p>Pilih layanan di menu atas atau di bawah ini.</p>
+    </div>
+    <div class="tiles">
+      <a class="tile" href="#buku-tamu"><h2>Buku Tamu Sekolah</h2><span>Konfirmasi kehadiran tamu kegiatan. Panel admin tersedia di dalam halaman ini.</span></a>
+      <a class="tile" href="#kelas"><h2>Administrasi Kelas</h2><span>Untuk guru: presensi, jurnal, jadwal, tugas, dan nilai. Perlu login.</span></a>
+      <a class="tile" href="#ortu"><h2>Pantau Belajar Anak</h2><span>Untuk orang tua: lihat kehadiran, tugas, dan nilai anak dengan kode akses.</span></a>
+    </div>
+  </section>
+  <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
+  <iframe id="f-kelas" title="Administrasi Kelas" hidden></iframe>
+  <iframe id="f-ortu" title="Pantau Belajar Anak" hidden></iframe>
+</main>
+
+<script>
+const PAGES = { 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', ortu: 'Pantau Belajar Anak' };
+
+function route() {
+  let r = location.hash.slice(1) || 'beranda';
+  const admin = r === 'admin';            // tautan lama /#admin tetap dikenali
+  if (admin) r = 'buku-tamu';
+  if (r !== 'beranda' && !PAGES[r]) r = 'beranda';
+
+  document.querySelectorAll('.menu a').forEach(a => a.classList.toggle('on', a.dataset.r === r));
+  document.getElementById('beranda').hidden = r !== 'beranda';
+  for (const k in PAGES) {
+    const f = document.getElementById('f-' + k);
+    f.hidden = k !== r;
+    // halaman dimuat sekali saat pertama dibuka, lalu dipertahankan (login dan isian tidak hilang)
+    if (k === r && (!f.getAttribute('src') || admin)) f.src = PAGES[k] + (admin ? '?t=' + Date.now() + '#admin' : '');
+  }
+  document.title = TITLES[r];
+}
+addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
