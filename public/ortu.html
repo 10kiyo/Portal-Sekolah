@@ -43,6 +43,13 @@ th{color:var(--mute);font-size:12px}
 summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:14px;margin-top:8px}
 .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
 .pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.bad{background:#fbeceb;color:var(--danger)}
+.kg h3{margin:0}.kg .row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.kg .box{background:var(--soft);border-radius:12px;padding:10px 12px;margin:10px 0;white-space:pre-wrap;font-size:14px}
+.kg .rp{font-size:20px;font-weight:800;color:var(--navy)}
+.kg form{margin-top:12px;display:grid;gap:10px}
+.kg form input,.kg form textarea{font-size:16px;letter-spacing:0;text-transform:none;padding:11px;width:100%;border-radius:12px;border:1px solid var(--line);font-family:inherit;color:var(--ink)}
+.kg form label{margin:0 0 4px;font-size:14px}.kg form .chk{display:flex;gap:8px;align-items:flex-start;font-weight:400}.kg form .chk input{width:auto;margin-top:3px}
+.kg .ok{color:var(--ok);font-weight:700}
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
 .gal a{text-decoration:none;color:var(--mute);font-size:12px}
 .gal img{display:block;width:100%;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
@@ -71,6 +78,77 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const tgl = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 const NS = { H: 'Hadir', I: 'Izin', S: 'Sakit', A: 'Alpa' };
 if (self !== top) document.body.classList.add('emb');
+let kodeAktif = '';
+const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+const FASE = { dibuka: '', penuh: 'Kuota sudah penuh.', ditutup: 'Pendaftaran sudah ditutup.' };
+const SPILL = { menunggu: ['warn', 'Menunggu verifikasi'], lunas: ['ok', 'Lunas'], ditolak: ['bad', 'Perlu diperbaiki'] };
+
+async function post(body) {
+  const r = await fetch('/api/ortu-kegiatan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kode: kodeAktif, ...body }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.');
+  return d;
+}
+// Foto dikecilkan di browser agar unggahan dari HP cepat dan hemat kuota.
+async function kecilkan(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+    const sk = Math.min(1, 1600 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+    cv.width = Math.round(img.width * sk); cv.height = Math.round(img.height * sk);
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    let q = .8, out = cv.toDataURL('image/jpeg', q);
+    while (out.length > 2500000 && q > .35) { q -= .15; out = cv.toDataURL('image/jpeg', q); }
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+async function muatKegiatan() {
+  const box = $('#kg'); if (!box) return;
+  try {
+    const { kegiatan } = await post({ action: 'list' });
+    box.innerHTML = kegiatan.map(k => kartuKegiatan(k)).join('');
+    box.querySelectorAll('[data-buka]').forEach(b => b.onclick = () => { const f = box.querySelector('form[data-k="' + b.dataset.buka + '"]'); f.classList.toggle('hidden'); b.textContent = f.classList.contains('hidden') ? b.dataset.label : 'Tutup formulir'; });
+    box.querySelectorAll('form').forEach(f => f.onsubmit = e => { e.preventDefault(); kirim(f); });
+  } catch (e) { box.innerHTML = ''; }
+}
+function kartuKegiatan(k) {
+  const d = k.daftar, st = d && SPILL[d.status];
+  const bisa = k.fase === 'dibuka' || (d && d.status === 'ditolak' && k.fase === 'ditutup');
+  let aksi = '';
+  if (d && d.status !== 'ditolak') aksi = `<div class="box ${d.status === 'lunas' ? 'ok' : ''}">${d.status === 'lunas' ? 'Pembayaran sudah dikonfirmasi panitia. Terima kasih.' : 'Bukti transfer sudah kami terima dan sedang diperiksa panitia.'}</div>`;
+  else {
+    if (d) aksi += `<div class="box" style="background:#fbeceb;color:var(--danger)"><b>Bukti belum dapat diterima.</b>\n${esc(d.catatan_panitia || 'Silakan kirim ulang bukti transfer.')}</div>`;
+    if (!bisa) aksi += `<div class="mut">${FASE[k.fase] || 'Pendaftaran belum dibuka.'}</div>`;
+    else aksi += `<button data-buka="${k.id}" data-label="${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}">${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}</button>
+    <form class="hidden" data-k="${k.id}">
+      <div><label>Nama pengirim transfer</label><input name="nama_pengirim" maxlength="60" required></div>
+      <div><label>Tanggal transfer</label><input type="date" name="tanggal_transfer" required></div>
+      <div><label>Foto bukti transfer</label><input type="file" name="bukti" accept="image/*" required></div>
+      <div><label>Ukuran kaos (jika ada)</label><input name="kaos" maxlength="20" placeholder="mis. M / anak 10"></div>
+      <div><label>Alergi atau kondisi kesehatan</label><textarea name="kesehatan" rows="2" maxlength="200" placeholder="Kosongkan jika tidak ada"></textarea></div>
+      <div><label>Nomor kontak darurat</label><input name="kontak" maxlength="40" inputmode="tel" required></div>
+      <label class="chk"><input type="checkbox" name="setuju" required> <span>Saya orang tua/wali dan mengizinkan anak mengikuti kegiatan ini.</span></label>
+      <div><button type="submit">Kirim pendaftaran</button></div><div class="err" data-err></div>
+    </form>`;
+  }
+  return `<div class="card kg"><div class="row"><h3>${esc(k.nama)}</h3>${st ? `<span class="pill ${st[0]}">${st[1]}</span>` : ''}</div>
+    <div class="mut">Kegiatan: ${tgl(k.tanggal_kegiatan)} · Daftar sampai ${tgl(k.tutup_daftar)}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}</div>
+    ${k.deskripsi ? `<div class="box">${esc(k.deskripsi)}</div>` : ''}
+    <div class="rp">${k.biaya ? rp(k.biaya) : 'Gratis'}</div>
+    ${k.biaya && k.rekening ? `<div class="box">Transfer ke:\n${esc(k.rekening)}</div>` : ''}
+    ${aksi}</div>`;
+}
+async function kirim(f) {
+  const err = f.querySelector('[data-err]'), btn = f.querySelector('button[type=submit]'), fd = new FormData(f);
+  err.textContent = ''; btn.disabled = true; btn.textContent = 'Mengirim…';
+  try {
+    const file = fd.get('bukti');
+    if (!file || !file.size) throw new Error('Pilih foto bukti transfer.');
+    await post({ action: 'daftar', kegiatanId: f.dataset.k, bukti: await kecilkan(file), setuju: f.setuju.checked,
+      nama_pengirim: fd.get('nama_pengirim'), tanggal_transfer: fd.get('tanggal_transfer'), kaos: fd.get('kaos'), kesehatan: fd.get('kesehatan'), kontak: fd.get('kontak') });
+    await muatKegiatan();
+  } catch (e) { err.textContent = e.message || 'Gagal mengirim.'; btn.disabled = false; btn.textContent = 'Kirim pendaftaran'; }
+}
 
 async function cari() {
   const kode = $('#kode').value.trim(); if (!kode) return;
@@ -79,7 +157,7 @@ async function cari() {
     const r = await fetch('/api/ortu-lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kode }) });
     const d = await r.json();
     if (!r.ok) { $('#err').textContent = d.error || 'Gagal memuat data.'; return; }
-    tampil(d);
+    kodeAktif = kode; tampil(d); muatKegiatan();
   } catch (e) { $('#err').textContent = 'Tidak bisa terhubung. Periksa koneksi internet.'; }
   finally { b.disabled = false; }
 }
@@ -98,6 +176,7 @@ function tampil(d) {
   const pill = s => `<span class="pill ${s === 'dinilai' ? 'ok' : s === 'dikumpulkan' ? 'warn' : ''}">${s}</span>`;
   $('#hasil').innerHTML = `
   <div class="card top"><div><h2>${esc(d.nama)}</h2><div class="mut">${esc(kelas)}</div></div><button class="ghost" id="lagi">Ganti kode</button></div>
+  <div id="kg"></div>
   <div class="card"><h3>Kehadiran${d.walas ? ' <span class="mut" style="font-weight:600">· dicatat wali kelas ' + esc(d.walas) + '</span>' : ''}</h3>
     <div class="stats">${['H', 'I', 'S', 'A'].map(k => `<button data-st="${k}" ${c[k] ? '' : 'disabled'}><b>${c[k]}</b><span>${NS[k]}</span></button>`).join('')}</div>
     <div class="mut">${total ? 'Hadir ' + Math.round(c.H / total * 100) + '% dari ' + total + ' pertemuan. Ketuk angka untuk melihat tanggalnya.' : (d.adaWalas ? 'Belum ada data kehadiran.' : 'Rekap kehadiran dari wali kelas belum tersedia.')}</div>

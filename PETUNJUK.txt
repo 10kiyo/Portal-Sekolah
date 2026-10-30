@@ -1,0 +1,11 @@
+MODUL KEGIATAN SEKOLAH - cara pasang
+1. Supabase > SQL Editor: jalankan supabase-kegiatan.sql (membuat 2 tabel + bucket privat "bukti").
+2. Salin folder ke repo (struktur sama):
+   functions/_lib/util.js            (BARU)
+   functions/api/ortu-kegiatan.js    (BARU)
+   functions/api/admin-kegiatan.js   (BARU)
+   src/worker.js                     (DIGANTI - menambah 2 route)
+   public/kegiatan.html              (BARU - halaman panitia)
+   public/ortu.html                  (DIGANTI - bagian Kegiatan untuk orang tua)
+   public/index.html, public/admin.html (DIGANTI - menu/tautan)
+3. Deploy. Tidak ada variabel baru: memakai SUPABASE_SERVICE_ROLE_KEY, ADMIN_PIN, ADMIN_SECRET yang sudah ada.

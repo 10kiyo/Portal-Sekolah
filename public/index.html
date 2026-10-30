@@ -42,6 +42,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
     <a href="#beranda" data-r="beranda">Beranda</a>
     <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
     <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
+    <a href="#kegiatan" data-r="kegiatan">Kegiatan (Panitia)</a>
     <a href="#ortu" data-r="ortu">Pantau Belajar Anak</a>
   </div>
 </nav>
@@ -56,17 +57,19 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
     <div class="tiles">
       <a class="tile" href="#buku-tamu"><h2>Buku Tamu Sekolah</h2><span>Konfirmasi kehadiran tamu kegiatan. Panel admin tersedia di dalam halaman ini.</span></a>
       <a class="tile" href="#kelas"><h2>Administrasi Kelas</h2><span>Untuk guru: presensi, jurnal, jadwal, tugas, dan nilai. Perlu login.</span></a>
+      <a class="tile" href="#kegiatan"><h2>Kegiatan (Panitia)</h2><span>Kelola pendaftaran kegiatan dan cek bukti transfer orang tua. Perlu PIN admin.</span></a>
       <a class="tile" href="#ortu"><h2>Pantau Belajar Anak</h2><span>Untuk orang tua: lihat kehadiran, tugas, dan nilai anak dengan kode akses.</span></a>
     </div>
   </section>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
   <iframe id="f-kelas" title="Administrasi Kelas" hidden></iframe>
+  <iframe id="f-kegiatan" title="Kegiatan Sekolah (Panitia)" hidden></iframe>
   <iframe id="f-ortu" title="Pantau Belajar Anak" hidden></iframe>
 </main>
 
 <script>
-const PAGES = { 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', ortu: 'Pantau Belajar Anak' };
+const PAGES = { 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 function route() {
   let r = location.hash.slice(1) || 'beranda';
