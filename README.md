@@ -1,6 +1,6 @@
 # Buku Tamu Sekolah Online
 
-1. Buka tautan website pada bukutamuattaqwa.netlify.app komputer petugas.
+1. Buka tautan website pada (harap hubungi operator) komputer petugas.
 2. Daftar tamu dari Excel sudah dimasukkan ke database online pada server SUPABASE.
 3. Tamu mengetik namanya, memilih data yang benar, lalu mengonfirmasi kehadiran dan menandatangani layar.
 

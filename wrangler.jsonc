@@ -1,0 +1,12 @@
+{
+  // Konfigurasi Cloudflare Workers (dengan file statis). Dibaca oleh "npx wrangler deploy".
+  "name": "portal-sekolah",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  // Pertahankan variabel yang diisi lewat dashboard saat deploy ulang.
+  "keep_vars": true
+}
