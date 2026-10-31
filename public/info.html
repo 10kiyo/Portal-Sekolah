@@ -55,6 +55,17 @@ h2{margin:0;color:var(--navy);font-size:18px}
 .pdi .go{flex:none;padding:9px 16px;border-radius:10px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
 .pdi .go:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
 .solo #pdWrap{display:none}
+.per{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.per h2{font-size:19px}.per .mut{margin-top:2px}
+.pbtn{font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.pbtn:hover{background:var(--soft)}.pbtn:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+.pbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#arsip h3{margin:14px 0 8px;color:var(--navy);font-size:16px}#arsip h3:first-of-type{margin-top:4px}
+.bln{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.bln button{font:inherit;cursor:pointer;padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--navy);font-weight:700;font-size:14px;text-align:left}
+.bln button:hover{background:var(--soft)}.bln button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.bln small{display:block;font-weight:400;font-size:12px;opacity:.75}
+.solo .per,.solo #arsip{display:none}
 </style>
 </head>
 <body>
@@ -77,6 +88,8 @@ h2{margin:0;color:var(--navy);font-size:18px}
   </div>
 
   <div class="bar"><input id="q" type="search" placeholder="Cari info…" aria-label="Cari info"></div>
+  <div class="per" id="per"></div>
+  <div class="card" id="arsip" hidden></div>
   <div class="chips" id="chips"></div>
 
   <div id="list"><div class="card empty">Memuat…</div></div>
@@ -119,9 +132,24 @@ let DATA = [], TODAY = '', kat = 'semua';
 const QS = new URLSearchParams(location.search), FOKUS = QS.get('id') || '', SOLO = QS.get('solo') === '1';
 if (QS.get('kat') && KAT[QS.get('kat')]) kat = QS.get('kat');
 
+const BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const ym = d => String(d || '').slice(0, 7);
+const namaBln = k => { const [y, m] = k.split('-').map(Number); return BLN[m - 1] + ' ' + y; };
+let periode = 'terbaru', arsipBuka = false;   // 'terbaru' = bulan berjalan; 'YYYY-MM' = arsip bulan itu
+
+// Info yang tampil menurut periode. Info disematkan selalu ikut di "terbaru". Saat mencari, semua arsip ikut dicari.
+function lingkup() {
+  const q = $('#q').value.trim();
+  if (q) return DATA;
+  const cur = ym(TODAY);
+  if (periode === 'terbaru') return DATA.filter(x => ym(x.tanggal_terbit) >= cur || x.sematkan);
+  return DATA.filter(x => ym(x.tanggal_terbit) === periode);
+}
 function render() {
   const q = $('#q').value.trim().toLowerCase();
-  const rows = DATA.filter(x => (kat === 'semua' || x.kategori === kat) && (!q || (x.judul + ' ' + (x.isi || '')).toLowerCase().includes(q)));
+  const rows = lingkup().filter(x => (kat === 'semua' || x.kategori === kat) && (!q || (x.judul + ' ' + (x.isi || '')).toLowerCase().includes(q)));
+  const kosong = q ? 'Tidak ada info yang cocok di seluruh arsip.'
+    : periode === 'terbaru' ? `Belum ada info untuk ${namaBln(ym(TODAY))}. Lihat <b>Arsip</b> untuk info bulan-bulan sebelumnya.` : 'Belum ada info untuk ditampilkan.';
   $('#list').innerHTML = rows.length ? rows.map(x => {
     const lamp = x.lampiran_url && /^https?:\/\//.test(x.lampiran_url) ? x.lampiran_url : '';
     const isImg = /\.(jpe?g|png|webp)(\?|$)/i.test(lamp);
@@ -135,18 +163,49 @@ function render() {
       ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener">📎 ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
       ${bagiHtml(x)}
     </article>`;
-  }).join('') : '<div class="card empty">Belum ada info untuk ditampilkan.</div>';
+  }).join('') : `<div class="card empty">${kosong}</div>`;
   document.querySelectorAll('.more').forEach(b => b.onclick = () => {
     const c = b.previousElementSibling.classList.toggle('cut'); b.textContent = c ? 'Baca selengkapnya' : 'Tutup';
   });
 }
 
 function renderChips() {
-  const ada = new Set(DATA.map(x => x.kategori));
+  const ada = new Set(lingkup().map(x => x.kategori));
+  if (kat !== 'semua' && !ada.has(kat)) kat = 'semua';
   $('#chips').innerHTML = Object.keys(KAT).filter(k => k === 'semua' || ada.has(k))
     .map(k => `<button data-k="${k}" class="${k === kat ? 'on' : ''}">${KAT[k]}</button>`).join('');
   document.querySelectorAll('#chips button').forEach(b => b.onclick = () => { kat = b.dataset.k; renderChips(); render(); });
 }
+
+// Arsip: bulan-bulan sebelum bulan berjalan, dikelompokkan per tahun (terbaru di atas).
+function petaArsip() {
+  const cur = ym(TODAY), m = {};
+  DATA.forEach(x => { const k = ym(x.tanggal_terbit); if (k && k < cur) m[k] = (m[k] || 0) + 1; });
+  return m;
+}
+function renderPeriode() {
+  const arsip = petaArsip(), keys = Object.keys(arsip).sort().reverse();
+  const q = $('#q').value.trim();
+  if (q) {
+    $('#per').innerHTML = `<div><h2>Hasil pencarian</h2><div class="mut">Mencari di semua info, termasuk arsip.</div></div>`;
+    $('#arsip').hidden = true; return;
+  }
+  const judul = periode === 'terbaru' ? `<h2>Info bulan ini</h2><div class="mut">${namaBln(ym(TODAY))}</div>` : `<h2>Arsip · ${namaBln(periode)}</h2><div class="mut">${arsip[periode] || 0} info</div>`;
+  const tombol = (periode !== 'terbaru' ? '<button class="pbtn" data-p="terbaru">← Info terbaru</button> ' : '')
+    + (keys.length ? `<button class="pbtn ${arsipBuka ? 'on' : ''}" data-p="arsip" aria-expanded="${arsipBuka}">📁 Arsip (${keys.length} bulan)</button>` : '');
+  $('#per').innerHTML = `<div>${judul}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${tombol}</div>`;
+  const tahun = [...new Set(keys.map(k => k.slice(0, 4)))];
+  $('#arsip').hidden = !arsipBuka || !keys.length;
+  $('#arsip').innerHTML = tahun.map(y => `<h3>${y}</h3><div class="bln">${keys.filter(k => k.startsWith(y)).map(k =>
+    `<button data-p="${k}" class="${k === periode ? 'on' : ''}">${BLN[Number(k.slice(5)) - 1]}<small>${arsip[k]} info</small></button>`).join('')}</div>`).join('');
+}
+function setPeriode(p) {
+  if (p === 'arsip') { arsipBuka = !arsipBuka; renderPeriode(); return; }
+  periode = p; arsipBuka = false; kat = 'semua';
+  renderPeriode(); renderChips(); render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b && (b.closest('#per') || b.closest('#arsip'))) setPeriode(b.dataset.p); });
 
 function renderPendaftaran(list) {
   const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
@@ -170,8 +229,8 @@ function renderAgenda() {
   }).join('');
 }
 
-$('#q').oninput = render;
-fetch('/api/info?limit=200').then(r => r.json()).then(d => {
+$('#q').oninput = () => { renderPeriode(); renderChips(); render(); };
+fetch('/api/info?limit=1000').then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
   DATA = d.info; TODAY = d.today; renderPendaftaran(d.pendaftaran || []);
   const f = FOKUS && DATA.find(x => x.id === FOKUS);
@@ -181,7 +240,12 @@ fetch('/api/info?limit=200').then(r => r.json()).then(d => {
     document.querySelector('.bar').style.display = 'none'; $('#chips').style.display = 'none';
     $('#list').insertAdjacentHTML('afterend', '<p style="text-align:center;margin-top:18px"><a class="lamp" href="/#info" target="_top">Lihat info lainnya →</a></p>');
     render();
-  } else { renderAgenda(); renderChips(); render(); }
+  } else {
+    const bl = QS.get('bulan');                       // ?bulan=2026-09 membuka arsip bulan itu
+    if (bl && /^\d{4}-\d{2}$/.test(bl) && bl < ym(TODAY)) periode = bl;
+    if (f && ym(f.tanggal_terbit) < ym(TODAY) && !f.sematkan) periode = ym(f.tanggal_terbit);   // info yang dituju sudah diarsipkan
+    renderAgenda(); renderPeriode(); renderChips(); render();
+  }
   if (f) {                                  // dibuka dari beranda: tampilkan info yang dituju, isi lengkap
     const el = document.querySelector(`article[data-id="${CSS.escape(f.id)}"]`);
     if (el) { el.classList.add('hl'); const t = el.querySelector('.isi'); if (t) t.classList.remove('cut'); const b = el.querySelector('.more'); if (b) b.textContent = 'Tutup'; el.scrollIntoView({ block: 'start' }); }

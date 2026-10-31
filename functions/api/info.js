@@ -5,7 +5,7 @@ import { json, cfg, dbGet, hariIni, fase, terpakaiMap } from '../_lib/util.js';
 export async function onRequestGet({ request, env }) {
   const c = cfg(env);
   if (!c) return json(500, { error: 'SUPABASE_SERVICE_ROLE_KEY belum diatur.' });
-  const lim = Math.min(Math.max(parseInt(new URL(request.url).searchParams.get('limit')) || 100, 1), 200);
+  const lim = Math.min(Math.max(parseInt(new URL(request.url).searchParams.get('limit')) || 100, 1), 1000);
   const kat = new URL(request.url).searchParams.get('kategori') || '';
   const fk = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'].includes(kat) ? `&kategori=eq.${kat}` : '';
   const jn = new URL(request.url).searchParams.get('jenis') || '';
