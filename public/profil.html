@@ -24,8 +24,6 @@ ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;
 .grid>div{border:1px solid #dbe8f2;border-radius:14px;padding:14px 16px;background:#fff}
 .grid p{font-size:14px;color:var(--mute);margin:0;line-height:1.6}
 .tags{display:flex;gap:8px;flex-wrap:wrap}.tags span{padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--navy);font-weight:700;font-size:14px}
-.sambutan{border-left:4px solid var(--blue);padding-left:16px}
-.sambutan .by{margin-top:12px;font-weight:700;color:var(--navy)}.sambutan .by span{display:block;font-weight:400;color:var(--mute);font-size:14px}
 .idf{flex:none;background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(26px,4vw,44px) clamp(18px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
 .idf .in{max-width:1100px;margin:0 auto}
 .idf .copy{margin-top:28px;padding-top:18px;border-top:1px solid #ffffff22;font-size:13px;color:#9db4c9}
@@ -77,7 +75,7 @@ ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;
    ISI PROFIL SEKOLAH — edit data di bawah ini saja.
    Bagian yang dibiarkan kosong ("" atau []) otomatis tidak ditampilkan.
    Teks biasa saja (tanpa HTML). Untuk paragraf baru, pisahkan dengan baris kosong
-   pada 'sejarah' dan 'sambutan.isi' (gunakan \n\n).
+   pada 'sejarah' (gunakan \n\n).
    ============================================================ */
 const PROFIL = {
   tagline: 'Belajar Nyaman, Perilaku Islami, Insan Bertaqwa',
@@ -105,8 +103,6 @@ const PROFIL = {
     'Menjadikan suatu lembaga pendidikan Islami dengan prinsip belajar sepanjang hayat mengacu kepada 4 pilar pendidikan universal yaitu learning to know, learning to do, learning to be, learning to live together dan mempunyai life skill',
     'Menyediakan lingkungan bermain yang sehat, udara yang bersih, hijau dan indah'
   ],
-
-  sambutan: { nama: 'Ibu Nurbaiti, S.Pd.', jabatan: 'Kepala Sekolah', isi: 'Semoga anak At-Taqwa menjadi anak yang cerdas, sehat, sukses bertaqwa' },
 
   // Teks panjang memakai tanda ` (backtick) di awal dan akhir agar boleh beberapa baris.
   // Paragraf baru = satu baris kosong.
@@ -175,8 +171,6 @@ const ytId = u => {
 };
 const vids = P.video.map(v => ({ judul: v.judul, id: ytId(v.url) })).filter(v => v.id);
 if (vids.length) out.push(`<section class="card"><h2>Video Profil Sekolah</h2><div class="vids ${vids.length > 1 ? 'dua' : ''}">${vids.map(v => `<div class="vid">${v.judul ? `<div class="t">${esc(v.judul)}</div>` : ''}<div class="fr"><iframe src="https://www.youtube-nocookie.com/embed/${v.id}" title="${esc(v.judul || 'Video sekolah')}" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></div>`).join('')}</div></section>`);
-if (P.sambutan.isi) out.push(`<section class="card"><h2>Sambutan ${esc(P.sambutan.jabatan || 'Kepala Sekolah')}</h2><div class="sambutan">${paras(P.sambutan.isi)}${
-  P.sambutan.nama ? `<div class="by">${esc(P.sambutan.nama)}<span>${esc(P.sambutan.jabatan)}</span></div>` : ''}</div></section>`);
 if (P.visi) out.push(`<section class="card"><h2>Visi</h2><p class="visi">${esc(P.visi)}</p></section>`);
 if (P.misi.length) out.push(`<section class="card"><h2>Misi</h2><ol class="misi">${P.misi.map(m => `<li>${esc(m)}</li>`).join('')}</ol></section>`);
 if (P.sejarah) out.push(`<section class="card"><h2>Sejarah Singkat</h2>${paras(P.sejarah)}</section>`);
