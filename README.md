@@ -5,3 +5,7 @@
 3. Tamu mengetik namanya, memilih data yang benar, lalu mengonfirmasi kehadiran dan menandatangani layar.
 
 Data konfirmasi tersimpan pada perangkat yang berbeda. Untuk penggunaan acara yang membutuhkan rekap bersama dari beberapa perangkat atau ekspor Excel/PDF, aplikasi telah otomatis tersimpanan terpusat secara online.
+
+
+## Guru & Staff
+Data jabatan, foto, mapel, dan wali kelas ada di tabel Supabase `guru_staf`; akun login guru memakai username + PIN dari tabel yang sama. Lihat `PETUNJUK.txt` dan `supabase-guru.sql`.

@@ -1,8 +1,8 @@
 /* ============================================================
-   PENYESUAIAN DATA GURU & STAF (OPSIONAL)
-   Daftar guru & staf ditarik otomatis dari Supabase (tabel daftar_tamu_gabungan, lewat /api/guru).
-   File ini hanya untuk MENAMBAHKAN foto / jabatan / mapel / wali kelas pada orang tertentu,
-   atau menampilkan orang yang belum ada di database. Tidak perlu diisi untuk semua guru.
+   PENYESUAIAN DATA GURU & STAF (OPSIONAL, CADANGAN)
+   Sumber utama sekarang tabel Supabase "guru_staf" (jabatan, kelompok, mapel, wali kelas, foto), lewat /api/guru.
+   Ubah data di Supabase, bukan di file ini. File ini hanya mengisi foto / jabatan / mapel bila kolomnya
+   di Supabase masih kosong, atau menampilkan orang yang belum ada di database.
 
    Kolom:
    nama      : nama (tanpa gelar pun boleh) — dipakai untuk mencocokkan dengan data Supabase

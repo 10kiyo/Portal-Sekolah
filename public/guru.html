@@ -50,18 +50,21 @@ const inisial = n => n.replace(/,.*$/, '').trim().split(/\s+/).slice(0, 2).map(w
 const kunci = n => String(n || '').replace(/,.*$/, '').toLowerCase().replace(/[^a-z]/g, '');   // "Nurbaiti, S.Pd" -> "nurbaiti"
 let DATA = [], kel = 'semua';
 
-// Gabungkan data Supabase (/api/guru) dengan penyesuaian manual di data-guru.js (foto, jabatan, mapel, wali kelas)
+// Gabungkan data Supabase (/api/guru) dengan data-guru.js (hanya pelengkap: foto/jabatan bila kolom di Supabase masih kosong)
 function gabung(db) {
   const man = (window.GURU_STAF || []).map(m => ({ ...m, k: kunci(m.nama), dipakai: false }));
   const out = db.map(x => {
     const k = kunci(x.nama), m = man.find(y => y.k && (y.k === k || k.startsWith(y.k) || y.k.startsWith(k)));
     if (m) m.dipakai = true;
-    return { nama: m ? m.nama : x.nama, jabatan: (m && m.jabatan) || x.keterangan || x.jenis || '',
-      kelompok: (m && m.kelompok) || x.kelompok, mapel: (m && m.mapel) || [], walikelas: (m && m.walikelas) || '', foto: (m && m.foto) || '' };
+    return { nama: m && !x.dariTabel ? m.nama : x.nama,
+      jabatan: x.jabatan || (m && m.jabatan) || x.jenis || '',
+      kelompok: x.dariTabel ? x.kelompok : ((m && m.kelompok) || x.kelompok),
+      mapel: (x.mapel && x.mapel.length) ? x.mapel : ((m && m.mapel) || []),
+      walikelas: x.walikelas || (m && m.walikelas) || '', foto: x.foto || (m && m.foto) || '', urutan: x.urutan };
   });
   man.filter(m => !m.dipakai).forEach(m => out.push({ nama: m.nama, jabatan: m.jabatan || '', kelompok: m.kelompok || 'guru', mapel: m.mapel || [], walikelas: m.walikelas || '', foto: m.foto || '' }));
   const rank = x => /kepala sekolah/i.test(x.jabatan) ? 0 : x.kelompok === 'pimpinan' ? 1 : 2;
-  return out.sort((a, b) => rank(a) - rank(b) || a.nama.localeCompare(b.nama, 'id'));
+  return out.sort((a, b) => rank(a) - rank(b) || (a.urutan ?? 9999) - (b.urutan ?? 9999) || a.nama.localeCompare(b.nama, 'id'));
 }
 
 function renderChips() {
@@ -70,7 +73,7 @@ function renderChips() {
   document.querySelectorAll('#chips button').forEach(b => b.onclick = () => { kel = b.dataset.k; renderChips(); render(); });
 }
 function kartu(x) {
-  const foto = /^[\w\-./]+\.(jpe?g|png|webp)$/i.test(x.foto || '') ? `<img src="${esc(x.foto)}" alt="Foto ${esc(x.nama)}" loading="lazy">` : esc(inisial(x.nama));
+  const foto = /^(https:\/\/[^\s"'<>]+|[\w\-./]+\.(jpe?g|png|webp))$/i.test(x.foto || '') ? `<img src="${esc(x.foto)}" alt="Foto ${esc(x.nama)}" loading="lazy">` : esc(inisial(x.nama));
   const mp = (x.mapel || []).length ? `<div class="m">${esc(x.mapel.join(', '))}</div>` : '';
   return `<article class="p"><div class="ph">${foto}</div><div class="bd"><b>${esc(x.nama)}</b><div class="j">${esc(x.jabatan)}</div>${mp}${x.walikelas ? `<span class="wk">Wali kelas ${esc(x.walikelas)}</span>` : ''}</div></article>`;
 }

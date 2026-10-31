@@ -58,10 +58,16 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
 
 <div id="login" class="card hidden">
   <div class="bar"><img src="logo-at-taqwa.png" alt=""><h1>Administrasi Kelas</h1></div>
-  <p class="mut">Masuk dengan akun guru.</p>
-  <label for="em">Email</label><input id="em" type="email" autocomplete="username">
-  <label for="pw" style="margin-top:10px">Kata sandi</label><input id="pw" type="password" autocomplete="current-password">
-  <p><button class="p" id="btnLogin">Masuk</button></p>
+  <p class="mut">Masuk dengan username dan PIN dari sekolah.</p>
+  <div id="fUser">
+    <label for="un">Username</label><input id="un" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="contoh: eki.yogawanto">
+    <label for="pinIn" style="margin-top:10px">PIN</label><input id="pinIn" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="6 angka">
+  </div>
+  <div id="fMail" class="hidden">
+    <label for="em">Email</label><input id="em" type="email" autocomplete="username">
+    <label for="pw" style="margin-top:10px">Kata sandi</label><input id="pw" type="password" autocomplete="current-password">
+  </div>
+  <p><button class="p" id="btnLogin">Masuk</button> <button id="btnMode" type="button">Masuk dengan email</button></p>
   <div id="loginMsg" class="msg err"></div>
 </div>
 
@@ -77,8 +83,10 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
     <div style="flex:1;min-width:200px"><label for="mapelSel">Mata pelajaran</label><select id="mapelSel"></select></div>
     <div style="flex-basis:100%;display:flex;gap:10px;flex-wrap:wrap">
       <button id="btnImp">Tarik Daftar Murid dari Database</button>
+      <button id="btnSync">Sinkronkan Murid</button>
       <button id="btnDel" class="d">Hapus kelas ini</button>
     </div>
+    <div class="mut" id="syncMsg" style="flex-basis:100%"></div>
   </div>
   <div class="tabs" id="tabs"></div>
   <div id="view" class="card"></div>
@@ -104,12 +112,34 @@ async function boot() {
   const { data } = await sb.auth.getSession();
   data.session ? start() : ($('#login').classList.remove('hidden'), $('#app').classList.add('hidden'));
 }
+let modeMail = false;
+$('#btnMode').onclick = () => {
+  modeMail = !modeMail; $('#loginMsg').textContent = '';
+  $('#fUser').classList.toggle('hidden', modeMail); $('#fMail').classList.toggle('hidden', !modeMail);
+  $('#btnMode').textContent = modeMail ? 'Masuk dengan username' : 'Masuk dengan email';
+};
 $('#btnLogin').onclick = async () => {
-  const { error } = await sb.auth.signInWithPassword({ email: $('#em').value.trim(), password: $('#pw').value });
-  if (error) { $('#loginMsg').textContent = 'Email atau kata sandi salah.'; return; }
-  $('#pw').value = ''; $('#login').classList.add('hidden'); start();
+  const bad = t => { $('#loginMsg').textContent = t; };
+  bad(''); $('#btnLogin').disabled = true;
+  try {
+    let email, password;
+    if (modeMail) { email = $('#em').value.trim(); password = $('#pw').value; }
+    else {
+      const username = $('#un').value.trim(), pin = $('#pinIn').value.trim();
+      if (!username || !pin) return bad('Isi username dan PIN.');
+      let r, d = {};
+      try { r = await fetch('/api/guru-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, pin }) }); d = await r.json().catch(() => ({})); }
+      catch (e) { return bad('Tidak bisa terhubung. Periksa koneksi internet.'); }
+      if (!r.ok) return bad(d.error || 'Username atau PIN salah.');
+      email = d.email; password = pin;
+    }
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) return bad(modeMail ? 'Email atau kata sandi salah.' : 'Username atau PIN salah.');
+    $('#pw').value = ''; $('#pinIn').value = ''; $('#login').classList.add('hidden'); start();
+  } finally { $('#btnLogin').disabled = false; }
 };
 $('#pw').onkeydown = e => { if (e.key === 'Enter') $('#btnLogin').click(); };
+$('#pinIn').onkeydown = e => { if (e.key === 'Enter') $('#btnLogin').click(); };
 $('#btnOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 /* ---------- kelas ---------- */
@@ -118,8 +148,10 @@ async function start() {
   $('#tabs').innerHTML = TABS.map(([k, l]) => `<button data-t="${k}">${l}</button>`).join('');
   $('#tabs').onclick = e => { const t = e.target.dataset.t; if (t) { S.tab = t; S.tugas = null; show(); } };
   await loadProfil();
+  if (!(S.prof && S.prof.nama)) await isiNamaDariDaftar();
   await loadKelas();
   if (!(S.prof && S.prof.nama)) { S.tab = 'profil'; show(); }
+  syncMurid(false);
 }
 async function loadKelas(pick) {
   S.kelas = await run(sb.from('kelas_kelas').select('*').order('nama'));
@@ -407,6 +439,61 @@ async function vProfil() {
   };
 }
 
+/* ---------- nama profil otomatis dari daftar guru & staf (tabel guru_staf) ---------- */
+async function isiNamaDariDaftar() {
+  try {
+    const u = (await sb.auth.getUser()).data.user; if (!u) return;
+    const { data } = await sb.from('guru_staf').select('nama').eq('auth_user_id', u.id).maybeSingle();
+    if (data && data.nama) { await sb.from('kelas_profil').upsert({ guru_id: u.id, nama: data.nama }, { onConflict: 'guru_id' }); await loadProfil(); }
+  } catch (e) {}
+}
+
+/* ---------- sinkron otomatis murid dengan database (daftar_tamu_gabungan) ----------
+   Berlaku untuk kelas yang sudah kamu tarik: murid baru ditambahkan, nama/kelas yang berubah diperbarui,
+   murid yang sudah tidak ada di database dinonaktifkan (nilai & presensi tetap tersimpan). Tidak membuat kelas baru. */
+let syncing = false, lastSync = 0;
+async function syncMurid(manual) {
+  if (syncing) return; syncing = true;
+  const info = t => { const e = $('#syncMsg'); if (e) e.textContent = t; };
+  try {
+    const u = (await sb.auth.getUser()).data.user; if (!u) return;
+    let have = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from('kelas_murid').select('id,nama,kelas_id,guest_id,aktif').not('guest_id', 'is', null).order('id').range(from, from + 999);
+      if (error) throw error; have = have.concat(data); if (data.length < 1000) break;
+    }
+    if (!have.length) { if (manual) info('Belum ada murid dari database. Klik "Tarik Daftar Murid dari Database" dulu.'); return; }
+    const g = await allGuests();
+    if (!g.length) return;
+    const byId = new Map(g.map(x => [String(x.guest_id), x]));
+    const jenis = new Set(have.map(h => (byId.get(String(h.guest_id)) || {}).jenis_undangan).filter(Boolean));
+    if (!jenis.size) return;
+    const kid = Object.fromEntries(S.kelas.map(k => [String(k.nama).trim(), k.id])), target = new Map();
+    g.forEach(x => {
+      const k = String(x.instansi_kelas || '').trim(), nm = String(x.guest_name || '').trim().replace(/\s+/g, ' ');
+      if (nm && kid[k] && jenis.has(x.jenis_undangan)) target.set(String(x.guest_id), { kelas_id: kid[k], nama: nm });
+    });
+    const haveBy = new Map(have.map(h => [String(h.guest_id), h])), up = []; let baru = 0, ubah = 0;
+    target.forEach((t, id) => {
+      const h = haveBy.get(id), row = { guru_id: u.id, kelas_id: t.kelas_id, nama: t.nama, guest_id: id, aktif: true };
+      if (!h || !h.aktif) { up.push(row); baru++; }
+      else if (String(h.nama).trim() !== t.nama || h.kelas_id !== t.kelas_id) { up.push(row); ubah++; }
+    });
+    const off = have.filter(h => h.aktif && !target.has(String(h.guest_id))).map(h => h.id);
+    const terlaluBanyak = off.length > Math.max(5, have.length * 0.3);      // pengaman bila data database terbaca tidak lengkap
+    for (let i = 0; i < up.length; i += 500) { const { error } = await sb.from('kelas_murid').upsert(up.slice(i, i + 500), { onConflict: 'guru_id,guest_id' }); if (error) throw error; }
+    if (!terlaluBanyak) for (let i = 0; i < off.length; i += 100) { const { error } = await sb.from('kelas_murid').update({ aktif: false }).in('id', off.slice(i, i + 100)); if (error) throw error; }
+    const nonaktif = terlaluBanyak ? 0 : off.length, parts = [];
+    if (baru) parts.push(`${baru} murid ditambahkan/diaktifkan`); if (ubah) parts.push(`${ubah} diperbarui`); if (nonaktif) parts.push(`${nonaktif} dinonaktifkan (tidak ada lagi di database)`);
+    if (terlaluBanyak && manual) parts.push(`${off.length} murid tidak ditemukan di database, belum dinonaktifkan otomatis karena jumlahnya banyak`);
+    info(parts.length ? 'Sinkron dengan database: ' + parts.join(', ') + '.' : (manual ? 'Murid sudah sesuai dengan database.' : ''));
+    if ((baru || ubah || nonaktif) && S.tab === 'murid' && S.kid) show();
+  } catch (e) {
+    if (manual) info('Gagal sinkron: ' + (e.message || e));
+  } finally { syncing = false; lastSync = Date.now(); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.kelas.length && !syncing && Date.now() - lastSync > 5 * 60 * 1000) syncMurid(false); });
+
 /* ---------- ekspor CSV (bisa dibuka di Excel) ---------- */
 function csv(name, rows) {
   const t = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -415,6 +502,7 @@ function csv(name, rows) {
 
 $('#btnProf').onclick = () => { S.tab = 'profil'; S.tugas = null; show(); };
 $('#btnImp').onclick = () => vImport();
+$('#btnSync').onclick = () => syncMurid(true);
 $('#btnDel').onclick = async () => {
   const k = S.kelas.find(x => x.id === S.kid); if (!k) return;
   const { count } = await sb.from('kelas_murid').select('id', { count: 'exact', head: true }).eq('kelas_id', k.id);

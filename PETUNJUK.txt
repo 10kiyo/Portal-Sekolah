@@ -37,3 +37,20 @@ MENU KEGIATAN (Jurnal Murid, Ekstrakurikuler, Club, Kegiatan Unggulan)
 GURU & STAFF OTOMATIS DARI SUPABASE
    functions/api/guru.js (BARU), public/guru.html, public/data-guru.js, public/footer-sekolah.js.
    Cek jenis undangan: buka /api/guru?jenis=1 . Atur manual dengan variabel GURU_JENIS di Cloudflare bila perlu.
+
+GURU & STAFF: JABATAN + AKUN LOGIN OTOMATIS (username + PIN)
+1. Supabase > SQL Editor: jalankan supabase-guru.sql (membuat tabel guru_staf, mengisinya dari daftar tamu guru/staf,
+   membuat username & PIN otomatis, mengisi jabatan awal). Periksa hasilnya di Table Editor > guru_staf.
+2. File baru/diganti (struktur sama):
+   functions/api/guru-login.js (BARU), functions/api/guru.js, src/worker.js,
+   public/guru.html, public/data-guru.js, public/kelas.html   (DIGANTI)
+3. Deploy. Tidak ada variabel wajib baru (memakai SUPABASE_SERVICE_ROLE_KEY).
+   Opsional GURU_EMAIL_DOMAIN: bila Supabase menolak email teknis "username@guru.at-taqwa.sch.id" saat membuat akun,
+   isi dengan domain asli yang punya MX record.
+4. Alur harian:
+   - Guru/staf baru: Table Editor > guru_staf > Insert row, isi "nama" (+ jabatan, kelompok, mapel, foto). Username & PIN muncul otomatis.
+   - Ubah jabatan/foto/mapel: edit barisnya; halaman Guru & Staff ikut berubah (maks. 1 menit).
+   - Login Administrasi Kelas: username + PIN dari kolom username & pin. Akun Supabase dibuat otomatis saat login pertama.
+   - Guru lama yang sudah punya akun email: isi auth_user_id di barisnya agar data kelas lamanya tetap terhubung.
+   - Murid: halaman Administrasi Kelas menyinkronkan murid (baru, ganti nama, pindah kelas, tidak aktif) dengan database
+     setiap halaman dibuka, atau lewat tombol "Sinkronkan Murid". Buku Tamu sudah membaca database setiap dibuka.

@@ -11,6 +11,7 @@ import * as info from '../functions/api/info.js';
 import * as adminInfo from '../functions/api/admin-info.js';
 import * as youtube from '../functions/api/youtube.js';
 import * as guru from '../functions/api/guru.js';
+import * as guruLogin from '../functions/api/guru-login.js';
 import * as jurnal from '../functions/api/jurnal.js';
 import * as muridJurnal from '../functions/api/murid-jurnal.js';
 import * as adminJurnal from '../functions/api/admin-jurnal.js';
@@ -27,6 +28,7 @@ const routes = {
   '/api/admin-info': adminInfo,
   '/api/youtube': youtube,
   '/api/guru': guru,
+  '/api/guru-login': guruLogin,
   '/api/jurnal': jurnal,
   '/api/murid-jurnal': muridJurnal,
   '/api/admin-jurnal': adminJurnal
