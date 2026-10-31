@@ -280,40 +280,94 @@ MODUL.kartu = async function (bawaan) {
 };
 
 MODUL.ekskul = async function () {
-  const [g, rows] = await Promise.all([dataSiswa(), run(sb.from('pendaftaran_kegiatan').select('*').order('kegiatan').order('nama'))]);
-  const kls = kelasDari(g); let kel = kls[0] || '', fj = '';
-  const kegs = [...new Set(rows.map(r => r.kegiatan))].sort(urut);
-  $('#view').innerHTML = `<h2>Pendaftaran ekstrakurikuler & club</h2>
-  <div class="grid"><div><label for="ej">Jenis</label><select id="ej"><option value="ekskul">Ekstrakurikuler</option><option value="club">Club</option></select></div>
-  <div><label for="ek">Nama kegiatan</label><input id="ek" list="ekl" placeholder="Contoh: Pramuka, Futsal, English Club"><datalist id="ekl">${kegs.map(k => `<option value="${esc(k)}">`).join('')}</datalist></div>
-  <div><label for="ekls">Kelas</label><select id="ekls">${opsi(kls, kel)}</select></div></div>
-  <label>Murid yang didaftarkan</label><div id="em" class="chklist"></div>
-  <p><button class="p" id="eAdd">Daftarkan yang dicentang</button></p><div id="msg" class="msg"></div>
-  <h2 style="margin-top:22px">Rekap peserta</h2>
-  <p><select id="ef" style="max-width:220px"><option value="">Semua kegiatan</option>${kegs.map(k => `<option>${esc(k)}</option>`).join('')}</select> <button id="eCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
-  <div id="er"></div>`;
-  const daftarMurid = () => g.filter(x => String(x.instansi_kelas || '').trim() === kel).sort((a, b) => urut(a.guest_name, b.guest_name));
-  const sudah = () => new Set(rows.filter(r => r.jenis === $('#ej').value && r.kegiatan === $('#ek').value.trim()).map(r => r.guest_id));
-  const isiMurid = () => { const s = sudah(); $('#em').innerHTML = daftarMurid().map(x => `<label class="chk"><input type="checkbox" data-id="${esc(x.guest_id)}" ${s.has(String(x.guest_id)) ? 'disabled' : ''}> ${esc(x.guest_name)}${s.has(String(x.guest_id)) ? ' <span class="mut">(sudah terdaftar)</span>' : ''}</label>`).join('') || '<span class="mut">Tidak ada murid.</span>'; };
-  const rekap = () => {
-    const f = $('#ef').value, list = rows.filter(r => !f || r.kegiatan === f), by = {};
-    list.forEach(r => (by[r.jenis + '|' + r.kegiatan] = by[r.jenis + '|' + r.kegiatan] || []).push(r));
-    $('#er').innerHTML = Object.keys(by).sort(urut).map(k => `<h3 style="color:var(--navy);margin-bottom:6px">${esc(k.split('|')[1])} <span class="mut">(${k.startsWith('club') ? 'Club' : 'Ekskul'}, ${by[k].length} peserta)</span></h3>
-      <table><tr><th>Nama</th><th>Kelas</th><th class="noprint"></th></tr>${by[k].map(r => `<tr><td>${esc(r.nama)}</td><td>${esc(r.kelas)}</td><td class="noprint"><button class="d" data-del="${r.id}">Keluarkan</button></td></tr>`).join('')}</table>`).join('') || '<p class="mut">Belum ada pendaftar.</p>';
+  // Tautan pendaftaran dibuat panitia (Kegiatan Sekolah > pilih jenis Ekskul/Club). Di sini pustakawan mengelola pendaftarnya:
+  //   Ekskul = berbayar: periksa bukti transfer, konfirmasi jumlah   |   Club = gratis: seleksi (diterima / tidak).
+  const [keg, rows] = await Promise.all([
+    run(sb.from('kegiatan').select('*').in('jenis', ['ekskul', 'club']).order('tanggal_kegiatan', { ascending: false })),
+    run(sb.from('ekskul_pendaftar').select('*').order('created_at', { ascending: false }).limit(5000))
+  ]);
+  const ST = { menunggu: ['Menunggu', '#a65f00', '#fdf0e3'], lunas: ['Lunas', '#19724d', '#eaf5ee'], diterima: ['Diterima', '#19724d', '#eaf5ee'], ditolak: ['Ditolak', '#bc3d33', '#fbeceb'] };
+  const pill = (st, club) => { const x = ST[st] || ST.menunggu, t = club && st === 'ditolak' ? 'Tidak diterima' : x[0]; return `<span style="display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;color:${x[1]};background:${x[2]}">${t}</span>`; };
+  let jenis = 'ekskul', kid = '';
+  const kegJ = () => keg.filter(k => k.jenis === jenis);
+  const tampil = () => {
+    const kl = kegJ(); if (!kl.find(k => k.id === kid)) kid = (kl[0] || {}).id || '';
+    const k = kl.find(x => x.id === kid), club = jenis === 'club', ps = rows.filter(r => r.kegiatan_id === kid);
+    const n = st => ps.filter(r => r.status === st).length;
+    const stat = (a, b) => `<div style="background:var(--soft,#eef6fc);border-radius:12px;padding:10px;text-align:center"><b style="display:block;font-size:20px;color:var(--navy)">${a}</b><span class="mut">${b}</span></div>`;
+    const dana = ps.reduce((a, r) => a + (r.status === 'lunas' ? Number(r.nominal_diterima || 0) : 0), 0);
+    $('#view').innerHTML = `<h2>Ekskul & club</h2>
+    <p class="mut">Tautan pendaftaran dibuat oleh panitia di menu Kegiatan Sekolah. Data pendaftar hanya bisa dilihat pustakawan.</p>
+    <p><button class="${jenis === 'ekskul' ? 'p' : ''}" data-j="ekskul">Ekstrakurikuler (berbayar)</button> <button class="${jenis === 'club' ? 'p' : ''}" data-j="club">Club (seleksi)</button></p>
+    ${kl.length ? `<label for="ekg">Kegiatan</label><select id="ekg" style="max-width:420px">${kl.map(x => `<option value="${x.id}" ${x.id === kid ? 'selected' : ''}>${esc(x.nama)} (${tglID(x.tanggal_kegiatan)})</option>`).join('')}</select>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0">
+      ${stat(ps.length, 'Pendaftar')}${club ? stat(n('diterima'), 'Diterima') + stat(n('menunggu'), 'Belum diseleksi') + stat(n('ditolak'), 'Tidak diterima') + (k.kuota ? stat(Math.max(0, k.kuota - n('diterima')), 'Sisa kuota') : '')
+        : stat(n('lunas'), 'Lunas') + stat(n('menunggu'), 'Perlu diperiksa') + stat(n('ditolak'), 'Ditolak') + stat(rp(dana), 'Dana terkonfirmasi') + (k.kuota ? stat(Math.max(0, k.kuota - ps.filter(r => r.status !== 'ditolak').length), 'Sisa kuota') : '')}
+    </div>
+    <p><select id="efs" style="max-width:200px"><option value="">Semua status</option>${Object.keys(ST).filter(x => club ? x !== 'lunas' : x !== 'diterima').map(x => `<option value="${x}">${club && x === 'ditolak' ? 'Tidak diterima' : ST[x][0]}</option>`).join('')}</select> <button id="eCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
+    <div id="et" style="overflow-x:auto"></div>` : `<p class="mut">Belum ada kegiatan ${club ? 'club' : 'ekskul'}. Minta panitia membuatnya di menu Kegiatan Sekolah (pilih jenis ${club ? 'Club' : 'Ekstrakurikuler'}).</p>`}
+    <div id="msg" class="msg"></div>`;
+    document.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { jenis = b.dataset.j; kid = ''; tampil(); });
+    if (!k) return;
+    $('#ekg').onchange = e => { kid = e.target.value; tampil(); };
+    const draw = () => {
+      const f = $('#efs').value, l = ps.filter(r => !f || r.status === f);
+      $('#et').innerHTML = l.length ? `<table><tr><th>Anak</th><th>Status</th><th>${club ? 'Alasan bergabung' : 'Transfer'}</th><th>Kontak</th>${club ? '<th>Nilai</th>' : ''}<th class="noprint"></th></tr>${l.map(r => `<tr>
+        <td><b>${esc(r.nama_anak)}</b><div class="mut">${esc(r.kelas || '')}</div></td><td>${pill(r.status, club)}${r.catatan ? `<div class="mut">${esc(r.catatan)}</div>` : ''}</td>
+        <td>${club ? esc((r.data || {}).motivasi || '-') : `${esc(r.nama_pengirim || '-')}<div class="mut">${tglID(r.tanggal_transfer)}${r.nominal_diterima != null ? ' · ' + rp(r.nominal_diterima) : ''}</div>`}</td>
+        <td>${esc((r.data || {}).kontak || '-')}</td>${club ? `<td>${r.nilai_seleksi ?? '-'}</td>` : ''}
+        <td class="noprint"><button data-p="${r.id}" class="${r.status === 'menunggu' ? 'p' : ''}">${r.status === 'menunggu' ? (club ? 'Seleksi' : 'Periksa') : 'Lihat'}</button></td></tr>`).join('')}</table>` : '<p class="mut">Belum ada pendaftar.</p>';
+    };
+    $('#efs').onchange = draw; draw();
+    $('#et').onclick = e => { const b = e.target.closest('[data-p]'); if (b) periksa(rows.find(r => r.id === b.dataset.p), k); };
+    $('#eCsv').onclick = () => csv('pendaftar-' + k.nama.replace(/[^\w]+/g, '-').toLowerCase() + '.csv',
+      [club ? ['Nama', 'Kelas', 'Status', 'Alasan bergabung', 'Nilai seleksi', 'Kontak', 'Catatan', 'Waktu daftar'] : ['Nama', 'Kelas', 'Status', 'Pengirim', 'Tanggal transfer', 'Jumlah dikonfirmasi', 'Kontak', 'Catatan', 'Waktu daftar'],
+       ...ps.map(r => club ? [r.nama_anak, r.kelas, r.status, (r.data || {}).motivasi, r.nilai_seleksi, (r.data || {}).kontak, r.catatan, r.created_at]
+         : [r.nama_anak, r.kelas, r.status, r.nama_pengirim, r.tanggal_transfer, r.nominal_diterima, (r.data || {}).kontak, r.catatan, r.created_at])]);
   };
-  $('#ej').onchange = $('#ek').oninput = isiMurid;
-  $('#ekls').onchange = e => { kel = e.target.value; isiMurid(); };
-  $('#ef').onchange = rekap;
-  $('#eAdd').onclick = async () => {
-    const keg = $('#ek').value.trim(), ids = [...document.querySelectorAll('#em input:checked')].map(i => i.dataset.id);
-    if (!keg) return msg('Isi nama kegiatan.', true); if (!ids.length) return msg('Centang murid yang akan didaftarkan.', true);
-    const byId = new Map(g.map(x => [String(x.guest_id), x]));
-    await run(sb.from('pendaftaran_kegiatan').upsert(ids.map(id => ({ jenis: $('#ej').value, kegiatan: keg, guest_id: id, nama: byId.get(id).guest_name, kelas: String(byId.get(id).instansi_kelas || '').trim() })), { onConflict: 'jenis,kegiatan,guest_id', ignoreDuplicates: true }));
-    MODUL.ekskul();
-  };
-  $('#eCsv').onclick = () => csv('peserta-kegiatan.csv', [['Jenis', 'Kegiatan', 'Nama', 'Kelas'], ...rows.filter(r => !$('#ef').value || r.kegiatan === $('#ef').value).map(r => [r.jenis, r.kegiatan, r.nama, r.kelas])]);
-  $('#view').onclick = async e => { const id = e.target.dataset.del; if (id && confirm('Keluarkan murid ini dari kegiatan?')) { await run(sb.from('pendaftaran_kegiatan').delete().eq('id', id)); MODUL.ekskul(); } };
-  isiMurid(); rekap();
+  async function periksa(r, k) {
+    const club = k.jenis === 'club', d = r.data || {};
+    let dlg = document.getElementById('dlgEC'); if (dlg) dlg.remove();
+    dlg = document.createElement('dialog'); dlg.id = 'dlgEC'; dlg.style.cssText = 'border:0;border-radius:18px;padding:20px;width:min(520px,calc(100% - 24px));max-height:calc(100vh - 24px);overflow-y:auto';
+    dlg.innerHTML = `<h3 style="margin:0">${esc(r.nama_anak)}</h3><div class="mut">${esc(r.kelas || '')} · ${esc(k.nama)}</div>
+      ${club ? `<p style="margin:12px 0 4px"><b>Alasan bergabung</b></p><div style="white-space:pre-wrap">${esc(d.motivasi || '-')}</div>`
+        : `<p style="margin:12px 0 4px">Pengirim: <b>${esc(r.nama_pengirim || '-')}</b> · ${tglID(r.tanggal_transfer)}<br>Biaya seharusnya: <b>${rp(k.biaya)}</b></p><div id="ebk" class="mut">Memuat bukti…</div>`}
+      <p class="mut" style="margin:10px 0">Kontak darurat: ${esc(d.kontak || '-')}${d.kaos ? ' · Kaos: ' + esc(d.kaos) : ''}${d.kesehatan ? '<br>Kesehatan: ' + esc(d.kesehatan) : ''}</p>
+      ${club ? `<label for="enl">Nilai seleksi (opsional)</label><input id="enl" type="number" step="0.1" min="0" max="100" value="${r.nilai_seleksi ?? ''}" style="max-width:160px">`
+        : `<label for="enm">Jumlah yang Anda terima di rekening (Rp)</label><input id="enm" type="number" min="0" step="1000" value="${r.nominal_diterima ?? k.biaya}" style="max-width:220px">`}
+      <label for="enc" style="margin-top:10px">Catatan untuk orang tua ${club ? '' : '(wajib jika ditolak)'}</label><textarea id="enc" rows="2" maxlength="300">${esc(r.catatan || '')}</textarea>
+      <div id="eerr" style="color:#bc3d33;font-weight:650;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px"><button data-s="x">Tutup</button>
+      ${r.status !== 'menunggu' ? '<button data-s="menunggu">Kembalikan ke menunggu</button>' : ''}<button data-s="ditolak">${club ? 'Tidak diterima' : 'Tolak'}</button><button class="p" data-s="${club ? 'diterima' : 'lunas'}">${club ? 'Terima' : 'Konfirmasi lunas'}</button></div>`;
+    document.body.appendChild(dlg); dlg.showModal();
+    if (!club) {
+      if (!r.bukti_path) $('#ebk').textContent = 'Tidak ada bukti transfer.';
+      else sb.storage.from('bukti').createSignedUrl(r.bukti_path, 600).then(({ data, error }) => {
+        $('#ebk').innerHTML = error ? 'Bukti tidak dapat dimuat: ' + esc(error.message) : `<a href="${esc(data.signedUrl)}" target="_blank" rel="noopener"><img src="${esc(data.signedUrl)}" alt="Bukti transfer" style="max-width:100%;max-height:50vh;display:block;margin:6px auto;border-radius:12px;border:1px solid #cbd8e6"></a>`;
+      });
+    }
+    dlg.onclick = async e => {
+      const b = e.target.closest('[data-s]'); if (!b) return;
+      const st = b.dataset.s; if (st === 'x') return dlg.close();
+      const cat = $('#enc').value.trim(), err = $('#eerr'); err.textContent = '';
+      if (st === 'ditolak' && !cat && !club) return err.textContent = 'Tulis alasan penolakan agar orang tua tahu apa yang perlu diperbaiki.';
+      const upd = { status: st, catatan: cat || null, verified_at: st === 'menunggu' ? null : new Date().toISOString() };
+      if (club) { const v = $('#enl').value; upd.nilai_seleksi = v === '' ? null : Number(v); if (st === 'diterima' && k.kuota && rows.filter(x => x.kegiatan_id === k.id && x.status === 'diterima' && x.id !== r.id).length >= k.kuota && !confirm('Kuota club sudah terpenuhi. Tetap terima anak ini?')) return; }
+      else {
+        const nom = $('#enm').value === '' ? null : Number($('#enm').value);
+        if (st === 'lunas') {
+          if (nom === null || nom < 0) return err.textContent = 'Isi jumlah yang Anda terima.';
+          if (nom !== Number(k.biaya) && !confirm(`Jumlah diterima ${rp(nom)} berbeda dari biaya ${rp(k.biaya)}. Tetap tandai lunas?`)) return;
+          upd.nominal_diterima = nom;
+        } else upd.nominal_diterima = null;
+      }
+      b.disabled = true;
+      const { error } = await sb.from('ekskul_pendaftar').update(upd).eq('id', r.id);
+      if (error) { err.textContent = 'Gagal menyimpan: ' + error.message; b.disabled = false; return; }
+      Object.assign(r, upd); dlg.close(); tampil();
+    };
+  }
+  tampil();
 };
 
 MODUL.pinjam = async function () {

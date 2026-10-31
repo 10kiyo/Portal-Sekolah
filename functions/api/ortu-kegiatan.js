@@ -7,10 +7,16 @@ import { json, cfg, dbGet, hariIni, fase, cariAnak, bolehTingkat, labelTingkat, 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_B64 = 2_800_000; // ~2 MB setelah decode
 
-async function terpakaiMap(get, ids) {
-  if (!ids.length) return {};
-  const rows = await get(`/pendaftaran_kegiatan?kegiatan_id=in.(${ids.join(',')})&status=neq.ditolak&select=kegiatan_id&limit=10000`);
-  const m = {}; rows.forEach(r => m[r.kegiatan_id] = (m[r.kegiatan_id] || 0) + 1);
+// Jumlah terpakai kuota. Kegiatan umum & ekskul: semua yang belum ditolak. Club: hanya yang sudah DITERIMA (seleksi).
+async function terpakaiMap(get, ks) {
+  const m = {}; if (!ks.length) return m;
+  const u = ks.filter(k => !k.jenis || k.jenis === 'umum'), e = ks.filter(k => k.jenis && k.jenis !== 'umum');
+  if (u.length) (await get(`/pendaftaran_kegiatan?kegiatan_id=in.(${u.map(k => k.id).join(',')})&status=neq.ditolak&select=kegiatan_id&limit=10000`)).forEach(r => m[r.kegiatan_id] = (m[r.kegiatan_id] || 0) + 1);
+  if (e.length) {
+    const club = new Set(e.filter(k => k.jenis === 'club').map(k => k.id));
+    (await get(`/ekskul_pendaftar?kegiatan_id=in.(${e.map(k => k.id).join(',')})&select=kegiatan_id,status&limit=10000`).catch(() => []))
+      .forEach(r => { if (club.has(r.kegiatan_id) ? r.status === 'diterima' : r.status !== 'ditolak') m[r.kegiatan_id] = (m[r.kegiatan_id] || 0) + 1; });
+  }
   return m;
 }
 
@@ -32,16 +38,18 @@ export async function onRequestPost({ request, env }) {
       const ks = sem.filter(k => bolehTingkat(k, anak));
       // Tautan khusus kegiatan yang bukan untuk tingkat anak ini: beri tahu alasannya (tanpa membuka isi kegiatan).
       const terkunci = fokus ? sem.filter(k => k.id === fokus && !bolehTingkat(k, anak)).map(k => ({ nama: k.nama, untuk: labelTingkat(k) }))[0] || null : null;
-      const ids = ks.map(k => k.id);
-      const [tp, mine] = await Promise.all([
-        terpakaiMap(get, ids),
-        ids.length ? get(`/pendaftaran_kegiatan?anak_key=eq.${encodeURIComponent(anak.key)}&kegiatan_id=in.(${ids.join(',')})&select=kegiatan_id,status,catatan_panitia,nama_pengirim,tanggal_transfer,created_at`) : []
+      const idU = ks.filter(k => !k.jenis || k.jenis === 'umum').map(k => k.id), idE = ks.filter(k => k.jenis && k.jenis !== 'umum').map(k => k.id);
+      const ak = encodeURIComponent(anak.key);
+      const [tp, mineU, mineE] = await Promise.all([
+        terpakaiMap(get, ks),
+        idU.length ? get(`/pendaftaran_kegiatan?anak_key=eq.${ak}&kegiatan_id=in.(${idU.join(',')})&select=kegiatan_id,status,catatan_panitia,nama_pengirim,tanggal_transfer,created_at`) : [],
+        idE.length ? get(`/ekskul_pendaftar?anak_key=eq.${ak}&kegiatan_id=in.(${idE.join(',')})&select=kegiatan_id,status,catatan,nama_pengirim,tanggal_transfer,created_at`).catch(() => []) : []
       ]);
-      const mm = Object.fromEntries(mine.map(x => [x.kegiatan_id, x]));
+      const mm = Object.fromEntries([...mineU, ...mineE.map(x => ({ ...x, catatan_panitia: x.catatan }))].map(x => [x.kegiatan_id, x]));
       return json(200, {
         terkunci, anakKelas: anak.kelas,
         kegiatan: ks.map(k => ({
-          id: k.id, nama: k.nama, deskripsi: k.deskripsi, biaya: k.biaya, rekening: k.rekening,
+          id: k.id, nama: k.nama, deskripsi: k.deskripsi, biaya: k.biaya, rekening: k.rekening, jenis: k.jenis || 'umum',
           buka_daftar: k.buka_daftar, tutup_daftar: k.tutup_daftar, tanggal_kegiatan: k.tanggal_kegiatan,
           sisa: k.kuota != null ? Math.max(0, k.kuota - (tp[k.id] || 0)) : null,
           tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan, untuk: labelTingkat(k), terbatas: tingkatKegiatan(k).length > 0,
@@ -56,21 +64,33 @@ export async function onRequestPost({ request, env }) {
       const k = (await get(`/kegiatan?id=eq.${kid}&select=*`))[0];
       if (!k) return json(404, { error: 'Kegiatan tidak ditemukan.' });
       if (!bolehTingkat(k, anak)) return json(403, { error: `Kegiatan ini khusus untuk ${labelTingkat(k)}. Anak ini berada di kelas ${anak.kelas || '-'}.` });
+      const ec = k.jenis === 'ekskul' || k.jenis === 'club', club = k.jenis === 'club', TB = ec ? 'ekskul_pendaftar' : 'pendaftaran_kegiatan';
       const [tp, ex] = await Promise.all([
-        terpakaiMap(get, [kid]),
-        get(`/pendaftaran_kegiatan?kegiatan_id=eq.${kid}&anak_key=eq.${encodeURIComponent(anak.key)}&select=id,status,bukti_path`)
+        terpakaiMap(get, [k]),
+        get(`/${TB}?kegiatan_id=eq.${kid}&anak_key=eq.${encodeURIComponent(anak.key)}&select=id,status,bukti_path`)
       ]);
       const f = fase(k, tp[kid] || 0, today), old = ex[0] || null;
-      if (old && old.status !== 'ditolak') return json(409, { error: 'Anak ini sudah terdaftar untuk kegiatan ini.' });
+      if (old && (club || old.status !== 'ditolak')) return json(409, { error: 'Anak ini sudah terdaftar untuk kegiatan ini.' });
       if (!(f === 'dibuka' || (old && f === 'ditutup'))) return json(400, { error: f === 'penuh' ? 'Mohon maaf, kuota sudah penuh.' : 'Pendaftaran tidak sedang dibuka.' });
 
       const nama_pengirim = String(b.nama_pengirim || '').trim().slice(0, 60);
       const tanggal_transfer = String(b.tanggal_transfer || '');
       const kontak = String(b.kontak || '').trim().slice(0, 40);
-      if (!nama_pengirim || !/^\d{4}-\d{2}-\d{2}$/.test(tanggal_transfer) || !kontak) return json(400, { error: 'Lengkapi nama pengirim, tanggal transfer, dan kontak darurat.' });
+      if (club ? !kontak : (!nama_pengirim || !/^\d{4}-\d{2}-\d{2}$/.test(tanggal_transfer) || !kontak)) return json(400, { error: club ? 'Isi nomor kontak darurat.' : 'Lengkapi nama pengirim, tanggal transfer, dan kontak darurat.' });
       const kaos = k.tanya_kaos ? String(b.kaos || '').trim().slice(0, 20) : '';
       if (k.tanya_kaos && !kaos) return json(400, { error: 'Isi ukuran kaos.' });
       if (b.setuju !== true) return json(400, { error: 'Centang persetujuan orang tua terlebih dahulu.' });
+      const jh0 = { ...c.h, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
+
+      // Club: gratis, tanpa bukti transfer; masuk antrean seleksi pustakawan.
+      if (club) {
+        const motivasi = String(b.motivasi || '').trim().slice(0, 500);
+        if (!motivasi) return json(400, { error: 'Tulis alasan anak ingin bergabung dengan club ini.' });
+        const data = { kontak, motivasi };
+        if (k.tanya_kesehatan) data.kesehatan = String(b.kesehatan || '').trim().slice(0, 200);
+        const w = await fetch(`${c.REST}/ekskul_pendaftar`, { method: 'POST', headers: jh0, body: JSON.stringify({ kegiatan_id: kid, anak_key: anak.key, nama_anak: anak.nama, kelas: anak.kelas, status: 'menunggu', data }) });
+        return w.ok ? json(200, { ok: true }) : json(w.status === 409 ? 409 : 500, { error: w.status === 409 ? 'Anak ini sudah terdaftar untuk kegiatan ini.' : 'Gagal menyimpan pendaftaran. Pastikan supabase-ekskul-club.sql sudah dijalankan.' });
+      }
 
       // Bukti transfer: hanya gambar JPEG/PNG/WEBP, maksimal ~2 MB, dicek juga dari byte awal file.
       const s = String(b.bukti || ''), i = s.indexOf(','), head = s.slice(0, i), b64 = s.slice(i + 1);
@@ -84,18 +104,18 @@ export async function onRequestPost({ request, env }) {
                  (mt[1] === 'webp' && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57);
       if (!ok) return json(400, { error: 'Berkas bukan foto yang valid.' });
 
-      const path = `${kid}/${crypto.randomUUID()}.${mt[1] === 'jpeg' ? 'jpg' : mt[1]}`;
+      const path = `${ec ? 'ekskul/' : ''}${kid}/${crypto.randomUUID()}.${mt[1] === 'jpeg' ? 'jpg' : mt[1]}`;
       const up = await fetch(`${c.URL}/storage/v1/object/bukti/${path}`, { method: 'POST', headers: { ...c.h, 'Content-Type': `image/${mt[1]}` }, body: bytes });
       if (!up.ok) return json(500, { error: 'Gagal mengunggah bukti. Pastikan bucket "bukti" sudah dibuat (lihat SQL).' });
 
       const data = { kontak };
       if (k.tanya_kaos) data.kaos = kaos;
       if (k.tanya_kesehatan) data.kesehatan = String(b.kesehatan || '').trim().slice(0, 200);
-      const row = { nama_pengirim, tanggal_transfer, data, bukti_path: path, status: 'menunggu', catatan_panitia: null, verified_at: null, created_at: new Date().toISOString() };
-      const jh = { ...c.h, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
+      const row = { nama_pengirim, tanggal_transfer, data, bukti_path: path, status: 'menunggu', verified_at: null, created_at: new Date().toISOString(), [ec ? 'catatan' : 'catatan_panitia']: null, ...(ec ? { nominal_diterima: null } : {}) };
+      const jh = jh0;
       const w = old
-        ? await fetch(`${c.REST}/pendaftaran_kegiatan?id=eq.${old.id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(row) })
-        : await fetch(`${c.REST}/pendaftaran_kegiatan`, { method: 'POST', headers: jh, body: JSON.stringify({ ...row, kegiatan_id: kid, anak_key: anak.key, nama_anak: anak.nama, kelas: anak.kelas }) });
+        ? await fetch(`${c.REST}/${TB}?id=eq.${old.id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(row) })
+        : await fetch(`${c.REST}/${TB}`, { method: 'POST', headers: jh, body: JSON.stringify({ ...row, kegiatan_id: kid, anak_key: anak.key, nama_anak: anak.nama, kelas: anak.kelas }) });
       if (!w.ok) {
         await fetch(`${c.URL}/storage/v1/object/bukti/${path}`, { method: 'DELETE', headers: c.h }).catch(() => {});
         return json(w.status === 409 ? 409 : 500, { error: w.status === 409 ? 'Anak ini sudah terdaftar untuk kegiatan ini.' : 'Gagal menyimpan pendaftaran.' });

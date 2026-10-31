@@ -37,7 +37,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px 6px;border-bottom:1px solid #e6eef5;text-align:left;vertical-align:top}th{color:var(--mute);font-size:12px;text-transform:uppercase}
-dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px));box-shadow:0 20px 60px #102a4350}dialog::backdrop{background:#102a4380}
+dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;box-shadow:0 20px 60px #102a4350}
+#fK.pick{padding-bottom:300px}dialog::backdrop{background:#102a4380}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid2 .full{grid-column:1/-1}
 .bukti{max-width:100%;max-height:52vh;display:block;margin:10px auto;border-radius:12px;border:1px solid var(--line)}
 .emb .wrap{padding-top:12px}
@@ -76,11 +77,12 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px
   <form id="fK" method="dialog" style="margin:0">
     <h2 id="dlgKt" style="margin-bottom:12px">Kegiatan</h2>
     <div class="grid2">
+      <div class="full"><label>Jenis kegiatan</label><select name="jenis" id="jenisK"><option value="umum">Kegiatan biasa (pendaftar dikelola panitia)</option><option value="ekskul">Ekstrakurikuler (berbayar, pendaftar dikelola Bu Laras)</option><option value="club">Club (gratis + seleksi, pendaftar dikelola Bu Laras)</option></select><div class="mut" id="jenisInfo" style="margin-top:6px"></div></div>
       <div class="full"><label>Nama kegiatan</label><input name="nama" maxlength="100" required placeholder="mis. Perkemahan Sabtu-Minggu"></div>
       <div class="full"><label>Deskripsi / info untuk orang tua</label><textarea name="deskripsi" rows="3" maxlength="1000" placeholder="Tempat, jam kumpul, barang bawaan…"></textarea></div>
-      <div><label>Biaya (Rp)</label><input name="biaya" type="number" min="0" step="1000" required value="0"></div>
+       <div id="wBiaya"><label>Biaya (Rp)</label><input name="biaya" type="number" min="0" step="1000" required value="0"></div>
       <div><label>Kuota (kosongkan jika tidak dibatasi)</label><input name="kuota" type="number" min="1"></div>
-      <div class="full"><label>Data tambahan di formulir orang tua</label>
+      <div class="full" id="wTambah"><label>Data tambahan di formulir orang tua</label>
         <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" name="tanya_kaos" style="width:auto"> Tanya ukuran kaos</label>
         <label style="font-weight:400;display:flex;gap:8px;align-items:center"><input type="checkbox" name="tanya_kesehatan" style="width:auto"> Tanya alergi / kondisi kesehatan</label>
         <div class="mut" style="margin-top:6px">Nama pengirim, tanggal transfer, foto bukti, dan kontak darurat selalu ada.</div></div>
@@ -88,10 +90,10 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px
         <legend style="font-weight:700;color:var(--navy);font-size:14px;padding:0 6px">Siapa yang boleh mendaftar</legend>
         <div class="mut" style="margin-bottom:6px">Centang tingkat kelas yang boleh mendaftar lewat kode akses murid. Jika tidak ada yang dicentang, semua kelas boleh.</div>
         <div id="tk" style="display:flex;gap:6px 16px;flex-wrap:wrap"></div>
-        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" name="untuk_umum" style="width:auto"> Buka juga untuk umum (peserta dari sekolah lain, tanpa kode akses)</label>
-        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" name="tampil_info" style="width:auto" checked> Tampilkan tautan pendaftaran umum di halaman Info Terbaru</label>
+        <div id="wUmum"><label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" name="untuk_umum" style="width:auto"> Buka juga untuk umum (peserta dari sekolah lain, tanpa kode akses)</label>
+        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" name="tampil_info" style="width:auto" checked> Tampilkan tautan pendaftaran umum di halaman Info Terbaru</label></div>
       </fieldset>
-      <div class="full"><label>Rekening tujuan transfer</label><textarea name="rekening" rows="2" maxlength="300" placeholder="Bank … 1234567890 a.n. …"></textarea></div>
+      <div class="full" id="wRek"><label>Rekening tujuan transfer</label><textarea name="rekening" rows="2" maxlength="300" placeholder="Bank … 1234567890 a.n. …"></textarea></div>
       <div><label>Pendaftaran dibuka</label><input name="buka_daftar" type="date" required></div>
       <div><label>Pendaftaran ditutup</label><input name="tutup_daftar" type="date" required></div>
       <div class="full"><label>Tanggal kegiatan (setelah ini kartu hilang dari halaman orang tua)</label><input name="tanggal_kegiatan" type="date" required></div>
@@ -155,11 +157,11 @@ const stat = id => { const p = D.pendaftar.filter(x => x.kegiatan_id === id), n 
 
 function renderList() {
   $('#klist').innerHTML = D.kegiatan.length ? D.kegiatan.map(k => {
-    const s = stat(k.id), f = FASE[k.fase];
+    const s = stat(k.id), f = FASE[k.fase], ec = k.jenis === 'ekskul' || k.jenis === 'club';
     return `<div class="k ${k.id === sel ? 'sel' : ''}"><div class="top"><div><h3>${esc(k.nama)}</h3><div class="mut">Kegiatan ${tgl(k.tanggal_kegiatan)} · Daftar ${tgl(k.buka_daftar)} – ${tgl(k.tutup_daftar)} · ${k.biaya ? rp(k.biaya) : 'Gratis'}${k.kuota ? ' · Kuota ' + k.kuota : ''}</div></div><span class="pill ${f[1]}">${f[0]}</span></div>
-    <div style="margin-top:6px"><span class="pill blue">Untuk ${untukLabel(k)}</span> ${k.untuk_umum ? '<span class="pill ok">Terbuka untuk umum</span>' : ''}</div>
-    <div class="mut" style="margin-top:6px">${s.total} pendaftar · ${s.lunas} lunas · ${s.menunggu} menunggu</div>
-    <div class="acts"><button class="sm" data-a="buka" data-id="${k.id}">Kelola pendaftar</button><button class="sm sec" data-a="edit" data-id="${k.id}">Edit</button><button class="sm sec" data-a="dup" data-id="${k.id}">Duplikat</button>
+    <div style="margin-top:6px">${ec ? `<span class="pill warn">${k.jenis === 'club' ? 'Club' : 'Ekskul'}</span> ` : ''}<span class="pill blue">Untuk ${untukLabel(k)}</span> ${k.untuk_umum ? '<span class="pill ok">Terbuka untuk umum</span>' : ''}</div>
+    <div class="mut" style="margin-top:6px">${ec ? `${k.jumlah_ec} pendaftar · data dikelola Bu Laras (menu Pustakawan › Ekskul & club)` : `${s.total} pendaftar · ${s.lunas} lunas · ${s.menunggu} menunggu`}</div>
+    <div class="acts">${ec ? '' : `<button class="sm" data-a="buka" data-id="${k.id}">Kelola pendaftar</button>`}<button class="sm sec" data-a="edit" data-id="${k.id}">Edit</button><button class="sm sec" data-a="dup" data-id="${k.id}">Duplikat</button>
     <button class="sm sec" data-a="link" data-id="${k.id}">Salin tautan murid</button>${k.untuk_umum ? `<button class="sm sec" data-a="linku" data-id="${k.id}">Salin tautan umum</button>` : ''}
     ${k.fase !== 'selesai' ? `<button class="sm sec" data-a="aktif" data-id="${k.id}" data-v="${!k.aktif}">${k.aktif ? 'Tutup pendaftaran' : 'Buka pendaftaran'}</button>` : ''}
     <button class="sm sec" data-a="hapus" data-id="${k.id}">Hapus</button></div></div>`;
@@ -183,14 +185,39 @@ $('#klist').onclick = async e => {
 function formK(k) {
   const f = $('#fK'); editId = k && k.id; $('#errK').textContent = '';
   $('#dlgKt').textContent = editId ? 'Edit kegiatan' : 'Tambah kegiatan';
-  const v = k || { biaya: 0, buka_daftar: D.today };
+  const v = k || { biaya: 0, buka_daftar: D.today, jenis: 'umum' };
   ['nama', 'deskripsi', 'biaya', 'kuota', 'rekening', 'buka_daftar', 'tutup_daftar', 'tanggal_kegiatan'].forEach(n => f[n].value = v[n] ?? '');
   f.tanya_kaos.checked = !!v.tanya_kaos; f.tanya_kesehatan.checked = !!v.tanya_kesehatan;
   const tk = new Set((v.tingkat || []).map(Number)); [1, 2, 3, 4, 5, 6].forEach(n => f['tk' + n].checked = tk.has(n));
   f.untuk_umum.checked = !!v.untuk_umum; f.tampil_info.checked = v.tampil_info !== false;
+  f.jenis.value = v.jenis || 'umum'; aturJenis();
   $('#dlgK').showModal();
 }
 $('#tk').innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<label style="font-weight:400;display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" name="tk${n}" style="width:auto"> Kelas ${n}</label>`).join('');
+/* Popup kalender bawaan browser terpotong bila kolom tanggal ada di dasar dialog: beri ruang kosong lalu gulir otomatis */
+$('#fK').addEventListener('focusin', e => {
+  const t = e.target, f = $('#fK');
+  if (t.matches('input[type=date]')) {
+    f.classList.add('pick');
+    setTimeout(() => t.scrollIntoView({ block: 'center', behavior: 'smooth' }), 60);
+  } else f.classList.remove('pick');
+});
+$('#dlgK').addEventListener('close', () => $('#fK').classList.remove('pick'));
+const INFO_JENIS = {
+  umum: '',
+  ekskul: 'Orang tua mendaftar lewat tautan murid dan mengunggah bukti transfer. Bu Laras yang memeriksa dan mengonfirmasi jumlah pembayaran. Panitia tidak melihat data pendaftar.',
+  club: 'Gratis. Orang tua mendaftar lewat tautan murid dan menulis alasan anak bergabung. Bu Laras yang melakukan seleksi. Panitia tidak melihat data pendaftar.'
+};
+function aturJenis() {
+  const f = $('#fK'), j = f.jenis.value, ec = j !== 'umum';
+  $('#jenisInfo').textContent = INFO_JENIS[j];
+  $('#wUmum').classList.toggle('hidden', ec);
+  if (ec) { f.untuk_umum.checked = false; f.tampil_info.checked = false; }
+  $('#wBiaya').classList.toggle('hidden', j === 'club'); $('#wRek').classList.toggle('hidden', j === 'club');
+  if (j === 'club') { f.biaya.value = 0; f.rekening.value = ''; }
+  f.biaya.required = j !== 'club';
+}
+$('#jenisK').onchange = aturJenis;
 $('#tambah').onclick = () => formK(null);
 $('#batalK').onclick = () => $('#dlgK').close();
 $('#fK').onsubmit = async e => {
@@ -199,7 +226,7 @@ $('#fK').onsubmit = async e => {
     await api({ action: 'simpan', id: editId, nama: f.nama.value, deskripsi: f.deskripsi.value, biaya: Number(f.biaya.value), kuota: f.kuota.value === '' ? null : Number(f.kuota.value),
       tanya_kaos: f.tanya_kaos.checked, tanya_kesehatan: f.tanya_kesehatan.checked,
       tingkat: [1, 2, 3, 4, 5, 6].filter(n => f['tk' + n].checked), untuk_umum: f.untuk_umum.checked, tampil_info: f.tampil_info.checked,
-      rekening: f.rekening.value, buka_daftar: f.buka_daftar.value, tutup_daftar: f.tutup_daftar.value, tanggal_kegiatan: f.tanggal_kegiatan.value });
+      rekening: f.rekening.value, buka_daftar: f.buka_daftar.value, tutup_daftar: f.tutup_daftar.value, tanggal_kegiatan: f.tanggal_kegiatan.value, jenis: f.jenis.value });
     $('#dlgK').close(); await muat();
   } catch (err) { $('#errK').textContent = err.message; } finally { b.disabled = false; }
 };

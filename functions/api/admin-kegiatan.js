@@ -21,6 +21,13 @@ export async function onRequest({ request, env }) {
       ]).catch(() => null);
       if (!ks) return json(500, { error: 'Tabel kegiatan belum ada atau tidak terbaca. Jalankan supabase-kegiatan.sql di Supabase SQL Editor.' });
       const tp = {}; ps.forEach(p => { if (p.status !== 'ditolak') tp[p.kegiatan_id] = (tp[p.kegiatan_id] || 0) + 1; });
+      // Ekskul & club: panitia HANYA menerima jumlah (tanpa nama/data). Rinciannya milik pustakawan.
+      const ec = await get('/ekskul_pendaftar?select=kegiatan_id,status&limit=10000').catch(() => []);
+      const jumlahEC = {}, jenisK = Object.fromEntries(ks.map(k => [k.id, k.jenis || 'umum']));
+      ec.forEach(r => {
+        jumlahEC[r.kegiatan_id] = (jumlahEC[r.kegiatan_id] || 0) + 1;
+        if (jenisK[r.kegiatan_id] === 'club' ? r.status === 'diterima' : r.status !== 'ditolak') tp[r.kegiatan_id] = (tp[r.kegiatan_id] || 0) + 1;
+      });
       // Daftar murid unik (satu anak bisa punya beberapa baris dari beberapa guru).
       const mm = new Map();
       mu.forEach(m => {
@@ -30,7 +37,7 @@ export async function onRequest({ request, env }) {
       });
       return json(200, {
         today,
-        kegiatan: ks.map(k => ({ ...k, terpakai: tp[k.id] || 0, fase: fase(k, tp[k.id] || 0, today) })),
+        kegiatan: ks.map(k => ({ ...k, jenis: k.jenis || 'umum', jumlah_ec: jumlahEC[k.id] || 0, terpakai: tp[k.id] || 0, fase: fase(k, tp[k.id] || 0, today) })),
         pendaftar: ps.map(p => ({ ...p, has_bukti: !!p.bukti_path, bukti_path: undefined })),
         murid: [...mm.values()].map(e => ({ key: e.key, nama: e.nama, kelas: [...e.kelas].join(', ') }))
       });
@@ -50,8 +57,13 @@ export async function onRequest({ request, env }) {
         tanya_kaos: b.tanya_kaos === true, tanya_kesehatan: b.tanya_kesehatan === true,
         // tingkat kosong/null = semua kelas; selain itu hanya murid di tingkat tersebut yang bisa mendaftar
         tingkat: [...new Set((Array.isArray(b.tingkat) ? b.tingkat : []).map(Number))].filter(n => Number.isInteger(n) && n >= 1 && n <= 6).sort(),
-        untuk_umum: b.untuk_umum === true, tampil_info: b.tampil_info !== false
+        untuk_umum: b.untuk_umum === true, tampil_info: b.tampil_info !== false,
+        jenis: ['umum', 'ekskul', 'club'].includes(b.jenis) ? b.jenis : 'umum'
       };
+      // Ekskul & club hanya lewat tautan murid (kode akses): tidak ada pendaftaran umum. Club selalu gratis.
+      if (k.jenis !== 'umum') { k.untuk_umum = false; k.tampil_info = false; k.tanya_kaos = k.jenis === 'ekskul' ? k.tanya_kaos : false; }
+      if (k.jenis === 'club') { k.biaya = 0; k.rekening = null; }
+      if (k.jenis === 'ekskul' && k.biaya > 0 && !k.rekening) return json(400, { error: 'Isi rekening tujuan transfer (rekening Bu Laras) untuk ekskul berbayar.' });
       if (!k.tingkat.length) k.tingkat = null;
       if (!k.nama) return json(400, { error: 'Nama kegiatan wajib diisi.' });
       if (!Number.isInteger(k.biaya) || k.biaya < 0 || k.biaya > 100000000) return json(400, { error: 'Biaya tidak valid.' });
@@ -63,7 +75,7 @@ export async function onRequest({ request, env }) {
       const r = id
         ? await fetch(`${c.REST}/kegiatan?id=eq.${id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(k) })
         : await fetch(`${c.REST}/kegiatan`, { method: 'POST', headers: jh, body: JSON.stringify(k) });
-      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan supabase-kegiatan.sql, supabase-kegiatan-opsi.sql, dan supabase-kegiatan-tingkat.sql sudah dijalankan.' });
+      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan supabase-kegiatan.sql, supabase-kegiatan-opsi.sql, dan supabase-kegiatan-tingkat.sql sudah dijalankan, dan supabase-ekskul-club.sql sudah dijalankan.' });
       return json(200, { ok: true });
     }
 
@@ -75,7 +87,7 @@ export async function onRequest({ request, env }) {
 
     if (b.action === 'hapus') {
       if (!UUID.test(String(b.id || ''))) return json(400, { error: 'ID tidak valid.' });
-      const n = await get(`/pendaftaran_kegiatan?kegiatan_id=eq.${b.id}&select=id&limit=1`);
+      const n = [...await get(`/pendaftaran_kegiatan?kegiatan_id=eq.${b.id}&select=id&limit=1`), ...await get(`/ekskul_pendaftar?kegiatan_id=eq.${b.id}&select=id&limit=1`).catch(() => [])];
       if (n.length) return json(400, { error: 'Kegiatan sudah punya pendaftar, jadi tidak bisa dihapus. Gunakan "Tutup pendaftaran" saja.' });
       const r = await fetch(`${c.REST}/kegiatan?id=eq.${b.id}`, { method: 'DELETE', headers: c.h });
       return r.ok ? json(200, { ok: true }) : json(500, { error: 'Gagal menghapus.' });

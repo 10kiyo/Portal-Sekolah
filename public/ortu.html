@@ -82,7 +82,8 @@ let kodeAktif = '';
 const FOKUS = new URLSearchParams(location.search).get('k') || '';   // tautan khusus satu kegiatan: ortu.html?k=<id>
 const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 const FASE = { dibuka: '', penuh: 'Kuota sudah penuh.', ditutup: 'Pendaftaran sudah ditutup.' };
-const SPILL = { menunggu: ['warn', 'Menunggu verifikasi'], lunas: ['ok', 'Lunas'], ditolak: ['bad', 'Perlu diperbaiki'] };
+const SPILL = { menunggu: ['warn', 'Menunggu verifikasi'], lunas: ['ok', 'Lunas'], diterima: ['ok', 'Diterima'], ditolak: ['bad', 'Perlu diperbaiki'] };
+const SPILL_CLUB = { menunggu: ['warn', 'Menunggu seleksi'], diterima: ['ok', 'Diterima'], ditolak: ['bad', 'Belum diterima'] };
 
 async function post(body) {
   const r = await fetch('/api/ortu-kegiatan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kode: kodeAktif, ...body }) });
@@ -116,29 +117,32 @@ async function muatKegiatan() {
   } catch (e) { box.innerHTML = ''; }
 }
 function kartuKegiatan(k) {
-  const d = k.daftar, st = d && SPILL[d.status];
-  const bisa = k.fase === 'dibuka' || (d && d.status === 'ditolak' && k.fase === 'ditutup');
+  const club = k.jenis === 'club', pj = k.jenis === 'umum' ? 'panitia' : 'pustakawan';
+  const d = k.daftar, st = d && (club ? SPILL_CLUB : SPILL)[d.status];
+  const bisa = k.fase === 'dibuka' || (d && !club && d.status === 'ditolak' && k.fase === 'ditutup');
   let aksi = '';
-  if (d && d.status !== 'ditolak') aksi = `<div class="box ${d.status === 'lunas' ? 'ok' : ''}">${d.status === 'lunas' ? 'Pembayaran sudah dikonfirmasi panitia. Terima kasih.' : 'Bukti transfer sudah kami terima dan sedang diperiksa panitia.'}</div>`;
+  if (club && d) aksi = `<div class="box ${d.status === 'diterima' ? 'ok' : ''}">${d.status === 'diterima' ? 'Selamat, anak diterima di club ini.' : d.status === 'ditolak' ? 'Mohon maaf, anak belum dapat diterima pada seleksi kali ini.' : 'Pendaftaran sudah kami terima dan sedang diseleksi pustakawan.'}${d.catatan_panitia ? '\n' + esc(d.catatan_panitia) : ''}</div>`;
+  else if (d && d.status !== 'ditolak') aksi = `<div class="box ${d.status === 'lunas' ? 'ok' : ''}">${d.status === 'lunas' ? `Pembayaran sudah dikonfirmasi ${pj}. Terima kasih.` : `Bukti transfer sudah kami terima dan sedang diperiksa ${pj}.`}</div>`;
   else {
     if (d) aksi += `<div class="box" style="background:#fbeceb;color:var(--danger)"><b>Bukti belum dapat diterima.</b>\n${esc(d.catatan_panitia || 'Silakan kirim ulang bukti transfer.')}</div>`;
     if (!bisa) aksi += `<div class="mut">${FASE[k.fase] || 'Pendaftaran belum dibuka.'}</div>`;
     else aksi += `<button data-buka="${k.id}" data-label="${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}">${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}</button>
     <form class="hidden" data-k="${k.id}">
-      <div><label>Nama pengirim transfer</label><input name="nama_pengirim" maxlength="60" required></div>
+      ${club ? '<div><label>Alasan anak ingin bergabung club ini</label><textarea name="motivasi" rows="3" maxlength="500" required placeholder="Ceritakan singkat minat dan alasan anak"></textarea></div>' : `<div><label>Nama pengirim transfer</label><input name="nama_pengirim" maxlength="60" required></div>
       <div><label>Tanggal transfer</label><input type="date" name="tanggal_transfer" required></div>
-      <div><label>Foto bukti transfer</label><input type="file" name="bukti" accept="image/*" required></div>
+      <div><label>Foto bukti transfer</label><input type="file" name="bukti" accept="image/*" required></div>`}
       ${k.tanya_kaos ? '<div><label>Ukuran kaos</label><input name="kaos" maxlength="20" required placeholder="mis. M / anak 10"></div>' : ''}
       ${k.tanya_kesehatan ? '<div><label>Alergi atau kondisi kesehatan</label><textarea name="kesehatan" rows="2" maxlength="200" placeholder="Kosongkan jika tidak ada"></textarea></div>' : ''}
       <div><label>Nomor kontak darurat</label><input name="kontak" maxlength="40" inputmode="tel" required></div>
       <label class="chk"><input type="checkbox" name="setuju" required> <span>Saya orang tua/wali dan mengizinkan anak mengikuti kegiatan ini.</span></label>
+      ${club ? '<div class="mut">Club ini memakai seleksi. Hasil seleksi akan tampil di kartu ini.</div>' : ''}
       <div><button type="submit">Kirim pendaftaran</button></div><div class="err" data-err></div>
     </form>`;
   }
   return `<div class="card kg"><div class="row"><h3>${esc(k.nama)}</h3>${st ? `<span class="pill ${st[0]}">${st[1]}</span>` : ''}</div>
     <div class="mut">Kegiatan: ${tgl(k.tanggal_kegiatan)} · Daftar sampai ${tgl(k.tutup_daftar)}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}${k.terbatas ? ' · Untuk ' + esc(k.untuk) : ''}</div>
     ${k.deskripsi ? `<div class="box">${esc(k.deskripsi)}</div>` : ''}
-    <div class="rp">${k.biaya ? rp(k.biaya) : 'Gratis'}</div>
+    ${club ? '<span class="pill blue">Club · ada seleksi</span>' : ''}<div class="rp">${k.biaya ? rp(k.biaya) : 'Gratis'}</div>
     ${k.biaya && k.rekening ? `<div class="box">Transfer ke:\n${esc(k.rekening)}</div>` : ''}
     ${aksi}</div>`;
 }
@@ -146,9 +150,9 @@ async function kirim(f) {
   const err = f.querySelector('[data-err]'), btn = f.querySelector('button[type=submit]'), fd = new FormData(f);
   err.textContent = ''; btn.disabled = true; btn.textContent = 'Mengirim…';
   try {
-    const file = fd.get('bukti');
-    if (!file || !file.size) throw new Error('Pilih foto bukti transfer.');
-    await post({ action: 'daftar', kegiatanId: f.dataset.k, bukti: await kecilkan(file), setuju: f.setuju.checked,
+    const file = fd.get('bukti'), tanpaBukti = fd.has('motivasi');
+    if (!tanpaBukti && (!file || !file.size)) throw new Error('Pilih foto bukti transfer.');
+    await post({ action: 'daftar', kegiatanId: f.dataset.k, bukti: tanpaBukti ? undefined : await kecilkan(file), setuju: f.setuju.checked, motivasi: fd.get('motivasi'),
       nama_pengirim: fd.get('nama_pengirim'), tanggal_transfer: fd.get('tanggal_transfer'), kaos: fd.get('kaos'), kesehatan: fd.get('kesehatan'), kontak: fd.get('kontak') });
     await muatKegiatan();
   } catch (e) { err.textContent = e.message || 'Gagal mengirim.'; btn.disabled = false; btn.textContent = 'Kirim pendaftaran'; }

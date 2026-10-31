@@ -99,3 +99,13 @@ KEGIATAN PER TINGKAT KELAS + PENDAFTARAN UMUM + EDIT DATA MURID OLEH OPERATOR
    (saat membuka Administrasi Kelas, kembali ke tab setelah >5 menit, atau tombol "Sinkronkan Murid"). Baris murid yang sama
    diperbarui di tempat, jadi presensi, nilai, dan kode akses TIDAK hilang. Murid nonaktif hanya disembunyikan.
    Catatan: Buku Tamu masih membaca daftar_tamu_gabungan langsung, jadi murid tambahan operator belum muncul di sana.
+
+EKSKUL & CLUB (tautan dari panitia, data hanya untuk pustakawan)
+1. Supabase > SQL Editor: jalankan supabase-ekskul-club.sql (SETELAH supabase-peran.sql & supabase-kegiatan-tingkat.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah kolom kegiatan.jenis, tabel ekskul_pendaftar (RLS: hanya peran pustakawan/admin), dan izin baca bukti transfer folder ekskul/.
+2. File diganti: public/kegiatan.html, public/ortu.html, public/modul-staf.js, functions/api/admin-kegiatan.js, functions/api/ortu-kegiatan.js.
+3. Alur: panitia > Kegiatan Sekolah > Tambah kegiatan > pilih Jenis (Ekstrakurikuler / Club) > Salin tautan murid > bagikan ke murid.
+   Ekskul: berbayar, orang tua unggah bukti transfer ke rekening Bu Laras; Bu Laras (menu Pustakawan > Ekskul & club) memeriksa bukti,
+   mengisi jumlah yang diterima, lalu Konfirmasi lunas / Tolak. Club: gratis, orang tua menulis alasan; Bu Laras menyeleksi (Terima / Tidak diterima).
+   Panitia hanya melihat jumlah pendaftar, bukan nama atau datanya. Ekskul & club tidak bisa dibuka untuk umum.
+4. Akun Bu Laras harus berperan 'pustakawan' (guru_staf.peran). Pendaftaran manual lama di menu Ekskul & club diganti alur ini.
