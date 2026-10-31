@@ -8,8 +8,11 @@
 <style>
 :root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--mute:#627d98}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
-.wrap{width:min(900px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(900px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.adm{flex:none;display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.adm:hover{filter:brightness(1.2)}.adm:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
 h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
 h2{margin:0;color:var(--navy);font-size:18px}
 .mut{color:var(--mute);font-size:14px}
@@ -45,8 +48,11 @@ h2{margin:0;color:var(--navy);font-size:18px}
 </head>
 <body>
 <div class="wrap">
-  <h1>Info Terbaru</h1>
-  <div class="mut">Pengumuman, agenda kegiatan, dan surat untuk orang tua</div>
+  <div class="top">
+    <div><h1>Info Terbaru</h1>
+    <div class="mut">Pengumuman, agenda kegiatan, dan surat untuk orang tua</div></div>
+    <a class="adm" href="/#info-admin" target="_top">⚙ Kelola info (admin)</a>
+  </div>
 
   <div class="card" id="agWrap" hidden>
     <h2>Agenda mendatang</h2>
@@ -58,7 +64,6 @@ h2{margin:0;color:var(--navy);font-size:18px}
 
   <div id="list"><div class="card empty">Memuat…</div></div>
 
-  <div class="foot"><a href="/#info-admin" target="_top">Kelola info (admin sekolah)</a></div>
 </div>
 
 <script>
@@ -125,5 +130,6 @@ fetch('/api/info?limit=200').then(r => r.json()).then(d => {
   }
 }).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat info.')}</div>`; });
 </script>
+<script src="footer-sekolah.js"></script>
 </body>
 </html>

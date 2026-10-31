@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profil Lulusan</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(960px,calc(100% - 24px));margin:0 auto;padding:24px 0 40px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
+h2{margin:0 0 12px;color:var(--navy);font-size:clamp(19px,3vw,23px);letter-spacing:-.02em}
+h3{margin:0 0 4px;color:var(--navy);font-size:16px}
+.mut{color:var(--mute);font-size:14px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:clamp(16px,3.5vw,26px);box-shadow:0 12px 30px #102a4310;margin-top:16px}
+.card p{line-height:1.7;margin:0 0 10px;overflow-wrap:anywhere}.card p:last-child{margin-bottom:0}
+.lead{font-size:clamp(17px,2.6vw,21px);line-height:1.6;color:var(--navy);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stats>div{background:var(--navy);color:#fff;border-radius:16px;padding:16px;text-align:center}
+.stats b{display:block;font-size:clamp(24px,4vw,32px);color:#f5b335;letter-spacing:-.02em}
+.stats span{font-size:14px;color:#d9e6f2}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.grid>div{border:1px solid #dbe8f2;border-radius:14px;padding:14px 16px;background:#fff}
+.grid p{font-size:14px;color:var(--mute);margin:0;line-height:1.6}
+.tags{display:flex;gap:8px;flex-wrap:wrap}.tags span{padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--navy);font-weight:700;font-size:14px}
+.emb .wrap{padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Profil Lulusan</h1>
+  <div class="mut">Gambaran peserta didik yang kami harapkan setelah lulus dari SDS Islam At-Taqwa Rawamangun</div>
+  <div id="isi"></div>
+</div>
+<script>
+/* ============================================================
+   ISI PROFIL LULUSAN — edit data di bawah ini saja.
+   Bagian yang dikosongkan ("" atau []) otomatis tidak ditampilkan.
+   Isi awal diambil dari visi/misi dan sejarah di halaman Profil Sekolah.
+   ============================================================ */
+const LULUSAN = {
+  pengantar: 'Lulusan At-Taqwa diharapkan menjadi insan yang beriman, bertaqwa dan berakhlak mulia, cerdas, sehat rohani dan jasmani, serta berperilaku Islami.',
+
+  // Angka ringkas (kosongkan label/angka yang belum ada)
+  angka: [
+    { angka: '14', label: 'angkatan telah diluluskan' },
+    { angka: '> 80', label: 'rata-rata nilai Ujian Nasional' },
+    { angka: 'A (98)', label: 'akreditasi BAN' }
+  ],
+
+  // Profil / karakter lulusan
+  profil: [
+    { judul: 'Beriman, bertaqwa, dan berakhlak mulia', isi: 'Memiliki kepribadian Islami dan terbiasa beribadah serta berperilaku baik.' },
+    { judul: 'Cerdas', isi: 'Seimbang antara daya pikir, daya qalbu (moral Islami), daya estetika, dan kinestetika.' },
+    { judul: 'Sehat rohani dan jasmani', isi: 'Tumbuh dalam lingkungan yang sehat, bersih, hijau, dan indah.' },
+    { judul: 'Terampil, kreatif, dan mandiri', isi: 'Memiliki life skill serta semangat belajar sepanjang hayat.' },
+    { judul: 'Peduli dan peka sosial', isi: 'Mampu hidup bersama (learning to live together) dengan kepekaan sosial yang tinggi.' }
+  ],
+
+  // Kelanjutan studi alumni
+  lanjutan: ['SMPN 115', 'SMPN 216', 'SMPN 255', 'SMPN 99', 'SMPN 92', 'SMP Labschool', 'Al-Azhar', 'Pondok Pesantren'],
+  lanjutanCatatan: 'Alumni tersebar di berbagai SMP negeri dan swasta favorit, pondok pesantren, bahkan ada yang melanjutkan di luar negeri.'
+};
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+if (self !== top) document.body.classList.add('emb');
+const L = LULUSAN, out = [];
+if (L.pengantar) out.push(`<section class="card"><p class="lead">${esc(L.pengantar)}</p></section>`);
+if (L.angka.length) out.push(`<section class="card"><div class="stats">${L.angka.map(x => `<div><b>${esc(x.angka)}</b><span>${esc(x.label)}</span></div>`).join('')}</div></section>`);
+if (L.profil.length) out.push(`<section class="card"><h2>Karakter Lulusan</h2><div class="grid">${L.profil.map(x => `<div><h3>${esc(x.judul)}</h3><p>${esc(x.isi)}</p></div>`).join('')}</div></section>`);
+if (L.lanjutan.length) out.push(`<section class="card"><h2>Kelanjutan Studi Alumni</h2><div class="tags">${L.lanjutan.map(x => `<span>${esc(x)}</span>`).join('')}</div>${L.lanjutanCatatan ? `<p style="margin-top:12px">${esc(L.lanjutanCatatan)}</p>` : ''}</section>`);
+document.getElementById('isi').innerHTML = out.join('');
+</script>
+<script src="footer-sekolah.js"></script>
+</body>
+</html>

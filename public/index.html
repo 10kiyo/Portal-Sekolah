@@ -133,11 +133,16 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <a class="brand" href="#beranda"><img src="logo-at-taqwa.png" alt=""><span>SDS Islam At-Taqwa</span></a>
   <div class="menu">
     <a href="#beranda" data-r="beranda">Beranda</a>
-    <a href="#profil" data-r="profil">Profil Sekolah</a>
-    <a href="#info" data-r="info">Info Terbaru</a>
+    <button type="button" class="dd" id="ddBtnP" aria-haspopup="true" aria-expanded="false" aria-controls="ddpP">Profil <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <a href="#info" data-r="info">Info Terbaru</a>
     <button type="button" class="dd" id="ddBtn" aria-haspopup="true" aria-expanded="false" aria-controls="ddp">Layanan <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <a href="#ortu" data-r="ortu">Pantau Belajar Anak</a>
   </div>
+<div class="ddp" id="ddpP" hidden>
+  <a href="#profil" data-r="profil">Profil Sekolah</a>
+  <a href="#guru" data-r="guru">Guru &amp; Staff</a>
+  <a href="#lulusan" data-r="lulusan">Profil Lulusan</a>
+</div>
 <div class="ddp" id="ddp" hidden>
   <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
   <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
@@ -213,6 +218,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
           <div class="pills">
             <a href="#beranda">Beranda</a>
             <a href="#profil">Profil Sekolah</a>
+            <a href="#guru">Guru &amp; Staff</a>
+            <a href="#lulusan">Profil Lulusan</a>
             <a href="#spmb">SPMB</a>
             <a href="#info">Info Terbaru</a>
             <a href="#buku-tamu">Buku Tamu Sekolah</a>
@@ -229,6 +236,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   </section>
   <iframe id="f-spmb" title="SPMB" hidden></iframe>
   <iframe id="f-profil" title="Profil Sekolah" hidden></iframe>
+  <iframe id="f-guru" title="Guru dan Staff" hidden></iframe>
+  <iframe id="f-lulusan" title="Profil Lulusan" hidden></iframe>
   <iframe id="f-info" title="Info Terbaru" hidden></iframe>
   <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
@@ -238,25 +247,29 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </main>
 
 <script>
-const PAGES = { spmb: 'spmb.html', profil: 'profil.html', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', lulusan: 'lulusan.html', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', lulusan: 'Profil Lulusan', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
-// ===== Dropdown "Layanan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
-const ddBtn = document.getElementById('ddBtn'), ddp = document.getElementById('ddp');
-function ddClose() { ddp.hidden = true; ddBtn.setAttribute('aria-expanded', 'false'); }
-ddBtn.onclick = e => {
-  e.stopPropagation();
-  if (!ddp.hidden) return ddClose();
-  ddp.hidden = false;
-  const r = ddBtn.getBoundingClientRect(), w = ddp.offsetWidth;
-  ddp.style.top = (r.bottom + 6) + 'px';
-  ddp.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
-  ddBtn.setAttribute('aria-expanded', 'true');
-};
-document.addEventListener('click', e => { if (!ddp.contains(e.target)) ddClose(); });
-addEventListener('keydown', e => { if (e.key === 'Escape') { ddClose(); ddBtn.focus(); } });
+// ===== Dropdown "Profil" dan "Layanan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
+const DDS = [['ddBtnP', 'ddpP'], ['ddBtn', 'ddp']].map(([b, p]) => ({ btn: document.getElementById(b), pnl: document.getElementById(p) }));
+function ddClose() { DDS.forEach(d => { d.pnl.hidden = true; d.btn.setAttribute('aria-expanded', 'false'); }); }
+DDS.forEach(d => {
+  d.btn.onclick = e => {
+    e.stopPropagation();
+    const buka = d.pnl.hidden;
+    ddClose();
+    if (!buka) return;
+    d.pnl.hidden = false;
+    const r = d.btn.getBoundingClientRect(), w = d.pnl.offsetWidth;
+    d.pnl.style.top = (r.bottom + 6) + 'px';
+    d.pnl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+    d.btn.setAttribute('aria-expanded', 'true');
+  };
+});
+document.addEventListener('click', e => { if (!DDS.some(d => d.pnl.contains(e.target))) ddClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') { const o = DDS.find(d => !d.pnl.hidden); ddClose(); if (o) o.btn.focus(); } });
 addEventListener('resize', ddClose);
 addEventListener('blur', ddClose);                       // klik ke dalam iframe
 document.querySelector('.menu').addEventListener('scroll', ddClose);
@@ -273,6 +286,7 @@ function route() {
 
   document.querySelectorAll('.menu a, .ddp a').forEach(a => a.classList.toggle('on', a.dataset.r === (r === 'info-admin' ? 'info' : r)));
   document.getElementById('ddBtn').classList.toggle('on', ['buku-tamu', 'kelas', 'kegiatan'].includes(r));
+  document.getElementById('ddBtnP').classList.toggle('on', ['profil', 'guru', 'lulusan'].includes(r));
   ddClose();
   document.getElementById('cta').classList.toggle('on', r === 'spmb');
   document.getElementById('beranda').hidden = r !== 'beranda';

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guru &amp; Staff</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(1000px,calc(100% - 24px));margin:0 auto;padding:24px 0 40px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
+h2{margin:28px 0 0;color:var(--navy);font-size:20px}
+.mut{color:var(--mute);font-size:14px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.bar input{flex:1 1 220px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#fff}
+.bar input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chips button{font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-top:14px}
+.p{background:#fff;border:1px solid #dbe8f2;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px #102a430d}
+.p .ph{aspect-ratio:3/4;background:linear-gradient(135deg,#102a43,#1677c8);display:grid;place-items:center;color:#fff;font-weight:800;font-size:44px;letter-spacing:.02em}
+.p .ph img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.p .bd{padding:12px 14px 16px}
+.p b{display:block;color:var(--navy);line-height:1.3}
+.p .j{margin-top:3px;font-size:14px;color:var(--blue);font-weight:700}
+.p .m{margin-top:6px;font-size:13px;color:var(--mute);line-height:1.45}
+.wk{display:inline-block;margin-top:6px;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#19724d;background:#eaf5ee;border-radius:99px;padding:2px 9px}
+.empty{text-align:center;color:var(--mute);padding:36px 0;background:#fff;border:1px solid #dbe8f2;border-radius:18px;margin-top:14px}
+.emb .wrap{padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Guru &amp; Staff</h1>
+  <div class="mut">Pimpinan, tenaga pendidik, dan tenaga kependidikan SDS Islam At-Taqwa Rawamangun</div>
+  <div class="bar"><input id="q" type="search" placeholder="Cari nama, jabatan, atau mapel…" aria-label="Cari guru atau staf"></div>
+  <div class="chips" id="chips"></div>
+  <div id="list"></div>
+</div>
+<script src="data-guru.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+if (self !== top) document.body.classList.add('emb');
+const DATA = (window.GURU_STAF || []), KEL = { pimpinan: 'Pimpinan', guru: 'Guru', staf: 'Staf & Tenaga Kependidikan' };
+const inisial = n => n.replace(/,.*$/, '').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+let kel = 'semua';
+
+function renderChips() {
+  const ada = Object.keys(KEL).filter(k => DATA.some(x => x.kelompok === k));
+  $('#chips').innerHTML = ada.length > 1 ? ['semua', ...ada].map(k => `<button data-k="${k}" class="${k === kel ? 'on' : ''}">${k === 'semua' ? 'Semua' : KEL[k]}</button>`).join('') : '';
+  document.querySelectorAll('#chips button').forEach(b => b.onclick = () => { kel = b.dataset.k; renderChips(); render(); });
+}
+function kartu(x) {
+  const foto = /^[\w\-./]+\.(jpe?g|png|webp)$/i.test(x.foto || '') ? `<img src="${esc(x.foto)}" alt="Foto ${esc(x.nama)}" loading="lazy">` : esc(inisial(x.nama));
+  const mp = (x.mapel || []).length ? `<div class="m">${esc(x.mapel.join(', '))}</div>` : '';
+  return `<article class="p"><div class="ph">${foto}</div><div class="bd"><b>${esc(x.nama)}</b><div class="j">${esc(x.jabatan)}</div>${mp}${x.walikelas ? `<span class="wk">Wali kelas ${esc(x.walikelas)}</span>` : ''}</div></article>`;
+}
+function render() {
+  const q = $('#q').value.trim().toLowerCase();
+  const rows = DATA.filter(x => (kel === 'semua' || x.kelompok === kel) && (!q || [x.nama, x.jabatan, (x.mapel || []).join(' '), x.walikelas].join(' ').toLowerCase().includes(q)));
+  if (!rows.length) { $('#list').innerHTML = `<div class="empty">${DATA.length ? 'Tidak ada yang cocok.' : 'Data guru dan staf belum diisi.'}</div>`; return; }
+  $('#list').innerHTML = Object.keys(KEL).map(k => {
+    const g = rows.filter(x => x.kelompok === k);
+    return g.length ? `<h2>${KEL[k]}</h2><div class="grid">${g.map(kartu).join('')}</div>` : '';
+  }).join('');
+}
+$('#q').oninput = render;
+renderChips(); render();
+</script>
+<script src="footer-sekolah.js"></script>
+</body>
+</html>
