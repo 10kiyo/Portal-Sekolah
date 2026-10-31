@@ -314,8 +314,15 @@ const SAMBUTAN = { judul: 'Sambutan Kepala Sekolah', nama: 'Ibu Nurbaiti, S.Pd.'
 // Tampil sebagai thumbnail; diputar di tempat saat diklik. Judul tertaut ke YouTube bila embed diblokir.
 fetch('/api/youtube').then(r => r.json()).then(d => {
   const v = (d.videos || []).filter(x => /^[\w-]{11}$/.test(x.id));
-  if (!v.length) { console.warn('Video YouTube kosong:', d.alasan || '(tanpa keterangan)'); return; }
   const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if (!v.length) {
+    console.warn('Video YouTube kosong:', d.alasan || '(tanpa keterangan)');
+    if (!/^UU[\w-]{22}$/.test(d.playlist || '')) return;
+    // Cadangan: pemutar daftar unggahan kanal (tidak butuh feed)
+    document.getElementById('ytList').innerHTML = `<div class="v" style="grid-column:1/-1"><div class="fr"><iframe src="https://www.youtube.com/embed/videoseries?list=${d.playlist}" title="Video terbaru SDS Islam At-Taqwa" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></div>`;
+    document.getElementById('video').hidden = false;
+    return;
+  }
   document.getElementById('ytList').innerHTML = v.map(x => `<div class="v"><div class="fr"><button type="button" class="play" data-id="${x.id}" aria-label="Putar: ${esc(x.judul)}" style="background-image:url(https://i.ytimg.com/vi/${x.id}/hqdefault.jpg)"></button></div><div class="t"><a href="https://www.youtube.com/watch?v=${x.id}" target="_blank" rel="noopener">${esc(x.judul)}</a></div></div>`).join('');
   document.getElementById('ytList').onclick = e => {
     const b = e.target.closest('.play'); if (!b) return;

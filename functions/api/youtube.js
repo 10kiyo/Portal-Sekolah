@@ -2,6 +2,7 @@
 // Mengambil 3 video terbaru dari kanal YouTube sekolah lewat RSS resmi YouTube, di-cache 30 menit.
 // Kanal dibaca dari handle di bawah. Jika pencarian otomatis gagal, isi variabel YOUTUBE_CHANNEL_ID (UCxxxx...) di Cloudflare.
 const HANDLE = 'sdiattaqwa2688';
+const CHANNEL_ID = 'UC8RLbFbE7MjDmP5jq-GXrqA';   // ID kanal @sdiattaqwa2688 (sudah dipastikan)
 const UA = 'Mozilla/5.0 (compatible; PortalSekolah/1.0)';
 const out = (body, ttl) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttl}` } });
 const dekode = t => t.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
@@ -12,6 +13,7 @@ async function ambil(url) {
 }
 async function cariKanal(env) {
   if (/^UC[\w-]{22}$/.test(env.YOUTUBE_CHANNEL_ID || '')) return env.YOUTUBE_CHANNEL_ID;
+  if (CHANNEL_ID) return CHANNEL_ID;
   for (const u of [`https://www.youtube.com/@${HANDLE}`, `https://www.youtube.com/@${HANDLE}/videos`, `https://m.youtube.com/@${HANDLE}`]) {
     try {
       const h = await ambil(u);
@@ -42,7 +44,7 @@ export async function onRequestGet({ request, env, ctx }) {
       try { videos = parse(await ambil(u)); } catch (e) { videos = []; }
       if (videos.length) break;
     }
-    if (!videos.length) return out({ videos: [], alasan: 'Feed YouTube kosong atau ditolak.', kanal: id }, 120);
+    if (!videos.length) return out({ videos: [], playlist: 'UU' + id.slice(2), alasan: 'Feed YouTube kosong atau ditolak; memakai pemutar daftar unggahan.', kanal: id }, 120);
     const res = out({ videos }, 1800);
     ctx.waitUntil(cache.put(key, res.clone()));
     return res;
