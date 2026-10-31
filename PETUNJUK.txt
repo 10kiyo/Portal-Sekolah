@@ -54,3 +54,15 @@ GURU & STAFF: JABATAN + AKUN LOGIN OTOMATIS (username + PIN)
    - Guru lama yang sudah punya akun email: isi auth_user_id di barisnya agar data kelas lamanya tetap terhubung.
    - Murid: halaman Administrasi Kelas menyinkronkan murid (baru, ganti nama, pindah kelas, tidak aktif) dengan database
      setiap halaman dibuka, atau lewat tombol "Sinkronkan Murid". Buku Tamu sudah membaca database setiap dibuka.
+
+MENU PER PERAN + MENU SAMPING (Administrasi Guru dan Staf)
+1. Supabase > SQL Editor: jalankan supabase-peran.sql (SETELAH supabase-guru.sql). Membuat kolom peran, tabel kerja
+   tiap peran, dan aturan akses (hanya peran yang bersangkutan yang bisa membuka datanya).
+2. File baru/diganti: public/modul-staf.js (BARU), public/kelas.html, public/admin.html, public/index.html,
+   public/guru.html, functions/api/guru.js (DIGANTI).
+3. Peran ditebak otomatis dari jabatan (pustaka -> pustakawan, bendahara/keuangan -> keuangan, surat/sekretar -> persuratan,
+   operator -> operator, lainnya -> guru/staf). Ubah di kolom guru_staf.peran atau lewat menu Akun guru & staf (operator).
+   Akun Anda sendiri: set peran = 'admin' agar semua menu tampil.
+4. Menu: guru (kelas & nilai) | pustakawan (kartu pelajar, ekskul & club, peminjaman buku) | keuangan (kas, laporan, proposal, LPJ)
+   | persuratan (surat masuk, surat keluar, agenda) | operator (pekerjaan, akun guru & staf, data murid). Semua punya Profil saya.
+5. Halaman Guru & Staff kini hanya menampilkan yang ada di tabel guru_staf (tidak ada nama ganda dari daftar tamu).

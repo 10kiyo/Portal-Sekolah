@@ -52,7 +52,7 @@ export async function onRequestGet({ request, env, ctx }) {
         guru.push({ nama: String(r.nama).trim(), jabatan: String(r.jabatan || '').trim(), kelompok: r.kelompok || 'guru', urutan: r.urutan,
           mapel: String(r.mapel || '').split(',').map(x => x.trim()).filter(Boolean), walikelas: String(r.walikelas || '').trim(), foto: String(r.foto || '').trim(), dariTabel: true });
       });
-      for (const x of tamu) {
+      for (const x of (tabel && tabel.length ? [] : tamu)) {     // tabel guru_staf terisi = satu-satunya sumber (hindari nama ganda)
         const nama = String(x.guest_name || '').trim().replace(/\s+/g, ' ');
         if (!nama || !cocok(x.jenis_undangan)) continue;
         const k = kunci(nama) || nama.toLowerCase();

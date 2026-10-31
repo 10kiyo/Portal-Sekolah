@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Administrasi Kelas</title>
+<title>Administrasi Guru dan Staf</title>
 <link rel="icon" href="logo-at-taqwa.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--danger:#bc3d33;--mute:#627d98}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
-.wrap{width:min(1000px,calc(100% - 24px));margin:0 auto;padding:20px 0 60px}
+.wrap{width:min(1240px,calc(100% - 24px));margin:0 auto;padding:20px 0 60px}
 .hidden{display:none!important}
 .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .bar img{width:48px;height:48px;background:#fff;border-radius:12px;padding:5px;box-shadow:0 6px 14px #102a4320}
@@ -25,8 +25,33 @@ button{border:0;cursor:pointer;font:inherit;font-weight:700;padding:10px 15px;bo
 button.p{background:var(--blue);color:#fff;border-color:var(--blue)}
 button.d{color:var(--danger)}
 button:focus-visible{outline:3px solid #1677c850}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.shell{display:flex;gap:16px;align-items:flex-start;margin-top:14px}
+#side{flex:none;width:250px;position:sticky;top:12px;background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:12px;box-shadow:0 12px 30px #102a4310;max-height:calc(100vh - 24px);overflow:auto}
+.shell[data-open="0"] #side{display:none}
+.main{flex:1;min-width:0}
+#sideHead{padding:6px 8px 10px;border-bottom:1px solid #e6eef5;margin-bottom:6px}
+#sideHead b{display:block;color:var(--navy);line-height:1.3}#sideHead span{font-size:13px;color:var(--mute)}
+#menu h4{margin:14px 8px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+#menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:10px;font-weight:650;color:var(--navy)}
+#menu button:hover{background:var(--soft)}
+#menu button.on{background:var(--navy);color:#fff}
+.ic{padding:9px 13px;font-size:18px;line-height:1}
+.scrim{display:none}
+.print-only{display:none}
+.chklist{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 12px;margin-bottom:12px}
+.chk{display:flex;gap:8px;align-items:center;margin:0;font-weight:600;cursor:pointer;padding:3px 0}.chk input{width:auto}
+.kwrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(85.6mm,1fr));gap:10px;justify-items:start}
+.kartu{width:85.6mm;height:54mm;border:1px solid #9db4c9;border-radius:3mm;overflow:hidden;display:flex;flex-direction:column;background:#fff;break-inside:avoid;font-size:11px}
+.kartu .kh{display:flex;gap:8px;align-items:center;background:var(--navy);color:#fff;padding:2.5mm 3mm}.kartu .kh img{width:9mm;height:9mm;background:#fff;border-radius:2mm;padding:1px}
+.kartu .kh b{display:block;font-size:12px;letter-spacing:.06em}.kartu .kh span{font-size:9px;opacity:.85}
+.kartu .kb{flex:1;display:flex;gap:3mm;padding:3mm;align-items:center}.kartu .kfoto{width:20mm;height:26mm;border:1px dashed #9db4c9;display:grid;place-items:center;color:#9db4c9;font-size:9px;flex:none}
+.kartu .ki b{font-size:13px;color:var(--navy);display:block;margin-bottom:3px;line-height:1.25}.kartu .kf{background:var(--soft);text-align:center;padding:1.5mm;font-size:9px;color:var(--mute)}
+@media(max-width:860px){
+  .wrap{width:calc(100% - 16px)}
+  #side{position:fixed;left:0;top:0;bottom:0;max-height:none;width:270px;z-index:30;border-radius:0 18px 18px 0;transform:translateX(-105%);transition:transform .2s;display:block!important}
+  .shell[data-open="1"] #side{transform:none}
+  .shell[data-open="1"] .scrim{display:block;position:fixed;inset:0;background:#102a4355;z-index:20}
+}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:12px}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{padding:8px;border-bottom:1px solid #e6eef5;text-align:left;vertical-align:middle}
@@ -50,14 +75,14 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
 .av img{width:100%;height:100%;object-fit:cover}.bar .nav{margin-left:auto}
 .pill2{display:inline-flex;align-items:center;gap:4px;background:var(--soft);border-radius:99px;padding:4px 6px 4px 12px;margin:0 6px 6px 0;font-weight:700;color:var(--navy)}
 .pill2 .x{border:0;background:none;padding:2px 6px;color:var(--mute)}
-@media print{.tabs,.bar,#kelasCard,button,.noprint{display:none!important}body{background:#fff}.card{box-shadow:none;border:0}}
+@media print{#side,.scrim,.bar,#kelasCard,button,.noprint{display:none!important}.print-only{display:inline}.shell{display:block}.wrap{width:100%}body{background:#fff}.card{box-shadow:none;border:0;overflow:visible}.kwrap{gap:4mm}.kartu{border-color:#555}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <div id="login" class="card hidden">
-  <div class="bar"><img src="logo-at-taqwa.png" alt=""><h1>Administrasi Kelas</h1></div>
+  <div class="bar"><img src="logo-at-taqwa.png" alt=""><h1>Administrasi Guru dan Staf</h1></div>
   <p class="mut">Masuk dengan username dan PIN dari sekolah.</p>
   <div id="fUser">
     <label for="un">Username</label><input id="un" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="contoh: eki.yogawanto">
@@ -72,35 +97,51 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
 </div>
 
 <div id="app" class="hidden">
-  <div class="bar">
+  <div class="bar" id="topbar">
+    <button id="btnMenu" class="ic" title="Tampilkan / sembunyikan menu" aria-label="Menu" aria-expanded="true">&#9776;</button>
     <button id="btnProf" class="prof" title="Profil saya"><span id="av" class="av">G</span><span><small>Selamat datang,</small><b id="hello">Guru</b></span></button>
     <div class="nav">
       <button id="btnOut">Keluar</button>
     </div>
   </div>
-  <div class="card" id="kelasCard" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
-    <div style="flex:1;min-width:200px"><label for="kelasSel">Kelas</label><select id="kelasSel"></select></div>
-    <div style="flex:1;min-width:200px"><label for="mapelSel">Mata pelajaran</label><select id="mapelSel"></select></div>
-    <div style="flex-basis:100%;display:flex;gap:10px;flex-wrap:wrap">
-      <button id="btnImp">Tarik Daftar Murid dari Database</button>
-      <button id="btnSync">Sinkronkan Murid</button>
-      <button id="btnDel" class="d">Hapus kelas ini</button>
-    </div>
-    <div class="mut" id="syncMsg" style="flex-basis:100%"></div>
+  <div class="shell" id="shell" data-open="1">
+    <aside id="side"><div id="sideHead"><b id="sideNama">Guru</b><span id="sideJab"></span></div><nav id="menu"></nav></aside>
+    <div class="scrim" id="scrim"></div>
+    <main class="main">
+      <div class="card" id="kelasCard" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px"><label for="kelasSel">Kelas</label><select id="kelasSel"></select></div>
+        <div style="flex:1;min-width:200px"><label for="mapelSel">Mata pelajaran</label><select id="mapelSel"></select></div>
+        <div style="flex-basis:100%;display:flex;gap:10px;flex-wrap:wrap">
+          <button id="btnImp">Tarik Daftar Murid dari Database</button>
+          <button id="btnSync">Sinkronkan Murid</button>
+          <button id="btnDel" class="d">Hapus kelas ini</button>
+        </div>
+        <div class="mut" id="syncMsg" style="flex-basis:100%"></div>
+      </div>
+      <div id="view" class="card"></div>
+    </main>
   </div>
-  <div class="tabs" id="tabs"></div>
-  <div id="view" class="card"></div>
 </div>
 
 </div>
+<script src="modul-staf.js"></script>
 <script>
 const sb = supabase.createClient("https://ejiivtioxouaeipmgsuq.supabase.co", "sb_publishable_6PtodVi8dU7Dd6JtH0g8uw_ppYbNmVl");
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
 const HARI = ['','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
-const TABS = [['murid','Murid'],['pertemuan','Pertemuan'],['rekap','Rekap kehadiran'],['tugas','Tugas & nilai'],['rubrik','Rubrik'],['galeri','Galeri'],['jadwal','Jadwal']];
-let S = { kelas: [], kid: null, tab: 'murid', tugas: null, mid: '', mapel: [], ajar: [], prof: null, fotoUrl: '', rid: 0 };
+const KELAS_TABS = ['murid', 'pertemuan', 'rekap', 'tugas', 'galeri', 'jadwal'];
+const GRUP = {
+  guru: ['Kelas', [['murid', 'Murid'], ['pertemuan', 'Pertemuan & presensi'], ['rekap', 'Rekap kehadiran'], ['tugas', 'Tugas & nilai'], ['galeri', 'Galeri karya'], ['jadwal', 'Jadwal mengajar'], ['rubrik', 'Rubrik penilaian']]],
+  pustakawan: ['Perpustakaan & kesiswaan', [['kartu', 'Kartu pelajar'], ['ekskul', 'Ekskul & club'], ['pinjam', 'Peminjaman buku']]],
+  keuangan: ['Keuangan', [['transaksi', 'Kas masuk & keluar'], ['laporan', 'Laporan keuangan'], ['proposal', 'Proposal'], ['lpj', 'LPJ']]],
+  persuratan: ['Persuratan', [['masuk', 'Surat masuk'], ['keluar', 'Surat keluar'], ['agenda', 'Agenda surat']]],
+  operator: ['Operator sekolah', [['tugasop', 'Daftar pekerjaan'], ['akun', 'Akun guru & staf'], ['data', 'Data murid']]]
+};
+// Peran -> kelompok menu. "admin" melihat semuanya; "staf" (satpam, kebersihan, dll) hanya Profil.
+const menuPeran = p => p === 'admin' ? Object.values(GRUP) : GRUP[p] ? [GRUP[p]] : [];
+let S = { peran: 'guru', jabatan: '', dnama: '', username: '', kelas: [], kid: null, tab: 'murid', tugas: null, mid: '', mapel: [], ajar: [], prof: null, fotoUrl: '', rid: 0 };
 const mn = () => (S.mapel.find(m => m.id === S.mid) || {}).nama || '';
 
 function msg(t, err) { const m = $('#msg'); if (m) { m.textContent = t; m.className = 'msg' + (err ? ' err' : ''); } }
@@ -145,14 +186,37 @@ $('#btnOut').onclick = async () => { await sb.auth.signOut(); location.reload();
 /* ---------- kelas ---------- */
 async function start() {
   $('#app').classList.remove('hidden');
-  $('#tabs').innerHTML = TABS.map(([k, l]) => `<button data-t="${k}">${l}</button>`).join('');
-  $('#tabs').onclick = e => { const t = e.target.dataset.t; if (t) { S.tab = t; S.tugas = null; show(); } };
   await loadProfil();
+  await loadPeran();
   if (!(S.prof && S.prof.nama)) await isiNamaDariDaftar();
-  await loadKelas();
+  buildMenu();
+  const adaKelas = ['guru', 'admin'].includes(S.peran);
+  S.tab = adaKelas ? 'murid' : (menuPeran(S.peran)[0] || [0, [['profil']]])[1][0][0];
+  if (adaKelas) { await loadKelas(); syncMurid(false); } else show();
   if (!(S.prof && S.prof.nama)) { S.tab = 'profil'; show(); }
-  syncMurid(false);
 }
+async function loadPeran() {
+  try {
+    const u = (await sb.auth.getUser()).data.user;
+    const { data } = await sb.from('guru_staf').select('nama,jabatan,peran,username').eq('auth_user_id', u.id).maybeSingle();
+    if (data) { S.peran = data.peran || 'guru'; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; }
+  } catch (e) {}
+  $('#sideNama').textContent = (S.prof && S.prof.nama) || S.dnama || 'Pengguna';
+  $('#sideJab').textContent = S.jabatan || ({ guru: 'Guru', admin: 'Admin' }[S.peran] || 'Staf');
+}
+function buildMenu() {
+  const grup = [...menuPeran(S.peran), ['Akun', [['profil', 'Profil saya']]]];
+  $('#menu').innerHTML = grup.map(([judul, items]) => `<h4>${esc(judul)}</h4>` + items.map(([k, l]) => `<button data-t="${k}">${esc(l)}</button>`).join('')).join('');
+}
+$('#menu').onclick = e => {
+  const t = e.target.dataset.t; if (!t) return;
+  S.tab = t; S.tugas = null; show();
+  if (matchMedia('(max-width:860px)').matches) setMenu(false);
+};
+function setMenu(open) { $('#shell').dataset.open = open ? '1' : '0'; $('#btnMenu').setAttribute('aria-expanded', open); try { localStorage.setItem('menuAdminTerbuka', open ? '1' : '0'); } catch (e) {} }
+$('#btnMenu').onclick = () => setMenu($('#shell').dataset.open !== '1');
+$('#scrim').onclick = () => setMenu(false);
+(() => { let o = !matchMedia('(max-width:860px)').matches; try { const v = localStorage.getItem('menuAdminTerbuka'); if (v && o) o = v === '1'; } catch (e) {} $('#shell').dataset.open = o ? '1' : '0'; })();
 async function loadKelas(pick) {
   S.kelas = await run(sb.from('kelas_kelas').select('*').order('nama'));
   S.kid = pick || (S.kelas.find(k => k.id === S.kid) || S.kelas[0] || {}).id || null;
@@ -169,11 +233,18 @@ function syncMapel() {
 
 function show() {
   S.rid++; $('#view').onclick = null; $('#view').onchange = null;
-  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === S.tab));
-  if (S.tab === 'profil') return vProfil();
-  if (!S.kid) { $('#view').innerHTML = '<p>Belum ada kelas. Klik <b>Tarik Daftar Murid dari Database</b> untuk membuat kelas dan murid secara otomatis.</p>'; return; }
-  if (['pertemuan', 'rekap', 'tugas'].includes(S.tab) && !S.mid) { $('#view').innerHTML = '<p>Belum ada mata pelajaran untuk kelas ini. Buka <b>Profil</b> (klik namamu di kiri atas), tambahkan mapel, lalu centang kelas yang kamu ajar.</p>'; return; }
+  document.querySelectorAll('#menu button').forEach(b => b.classList.toggle('on', b.dataset.t === S.tab));
+  $('#kelasCard').style.display = (['guru', 'admin'].includes(S.peran) && KELAS_TABS.includes(S.tab)) ? 'flex' : 'none';
+  if (S.tab === 'profil') return ['guru', 'admin'].includes(S.peran) ? vProfil() : jalan(MODUL.profilStaf);
+  if (MODUL[S.tab]) return jalan(MODUL[S.tab]);
+  if (!S.kid) { $('#view').innerHTML = '<p>Belum ada kelas. Klik <b>Tarik Daftar Murid dari Database</b> untuk membuat kelas dan murid secara otomatis.</p>'; $('#kelasCard').style.display = 'flex'; return; }
+  if (['pertemuan', 'rekap', 'tugas'].includes(S.tab) && !S.mid) { $('#view').innerHTML = '<p>Belum ada mata pelajaran untuk kelas ini. Buka <b>Profil saya</b> di menu kiri, tambahkan mapel, lalu centang kelas yang kamu ajar.</p>'; return; }
   ({ murid: vMurid, pertemuan: vPertemuan, rekap: vRekap, tugas: vTugas, rubrik: vRubrik, galeri: vGaleri, jadwal: vJadwal })[S.tab]();
+}
+// Menjalankan modul staf; bila gagal (mis. tabel belum dibuat) tampilkan pesan yang jelas.
+function jalan(f) {
+  $('#view').innerHTML = '<p class="mut">Memuat...</p>';
+  Promise.resolve().then(() => f()).catch(e => { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan supabase-peran.sql sudah dijalankan di Supabase.</p>`; });
 }
 const murid = () => run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid).eq('aktif', true).order('nama'));
 
@@ -396,7 +467,7 @@ async function loadProfil() {
   S.prof = p.data; S.mapel = ms.data || []; S.ajar = aj.data || []; S.fotoUrl = '';
   if (S.prof && S.prof.foto_path) { const { data } = await sb.storage.from('karya').createSignedUrl(S.prof.foto_path, 3600); S.fotoUrl = (data || {}).signedUrl || ''; }
   const n = (S.prof && S.prof.nama) || '';
-  $('#hello').textContent = n || 'Guru';
+  $('#hello').textContent = n || S.dnama || 'Guru'; if ($('#sideNama')) $('#sideNama').textContent = n || S.dnama || 'Pengguna';
   $('#av').innerHTML = S.fotoUrl ? `<img src="${esc(S.fotoUrl)}" alt="">` : esc((n.trim()[0] || 'G').toUpperCase());
 }
 async function saveProfil(extra) {
@@ -442,9 +513,9 @@ async function vProfil() {
 /* ---------- nama profil otomatis dari daftar guru & staf (tabel guru_staf) ---------- */
 async function isiNamaDariDaftar() {
   try {
+    if (!S.dnama) return;
     const u = (await sb.auth.getUser()).data.user; if (!u) return;
-    const { data } = await sb.from('guru_staf').select('nama').eq('auth_user_id', u.id).maybeSingle();
-    if (data && data.nama) { await sb.from('kelas_profil').upsert({ guru_id: u.id, nama: data.nama }, { onConflict: 'guru_id' }); await loadProfil(); }
+    await sb.from('kelas_profil').upsert({ guru_id: u.id, nama: S.dnama }, { onConflict: 'guru_id' }); await loadProfil();
   } catch (e) {}
 }
 

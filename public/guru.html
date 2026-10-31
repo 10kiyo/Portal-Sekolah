@@ -62,7 +62,7 @@ function gabung(db) {
       mapel: (x.mapel && x.mapel.length) ? x.mapel : ((m && m.mapel) || []),
       walikelas: x.walikelas || (m && m.walikelas) || '', foto: x.foto || (m && m.foto) || '', urutan: x.urutan };
   });
-  man.filter(m => !m.dipakai).forEach(m => out.push({ nama: m.nama, jabatan: m.jabatan || '', kelompok: m.kelompok || 'guru', mapel: m.mapel || [], walikelas: m.walikelas || '', foto: m.foto || '' }));
+  if (!db.some(x => x.dariTabel)) man.filter(m => !m.dipakai).forEach(m => out.push({ nama: m.nama, jabatan: m.jabatan || '', kelompok: m.kelompok || 'guru', mapel: m.mapel || [], walikelas: m.walikelas || '', foto: m.foto || '' }));
   const rank = x => /kepala sekolah/i.test(x.jabatan) ? 0 : x.kelompok === 'pimpinan' ? 1 : 2;
   return out.sort((a, b) => rank(a) - rank(b) || (a.urutan ?? 9999) - (b.urutan ?? 9999) || a.nama.localeCompare(b.nama, 'id'));
 }

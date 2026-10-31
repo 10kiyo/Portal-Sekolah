@@ -152,7 +152,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </div>
 <div class="ddp" id="ddp" hidden>
   <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
-  <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
+  <a href="#kelas" data-r="kelas">Administrasi Guru dan Staf</a>
   <a href="#kegiatan" data-r="kegiatan">Kegiatan (Panitia)</a>
 </div>
 </nav>
@@ -234,7 +234,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
             <a href="#unggulan">Kegiatan Unggulan</a>
             <a href="#info">Info Terbaru</a>
             <a href="#buku-tamu">Buku Tamu Sekolah</a>
-            <a href="#kelas">Administrasi Kelas</a>
+            <a href="#kelas">Administrasi Guru dan Staf</a>
             <a href="#kegiatan">Kegiatan (Panitia)</a>
             <a href="#ortu">Pantau Belajar Anak</a>
             <!-- Tambah tautan lain di sini: <a href="https://...">Nama</a> -->
@@ -256,14 +256,14 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <iframe id="f-info" title="Info Terbaru" hidden></iframe>
   <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
-  <iframe id="f-kelas" title="Administrasi Kelas" hidden></iframe>
+  <iframe id="f-kelas" title="Administrasi Guru dan Staf" hidden></iframe>
   <iframe id="f-kegiatan" title="Kegiatan Sekolah (Panitia)" hidden></iframe>
   <iframe id="f-ortu" title="Pantau Belajar Anak" hidden></iframe>
 </main>
 
 <script>
 const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', lulusan: 'lulusan.html', jurnal: 'jurnal.html', ekskul: 'kegiatan-sekolah.html?j=ekskul', club: 'kegiatan-sekolah.html?j=club', unggulan: 'kegiatan-sekolah.html?j=unggulan', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', lulusan: 'Profil Lulusan', jurnal: 'Jurnal Murid', ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', lulusan: 'Profil Lulusan', jurnal: 'Jurnal Murid', ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Guru dan Staf', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
