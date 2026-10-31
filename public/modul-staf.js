@@ -382,6 +382,106 @@ MODUL.ekskul = async function () {
   tampil();
 };
 
+/* ================= SARANA & PRASARANA: KELOLA FASILITAS (Waka SarPras) =================
+   Data tabel "fasilitas" + foto di bucket publik "fasilitas". Tampil di halaman publik fasilitas.html lewat /api/fasilitas.
+   Tabel & aturan akses: supabase-fasilitas.sql. */
+const KAT_FAS = ['Ruang belajar', 'Ibadah', 'Olahraga & bermain', 'Perpustakaan & laboratorium', 'Kesehatan & sanitasi', 'Penunjang', 'Lainnya'];
+const KOND_FAS = { baik: ['Baik', '#19724d', '#eaf5ee'], perlu_perbaikan: ['Perlu perbaikan', '#a65f00', '#fdf0e3'], dalam_perbaikan: ['Sedang diperbaiki', '#bc3d33', '#fbeceb'] };
+const pathFasilitas = u => { const i = String(u).indexOf('/object/public/fasilitas/'); return i < 0 ? null : decodeURIComponent(String(u).slice(i + 25).split('?')[0]); };
+MODUL.fasilitas = async function () {
+  const rows = await run(sb.from('fasilitas').select('*').order('urutan', { ascending: true, nullsFirst: false }).order('nama'));
+  const pill = (t, c, b) => `<span style="display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;color:${c};background:${b}">${t}</span>`;
+  $('#view').innerHTML = `<h2>Kelola fasilitas sekolah</h2>
+  <p class="mut">Yang ditandai "Tampil" muncul di halaman publik Profil › Fasilitas. Kondisi hanya untuk catatan internal dan tidak tampil ke publik. Foto pertama menjadi sampul.</p>
+  <p><button class="p" id="fTambah">+ Tambah fasilitas</button></p><div id="msg" class="msg"></div>
+  <div id="fl">${rows.length ? rows.map((r, i) => {
+    const k = KOND_FAS[r.kondisi] || KOND_FAS.baik, f0 = (r.foto || [])[0];
+    return `<div style="display:flex;gap:12px;align-items:flex-start;border:1px solid #dbe8f2;border-radius:14px;padding:10px;margin-top:10px;background:#fff">
+      <div style="width:96px;height:72px;flex:none;border-radius:10px;overflow:hidden;background:#e6eef6;display:grid;place-items:center;color:#9db4c9;font-size:12px">${f0 ? `<img src="${esc(f0)}" alt="" style="width:100%;height:100%;object-fit:cover">` : 'Tanpa foto'}</div>
+      <div style="flex:1;min-width:0"><b style="color:var(--navy)">${esc(r.nama)}</b> ${r.tampil ? pill('Tampil', '#19724d', '#eaf5ee') : pill('Disembunyikan', '#627d98', '#eef2f6')} ${pill(k[0], k[1], k[2])}
+        <div class="mut">${esc(r.kategori)}${r.lokasi ? ' · ' + esc(r.lokasi) : ''}${r.kapasitas ? ' · ' + esc(r.kapasitas) : ''}${r.jumlah != null ? ' · ' + r.jumlah + ' unit' : ''} · ${(r.foto || []).length} foto</div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button data-e="${r.id}">Edit</button>
+        <button data-t="${r.id}">${r.tampil ? 'Sembunyikan' : 'Tampilkan'}</button>
+        <button data-u="${r.id}" ${i === 0 ? 'disabled' : ''} title="Naik">↑</button><button data-d="${r.id}" ${i === rows.length - 1 ? 'disabled' : ''} title="Turun">↓</button>
+        <button data-x="${r.id}">Hapus</button></div></div></div>`;
+  }).join('') : '<p class="mut">Belum ada fasilitas. Klik "Tambah fasilitas".</p>'}</div>`;
+
+  const geser = async (id, arah) => {
+    const ids = rows.map(r => r.id), i = ids.indexOf(id), j = i + arah; if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    await Promise.all(ids.map((x, n) => sb.from('fasilitas').update({ urutan: (n + 1) * 10 }).eq('id', x)));
+    MODUL.fasilitas();
+  };
+  $('#fTambah').onclick = () => form(null);
+  $('#fl').onclick = async e => {
+    const d = e.target.closest('button')?.dataset || {}, r = rows.find(x => x.id === (d.e || d.t || d.u || d.d || d.x)); if (!r) return;
+    if (d.e) form(r);
+    else if (d.t) { await run(sb.from('fasilitas').update({ tampil: !r.tampil }).eq('id', r.id)); MODUL.fasilitas(); }
+    else if (d.u) await geser(r.id, -1);
+    else if (d.d) await geser(r.id, 1);
+    else if (d.x && confirm(`Hapus "${r.nama}" beserta fotonya? Tidak bisa dikembalikan.`)) {
+      const ps = (r.foto || []).map(pathFasilitas).filter(Boolean);
+      await run(sb.from('fasilitas').delete().eq('id', r.id));
+      if (ps.length) await sb.storage.from('fasilitas').remove(ps);
+      MODUL.fasilitas();
+    }
+  };
+
+  function form(r) {
+    let foto = [...((r && r.foto) || [])]; const hapus = [];
+    let dlg = document.getElementById('dlgFas'); if (dlg) dlg.remove();
+    dlg = document.createElement('dialog'); dlg.id = 'dlgFas'; dlg.style.cssText = 'border:0;border-radius:18px;padding:20px;width:min(600px,calc(100% - 24px));max-height:calc(100vh - 24px);overflow-y:auto';
+    dlg.innerHTML = `<h3 style="margin:0 0 10px">${r ? 'Edit fasilitas' : 'Tambah fasilitas'}</h3>
+      <div class="grid"><div style="grid-column:1/-1"><label for="fn">Nama fasilitas</label><input id="fn" maxlength="100" value="${esc(r ? r.nama : '')}" placeholder="mis. Perpustakaan, Musala, Lapangan Upacara"></div>
+      <div><label for="fk">Kategori</label><select id="fk">${opsi(KAT_FAS, r ? r.kategori : KAT_FAS[0])}</select></div>
+      <div><label for="fl2">Lokasi</label><input id="fl2" maxlength="100" value="${esc(r ? r.lokasi || '' : '')}" placeholder="mis. Gedung A lantai 1"></div>
+      <div><label for="fc">Kapasitas</label><input id="fc" maxlength="60" value="${esc(r ? r.kapasitas || '' : '')}" placeholder="mis. 30 siswa"></div>
+      <div><label for="fj">Jumlah unit (opsional)</label><input id="fj" type="number" min="0" value="${r && r.jumlah != null ? r.jumlah : ''}"></div>
+      <div style="grid-column:1/-1"><label for="fd">Deskripsi</label><textarea id="fd" rows="4" maxlength="1500" placeholder="Fungsi, perlengkapan, dan keunggulan fasilitas">${esc(r ? r.deskripsi || '' : '')}</textarea></div>
+      <div><label for="fo">Kondisi (internal)</label><select id="fo">${Object.keys(KOND_FAS).map(k => `<option value="${k}" ${r && r.kondisi === k ? 'selected' : ''}>${KOND_FAS[k][0]}</option>`).join('')}</select></div>
+      <div><label for="fu">Urutan (angka kecil lebih dulu)</label><input id="fu" type="number" min="0" value="${r && r.urutan != null ? r.urutan : ''}"></div></div>
+      <label class="chk" style="margin-top:10px"><input type="checkbox" id="ft" ${!r || r.tampil ? 'checked' : ''}> Tampilkan di halaman publik</label>
+      <label style="margin-top:10px">Foto</label><div id="ff" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <input id="fup" type="file" accept="image/*" multiple style="margin-top:8px"><div class="mut">Boleh pilih beberapa foto sekaligus. Foto dikecilkan otomatis.</div>
+      <div id="ferr" style="color:#bc3d33;font-weight:650;margin-top:8px"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="fBatal">Batal</button><button class="p" id="fSimpan">Simpan</button></div>`;
+    document.body.appendChild(dlg); dlg.showModal();
+    const gambarFoto = () => { $('#ff').innerHTML = foto.length ? foto.map((u, i) => `<div style="width:104px"><div style="height:78px;border-radius:10px;overflow:hidden;background:#e6eef6"><img src="${esc(u)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>
+      <div style="font-size:12px;margin-top:3px">${i === 0 ? '<b>Sampul</b>' : `<a href="#" data-cov="${i}">Jadikan sampul</a>`} · <a href="#" data-del="${i}" style="color:#bc3d33">Hapus</a></div></div>`).join('') : '<span class="mut">Belum ada foto.</span>'; };
+    gambarFoto();
+    $('#ff').onclick = e => {
+      const a = e.target.closest('a'); if (!a) return; e.preventDefault();
+      if (a.dataset.cov) { const [u] = foto.splice(Number(a.dataset.cov), 1); foto.unshift(u); }
+      if (a.dataset.del) { const [u] = foto.splice(Number(a.dataset.del), 1); const p = pathFasilitas(u); if (p) hapus.push(p); }
+      gambarFoto();
+    };
+    $('#fBatal').onclick = () => { dlg.close(); dlg.remove(); };
+    $('#fSimpan').onclick = async () => {
+      const err = $('#ferr'); err.textContent = '';
+      const nama = $('#fn').value.trim(); if (!nama) return err.textContent = 'Isi nama fasilitas.';
+      const num = id => { const v = $(id).value; return v === '' ? null : Number(v); };
+      const rec = { nama, kategori: $('#fk').value, lokasi: $('#fl2').value.trim() || null, kapasitas: $('#fc').value.trim() || null, jumlah: num('#fj'),
+        deskripsi: $('#fd').value.trim() || null, kondisi: $('#fo').value, urutan: num('#fu'), tampil: $('#ft').checked };
+      const b = $('#fSimpan'); b.disabled = true; b.textContent = 'Menyimpan…';
+      try {
+        let id = r && r.id;
+        if (id) await run(sb.from('fasilitas').update(rec).eq('id', id));
+        else id = (await run(sb.from('fasilitas').insert(rec).select('id').single())).id;
+        const baru = [];
+        for (const f of [...$('#fup').files]) {
+          const path = `${id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+          const up = await sb.storage.from('fasilitas').upload(path, await resize(f, 1400), { contentType: 'image/jpeg' });
+          if (up.error) throw up.error;
+          baru.push(sb.storage.from('fasilitas').getPublicUrl(path).data.publicUrl);
+        }
+        await run(sb.from('fasilitas').update({ foto: [...foto, ...baru] }).eq('id', id));
+        if (hapus.length) await sb.storage.from('fasilitas').remove(hapus);
+        dlg.close(); dlg.remove(); MODUL.fasilitas();
+      } catch (ex) { err.textContent = 'Gagal menyimpan: ' + (ex.message || ex) + '. Pastikan supabase-fasilitas.sql sudah dijalankan dan akun berperan sarpras.'; b.disabled = false; b.textContent = 'Simpan'; }
+    };
+  }
+};
+
 MODUL.pinjam = async function () {
   const [g, rows] = await Promise.all([dataSiswa().catch(() => []), run(sb.from('perpus_pinjam').select('*').order('tgl_pinjam', { ascending: false }).limit(1000))]);
   const t = today(), telat = r => r.status === 'dipinjam' && r.tenggat && r.tenggat < t;
@@ -533,7 +633,7 @@ MODUL.agenda = async function (bln) {
 };
 
 /* ================= OPERATOR ================= */
-const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'staf'];
+const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'staf'];
 MODUL.akun = async function () {
   const rows = await run(sb.from('guru_staf').select('id,nama,jabatan,kelompok,peran,username,pin,aktif,auth_user_id').order('nama'));
   let lihat = false;

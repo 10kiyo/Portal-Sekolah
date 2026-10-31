@@ -117,3 +117,12 @@ FOTO GURU & STAFF (diunggah sendiri, langsung tampil di halaman Guru & Staff)
 3. Alur: guru/staf login > Profil saya > Ganti foto profil. Foto otomatis mengisi guru_staf.foto, tampil di halaman Guru & Staff (maks. ~1 menit karena cache).
 4. Nama diatur operator: menu Akun guru & staf > tombol "Ubah nama". Di Profil saya, kolom nama terkunci (readonly) untuk yang sudah ada di daftar guru & staf.
    Akun yang belum terhubung ke daftar guru & staf (auth_user_id kosong) tidak bisa menyimpan foto: hubungi operator.
+
+FASILITAS SEKOLAH (halaman publik, dikelola Waka SarPras / Pak Mahidin)
+1. Supabase > SQL Editor: jalankan supabase-fasilitas.sql (SETELAH supabase-peran.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah peran "sarpras", tabel fasilitas, bucket publik "fasilitas", dan aturan akses. Akun dengan jabatan memuat sarpras/sarana/prasarana
+   (dan nama Mahidin yang sudah ada) otomatis diberi peran sarpras. Peran bisa diubah operator di Akun guru & staf.
+2. File baru/diganti: public/fasilitas.html (BARU), functions/api/fasilitas.js (BARU), src/worker.js, public/index.html, public/kelas.html, public/modul-staf.js.
+3. Pengelolaan: Pak Mahidin login di Administrasi Guru dan Staf > menu "Sarana & prasarana > Kelola fasilitas": tambah/edit, foto banyak (foto pertama = sampul),
+   urutan naik/turun, sembunyikan/tampilkan, hapus. Kondisi (baik/perlu perbaikan/sedang diperbaiki) hanya catatan internal, tidak tampil ke publik.
+4. Halaman publik: menu Profil > Fasilitas (#fasilitas), ada pencarian dan filter kategori, klik kartu untuk galeri foto. Perubahan tampil maks. ~1 menit.
