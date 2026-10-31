@@ -206,10 +206,10 @@ async function start() {
 async function loadPeran() {
   try {
     const u = (await sb.auth.getUser()).data.user;
-    const { data } = await sb.from('guru_staf').select('nama,jabatan,peran,username').eq('auth_user_id', u.id).maybeSingle();
-    if (data) { S.peran = data.peran || 'guru'; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; }
+    const { data } = await sb.from('guru_staf').select('nama,jabatan,peran,username,foto').eq('auth_user_id', u.id).maybeSingle();
+    if (data) { S.peran = data.peran || 'guru'; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; S.fotoGuru = /^https:\/\//.test(data.foto || '') ? data.foto : ''; }
   } catch (e) {}
-  $('#sideNama').textContent = (S.prof && S.prof.nama) || S.dnama || 'Pengguna';
+  $('#sideNama').textContent = S.dnama || (S.prof && S.prof.nama) || 'Pengguna';
   $('#sideJab').textContent = S.jabatan || ({ guru: 'Guru', admin: 'Admin' }[S.peran] || 'Staf');
 }
 function buildMenu() {
@@ -482,22 +482,23 @@ async function vImport() {
 async function loadProfil() {
   const [p, ms, aj] = await Promise.all([sb.from('kelas_profil').select('*').maybeSingle(), sb.from('kelas_mapel').select('*').order('nama'), sb.from('kelas_ajar').select('*')]);
   S.prof = p.data; S.mapel = ms.data || []; S.ajar = aj.data || []; S.fotoUrl = '';
-  if (S.prof && S.prof.foto_path) { const { data } = await sb.storage.from('karya').createSignedUrl(S.prof.foto_path, 3600); S.fotoUrl = (data || {}).signedUrl || ''; }
-  const n = (S.prof && S.prof.nama) || '';
-  $('#hello').textContent = n || S.dnama || 'Guru'; if ($('#sideNama')) $('#sideNama').textContent = n || S.dnama || 'Pengguna';
+  if (S.fotoGuru) S.fotoUrl = S.fotoGuru;   // foto dari guru sendiri (sama dengan yang tampil di halaman Guru & Staff)
+  else if (S.prof && S.prof.foto_path) { const { data } = await sb.storage.from('karya').createSignedUrl(S.prof.foto_path, 3600); S.fotoUrl = (data || {}).signedUrl || ''; }
+  const n = S.dnama || (S.prof && S.prof.nama) || '';   // nama dari operator (daftar guru & staf)
+  $('#hello').textContent = n || 'Guru'; if ($('#sideNama')) $('#sideNama').textContent = n || 'Pengguna';
   $('#av').innerHTML = S.fotoUrl ? `<img src="${esc(S.fotoUrl)}" alt="">` : esc((n.trim()[0] || 'G').toUpperCase());
 }
 async function saveProfil(extra) {
   const u = (await sb.auth.getUser()).data.user.id;
-  await run(sb.from('kelas_profil').upsert({ guru_id: u, nama: $('#pn').value.trim(), wali_kelas_id: $('#pw2').value || null, foto_path: S.prof?.foto_path || null, ...extra }, { onConflict: 'guru_id' }));
+  await run(sb.from('kelas_profil').upsert({ guru_id: u, nama: S.dnama || $('#pn').value.trim(), wali_kelas_id: $('#pw2').value || null, foto_path: S.prof?.foto_path || null, ...extra }, { onConflict: 'guru_id' }));
   await loadProfil();
 }
 async function vProfil() {
-  const n = (S.prof && S.prof.nama) || '', ada = (k, m) => S.ajar.some(a => a.kelas_id === k && a.mapel_id === m), wali = S.prof && S.prof.wali_kelas_id;
+  const n = S.dnama || (S.prof && S.prof.nama) || '', ada = (k, m) => S.ajar.some(a => a.kelas_id === k && a.mapel_id === m), wali = S.prof && S.prof.wali_kelas_id;
   $('#view').innerHTML = `<h2>Profil guru</h2>${n ? '' : '<p class="msg">Selamat datang! Lengkapi dulu nama, mapel, dan kelas yang kamu ajar.</p>'}
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="av" style="width:84px;height:84px;font-size:32px">${S.fotoUrl ? `<img src="${esc(S.fotoUrl)}" alt="">` : esc((n.trim()[0] || 'G').toUpperCase())}</div>
-  <div><label for="pf">Ganti foto profil</label><input id="pf" type="file" accept="image/*"></div></div>
-  <div class="grid"><div><label for="pn">Nama (tampil di sapaan)</label><input id="pn" value="${esc(n)}" placeholder="Contoh: Ibu Ranti"></div>
+  <div><label for="pf">Ganti foto profil</label><input id="pf" type="file" accept="image/*"><div class="mut">Foto ini langsung tampil di halaman Guru & Staff.</div></div></div>
+  <div class="grid"><div><label for="pn">Nama ${S.dnama ? '(diatur operator sekolah)' : '(tampil di sapaan)'}</label><input id="pn" value="${esc(n)}" placeholder="Contoh: Ibu Ranti" ${S.dnama ? 'readonly' : ''}></div>
   <div><label for="pw2">Wali kelas (presensimu tampil ke orang tua)</label><select id="pw2"><option value="">Bukan wali kelas</option>${S.kelas.map(k => `<option value="${k.id}" ${wali === k.id ? 'selected' : ''}>${esc(k.nama)}</option>`).join('')}</select></div></div>
   <p><button class="p" id="svP">Simpan profil</button></p><div id="msg" class="msg"></div>
   <h2 style="margin-top:22px">Mata pelajaran yang diampu</h2>
@@ -511,10 +512,8 @@ async function vProfil() {
   $('#view').onchange = async e => {
     const t = e.target;
     if (t.id === 'pf' && t.files[0]) {
-      const u = (await sb.auth.getUser()).data.user.id, path = `${u}/profil/foto.jpg`;
-      const { error } = await sb.storage.from('karya').upload(path, await resize(t.files[0], 400), { contentType: 'image/jpeg', upsert: true });
-      if (error) return msg(error.message, true);
-      await saveProfil({ foto_path: path }); await again(); msg('Foto diganti.');
+      try { await unggahFotoGuru(t.files[0]); } catch (err) { return msg('Foto gagal diunggah: ' + (err.message || err) + '. Pastikan supabase-foto-guru.sql sudah dijalankan.', true); }
+      await again(); msg('Foto diganti dan langsung tampil di halaman Guru & Staff.');
     } else if (t.dataset.k) {
       await run(t.checked ? sb.from('kelas_ajar').insert({ kelas_id: t.dataset.k, mapel_id: t.dataset.m }) : sb.from('kelas_ajar').delete().eq('kelas_id', t.dataset.k).eq('mapel_id', t.dataset.m));
       await loadProfil(); syncMapel(); msg('Tersimpan.');

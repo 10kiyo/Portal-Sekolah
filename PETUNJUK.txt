@@ -109,3 +109,11 @@ EKSKUL & CLUB (tautan dari panitia, data hanya untuk pustakawan)
    mengisi jumlah yang diterima, lalu Konfirmasi lunas / Tolak. Club: gratis, orang tua menulis alasan; Bu Laras menyeleksi (Terima / Tidak diterima).
    Panitia hanya melihat jumlah pendaftar, bukan nama atau datanya. Ekskul & club tidak bisa dibuka untuk umum.
 4. Akun Bu Laras harus berperan 'pustakawan' (guru_staf.peran). Pendaftaran manual lama di menu Ekskul & club diganti alur ini.
+
+FOTO GURU & STAFF (diunggah sendiri, langsung tampil di halaman Guru & Staff)
+1. Supabase > SQL Editor: jalankan supabase-foto-guru.sql (SETELAH supabase-guru.sql & supabase-peran.sql). JALANKAN SEBELUM DEPLOY.
+   Membuat bucket publik "foto-guru", aturan agar tiap orang hanya bisa menulis file miliknya (<uid>.jpg), dan fungsi simpan_foto_saya().
+2. File diganti: public/kelas.html, public/modul-staf.js (halaman Guru & Staff tidak berubah; sudah membaca kolom guru_staf.foto).
+3. Alur: guru/staf login > Profil saya > Ganti foto profil. Foto otomatis mengisi guru_staf.foto, tampil di halaman Guru & Staff (maks. ~1 menit karena cache).
+4. Nama diatur operator: menu Akun guru & staf > tombol "Ubah nama". Di Profil saya, kolom nama terkunci (readonly) untuk yang sudah ada di daftar guru & staf.
+   Akun yang belum terhubung ke daftar guru & staf (auth_user_id kosong) tidak bisa menyimpan foto: hubungi operator.

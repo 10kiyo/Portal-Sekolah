@@ -8,6 +8,18 @@
    Tabel & aturan akses: supabase-peran.sql.
    ============================================================ */
 const MODUL = {};
+// Foto profil guru/staf: diunggah sendiri oleh orangnya ke bucket publik "foto-guru" (<uid>.jpg), lalu kolom guru_staf.foto-nya
+// diisi lewat fungsi simpan_foto_saya() sehingga langsung tampil di halaman Guru & Staff. Lihat supabase-foto-guru.sql.
+async function unggahFotoGuru(file) {
+  const u = (await sb.auth.getUser()).data.user.id, path = u + '.jpg';
+  const up = await sb.storage.from('foto-guru').upload(path, await resize(file, 600), { contentType: 'image/jpeg', upsert: true, cacheControl: '3600' });
+  if (up.error) throw up.error;
+  const url = sb.storage.from('foto-guru').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+  const rpc = await sb.rpc('simpan_foto_saya', { p_url: url });
+  if (rpc.error) throw rpc.error;
+  S.fotoGuru = url;
+  return url;
+}
 const rp = n => 'Rp ' + Math.round(Number(n || 0)).toLocaleString('id-ID');
 const urut = (a, b) => String(a).localeCompare(String(b), 'id', { numeric: true });
 const jumlah = l => l.reduce((a, x) => a + Number(x.jumlah || 0), 0);
@@ -531,7 +543,7 @@ MODUL.akun = async function () {
     <td><select data-peran="${r.id}" class="noprint">${opsi(r.peran === 'admin' ? [...PERAN, 'admin'] : PERAN, r.peran)}</select><span class="print-only">${esc(r.peran)}</span></td>
     <td><b>${esc(r.username)}</b></td><td><b>${lihat ? esc(r.pin) : '••••••'}</b></td>
     <td><input type="checkbox" style="width:auto" data-aktif="${r.id}" ${r.aktif ? 'checked' : ''}></td>
-    <td class="noprint"><button data-jab="${r.id}">Ubah jabatan</button> <button data-pin="${r.id}">Reset PIN</button></td></tr>`).join('')}</table>`;
+    <td class="noprint"><button data-nm="${r.id}">Ubah nama</button> <button data-jab="${r.id}">Ubah jabatan</button> <button data-pin="${r.id}">Reset PIN</button></td></tr>`).join('')}</table>`;
   };
   $('#view').innerHTML = `<h2>Akun guru & staf</h2>
   <p class="mut">Username dan PIN dibuat otomatis. Akun login aktif saat orangnya pertama kali masuk. Peran menentukan menu yang tampil di akunnya.</p>
@@ -556,7 +568,8 @@ MODUL.akun = async function () {
     if (d.aktif) { await run(sb.from('guru_staf').update({ aktif: e.target.checked }).eq('id', d.aktif)); rows.find(r => r.id === d.aktif).aktif = e.target.checked; msg(e.target.checked ? 'Akun diaktifkan.' : 'Akun dinonaktifkan: tidak tampil di halaman Guru & Staff dan tidak bisa login baru.'); }
   };
   $('#view').onclick = async e => {
-    const d = e.target.dataset, r = rows.find(x => x.id === (d.jab || d.pin));
+    const d = e.target.dataset, r = rows.find(x => x.id === (d.jab || d.pin || d.nm));
+    if (d.nm) { const n = prompt('Nama baru (boleh dengan gelar):', r.nama); if (n && n.trim() && n.trim() !== r.nama) { const { error } = await sb.from('guru_staf').update({ nama: n.trim() }).eq('id', r.id); if (error) return msg(error.message.includes('duplicate') ? 'Nama itu sudah ada.' : error.message, true); MODUL.akun(); } }
     if (d.jab) { const j = prompt('Jabatan baru untuk ' + r.nama + ':', r.jabatan || ''); if (j !== null) { await run(sb.from('guru_staf').update({ jabatan: j.trim() || null }).eq('id', r.id)); MODUL.akun(); } }
     if (d.pin && confirm('Buat PIN baru untuk ' + r.nama + '? PIN lama tidak berlaku lagi.')) {
       const hasil = await run(sb.from('guru_staf').update({ pin: null }).eq('id', r.id).select('pin').single());
@@ -685,25 +698,22 @@ MODUL.tugasop = async function () {
 
 /* ================= PROFIL STAF (nama + foto) ================= */
 MODUL.profilStaf = async function () {
-  const n = (S.prof && S.prof.nama) || S.dnama || '';
+  const n = S.dnama || (S.prof && S.prof.nama) || '';
   $('#view').innerHTML = `<h2>Profil saya</h2>
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="av" style="width:84px;height:84px;font-size:32px">${S.fotoUrl ? `<img src="${esc(S.fotoUrl)}" alt="">` : esc((n.trim()[0] || 'S').toUpperCase())}</div>
-  <div><label for="pf">Ganti foto profil</label><input id="pf" type="file" accept="image/*"></div></div>
-  <div class="grid"><div><label for="pn">Nama (tampil di sapaan)</label><input id="pn" value="${esc(n)}"></div>
+  <div><label for="pf">Ganti foto profil</label><input id="pf" type="file" accept="image/*"><div class="mut">Foto ini langsung tampil di halaman Guru & Staff.</div></div></div>
+  <div class="grid"><div><label for="pn">Nama ${S.dnama ? '(diatur operator sekolah)' : '(tampil di sapaan)'}</label><input id="pn" value="${esc(n)}" ${S.dnama ? 'readonly' : ''}></div>
   <div><label>Jabatan</label><input value="${esc(S.jabatan)}" disabled></div><div><label>Username</label><input value="${esc(S.username)}" disabled></div></div>
   <p><button class="p" id="svP">Simpan profil</button></p><div id="msg" class="msg"></div>
-  <p class="mut">Jabatan dan PIN diatur oleh operator sekolah. Jabatan juga tampil di halaman Guru & Staff.</p>`;
+  <p class="mut">Nama, jabatan, dan PIN diatur oleh operator sekolah. Foto hanya bisa diganti olehmu di sini. Nama, jabatan, dan foto tampil di halaman Guru & Staff.</p>`;
   $('#svP').onclick = async () => {
     const u = (await sb.auth.getUser()).data.user.id;
-    await run(sb.from('kelas_profil').upsert({ guru_id: u, nama: $('#pn').value.trim() }, { onConflict: 'guru_id' }));
+    await run(sb.from('kelas_profil').upsert({ guru_id: u, nama: S.dnama || $('#pn').value.trim() }, { onConflict: 'guru_id' }));
     await loadProfil(); msg('Profil tersimpan.');
   };
   $('#view').onchange = async e => {
     if (e.target.id !== 'pf' || !e.target.files[0]) return;
-    const u = (await sb.auth.getUser()).data.user.id, path = `${u}/profil/foto.jpg`;
-    const { error } = await sb.storage.from('karya').upload(path, await resize(e.target.files[0], 400), { contentType: 'image/jpeg', upsert: true });
-    if (error) return msg(error.message, true);
-    await run(sb.from('kelas_profil').upsert({ guru_id: u, nama: $('#pn').value.trim(), foto_path: path }, { onConflict: 'guru_id' }));
-    await loadProfil(); MODUL.profilStaf(); msg('Foto diganti.');
+    try { await unggahFotoGuru(e.target.files[0]); } catch (err) { return msg('Foto gagal diunggah: ' + (err.message || err) + '. Pastikan supabase-foto-guru.sql sudah dijalankan.', true); }
+    await loadProfil(); MODUL.profilStaf(); msg('Foto diganti dan langsung tampil di halaman Guru & Staff.');
   };
 };
