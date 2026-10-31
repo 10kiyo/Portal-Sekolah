@@ -17,7 +17,14 @@ nav{flex:none;display:flex;align-items:center;gap:14px;padding:8px 16px;backgrou
 .menu{display:flex;gap:6px;overflow-x:auto;margin-left:auto;scrollbar-width:none}
 .menu::-webkit-scrollbar{display:none}
 .menu a{white-space:nowrap;text-decoration:none;color:var(--navy);font-weight:700;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid transparent}
-.menu a:hover{background:var(--soft)}
+.menu a:hover,.menu button.dd:hover{background:var(--soft)}
+.menu button.dd{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font:inherit;font-weight:700;font-size:14px;color:var(--navy);background:none;padding:9px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer}
+.menu button.dd svg{transition:transform .18s}.menu button.dd[aria-expanded=true] svg{transform:rotate(180deg)}
+.menu button.dd.on{background:var(--navy);color:#fff}
+.menu button.dd:focus-visible{outline:3px solid #1677c850}
+.ddp{position:fixed;z-index:50;min-width:220px;background:#fff;border:1px solid #dbe8f2;border-radius:14px;box-shadow:0 16px 40px #102a4330;padding:6px}
+.ddp a{display:block;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;color:var(--navy)}
+.ddp a:hover{background:var(--soft)}.ddp a.on{background:var(--navy);color:#fff}
 .menu a.on{background:var(--navy);color:#fff}
 .menu a:focus-visible,.brand:focus-visible,a.tile:focus-visible{outline:3px solid #1677c850}
 @media(max-width:760px){.brand span{display:none}}
@@ -27,7 +34,11 @@ main{flex:1;position:relative;min-height:0}
 .hero img{width:92px;height:92px;background:#fff;border-radius:24px;padding:9px;box-shadow:0 10px 26px #102a4325}
 h1{margin:18px 0 10px;color:var(--navy);font-size:clamp(28px,5.5vw,44px);letter-spacing:-.04em;line-height:1.1}
 .hero p{margin:0;color:var(--mute);font-size:clamp(15px,2.2vw,18px)}
-.tiles{max-width:900px;margin:34px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.herobg{margin:calc(-1*clamp(24px,6vw,64px)) -16px 0;padding:clamp(44px,9vw,96px) 16px clamp(96px,14vw,130px);background:linear-gradient(180deg,#102a43d9 0%,#102a4399 45%,#102a43e6 100%),url(foto-sekolah.jpg) center 62%/cover no-repeat #102a43}
+.herobg h1{color:#fff;text-shadow:0 2px 18px #0006}
+.herobg .hero p{color:#e3eefa;text-shadow:0 1px 10px #0006}
+.herobg .hero img{box-shadow:0 10px 30px #0006}
+.tiles{position:relative;z-index:1;max-width:900px;margin:clamp(-76px,-9vw,-56px) auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
 a.tile{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:24px;box-shadow:0 14px 36px #102a4310;transition:border-color .18s,transform .18s}
 a.tile:hover{border-color:var(--blue);transform:translateY(-2px)}
 a.tile h2{margin:0 0 8px;color:var(--navy);font-size:20px}
@@ -76,20 +87,23 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
     <a href="#beranda" data-r="beranda">Beranda</a>
     <a href="#profil" data-r="profil">Profil Sekolah</a>
     <a href="#info" data-r="info">Info Terbaru</a>
-    <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
-    <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
-    <a href="#kegiatan" data-r="kegiatan">Kegiatan (Panitia)</a>
+    <button type="button" class="dd" id="ddBtn" aria-haspopup="true" aria-expanded="false" aria-controls="ddp">Layanan <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <a href="#ortu" data-r="ortu">Pantau Belajar Anak</a>
   </div>
+<div class="ddp" id="ddp" hidden>
+  <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
+  <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
+  <a href="#kegiatan" data-r="kegiatan">Kegiatan (Panitia)</a>
+</div>
 </nav>
 
 <main>
   <section id="beranda">
-    <div class="hero">
+    <div class="herobg"><div class="hero">
       <img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa">
       <h1>Selamat datang di SDS Islam At-Taqwa Rawamangun</h1>
       <p>Pilih layanan di menu atas atau di bawah ini.</p>
-    </div>
+    </div></div>
     <div class="tiles">
       <a class="tile" href="#profil"><h2>Profil Sekolah</h2><span>Kenali SDS Islam At-Taqwa: identitas, akreditasi, dan informasi sekolah.</span></a>
       <a class="tile" href="#info"><h2>Info Terbaru</h2><span>Pengumuman, agenda kegiatan, dan surat untuk orang tua dari sekolah.</span></a>
@@ -171,13 +185,33 @@ const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', profil: 'Profil Sekol
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
+// ===== Dropdown "Layanan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
+const ddBtn = document.getElementById('ddBtn'), ddp = document.getElementById('ddp');
+function ddClose() { ddp.hidden = true; ddBtn.setAttribute('aria-expanded', 'false'); }
+ddBtn.onclick = e => {
+  e.stopPropagation();
+  if (!ddp.hidden) return ddClose();
+  ddp.hidden = false;
+  const r = ddBtn.getBoundingClientRect(), w = ddp.offsetWidth;
+  ddp.style.top = (r.bottom + 6) + 'px';
+  ddp.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  ddBtn.setAttribute('aria-expanded', 'true');
+};
+document.addEventListener('click', e => { if (!ddp.contains(e.target)) ddClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') { ddClose(); ddBtn.focus(); } });
+addEventListener('resize', ddClose);
+addEventListener('blur', ddClose);                       // klik ke dalam iframe
+document.querySelector('.menu').addEventListener('scroll', ddClose);
+
 function route() {
   let r = location.hash.slice(1) || 'beranda';
   const admin = r === 'admin';            // tautan lama /#admin tetap dikenali
   if (admin) r = 'buku-tamu';
   if (r !== 'beranda' && !PAGES[r]) r = 'beranda';
 
-  document.querySelectorAll('.menu a').forEach(a => a.classList.toggle('on', a.dataset.r === (r === 'info-admin' ? 'info' : r)));
+  document.querySelectorAll('.menu a, .ddp a').forEach(a => a.classList.toggle('on', a.dataset.r === (r === 'info-admin' ? 'info' : r)));
+  document.getElementById('ddBtn').classList.toggle('on', ['buku-tamu', 'kelas', 'kegiatan'].includes(r));
+  ddClose();
   document.getElementById('beranda').hidden = r !== 'beranda';
   for (const k in PAGES) {
     const f = document.getElementById('f-' + k);
