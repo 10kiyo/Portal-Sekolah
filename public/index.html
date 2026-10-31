@@ -32,6 +32,13 @@ a.tile{display:block;text-decoration:none;color:inherit;background:#fff;border:1
 a.tile:hover{border-color:var(--blue);transform:translateY(-2px)}
 a.tile h2{margin:0 0 8px;color:var(--navy);font-size:20px}
 a.tile span{color:var(--mute);font-size:15px}
+.latest{max-width:900px;margin:30px auto 0}
+.latest .lh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.latest h2{margin:0;color:var(--navy);font-size:20px}
+.latest .lh a{color:var(--blue);font-weight:700;text-decoration:none;font-size:14px}
+.latest .li{display:block;margin-top:10px;padding:14px 18px;background:#fff;border:1px solid #dbe8f2;border-radius:16px;text-decoration:none;color:inherit;box-shadow:0 8px 24px #102a430d}
+.latest .li:hover{border-color:var(--blue)}
+.latest .li b{display:block;color:var(--navy)}.latest .li span{font-size:13px;color:var(--mute)}
 /* ===== Footer Beranda ===== */
 footer.site{max-width:none;width:auto;margin:56px -16px calc(-1*clamp(24px,6vw,64px));background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(28px,4vw,48px) clamp(20px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
 footer.site .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
@@ -67,6 +74,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <a class="brand" href="#beranda"><img src="logo-at-taqwa.png" alt=""><span>SDS Islam At-Taqwa</span></a>
   <div class="menu">
     <a href="#beranda" data-r="beranda">Beranda</a>
+    <a href="#info" data-r="info">Info Terbaru</a>
     <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
     <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
     <a href="#kegiatan" data-r="kegiatan">Kegiatan (Panitia)</a>
@@ -82,10 +90,16 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
       <p>Pilih layanan di menu atas atau di bawah ini.</p>
     </div>
     <div class="tiles">
+      <a class="tile" href="#info"><h2>Info Terbaru</h2><span>Pengumuman, agenda kegiatan, dan surat untuk orang tua dari sekolah.</span></a>
       <a class="tile" href="#buku-tamu"><h2>Buku Tamu Sekolah</h2><span>Konfirmasi kehadiran tamu kegiatan. Panel admin tersedia di dalam halaman ini.</span></a>
       <a class="tile" href="#kelas"><h2>Administrasi Kelas</h2><span>Untuk guru: presensi, jurnal, jadwal, tugas, dan nilai. Perlu login.</span></a>
       <a class="tile" href="#kegiatan"><h2>Kegiatan (Panitia)</h2><span>Kelola pendaftaran kegiatan dan cek bukti transfer orang tua. Perlu PIN admin.</span></a>
       <a class="tile" href="#ortu"><h2>Pantau Belajar Anak</h2><span>Untuk orang tua: lihat kehadiran, tugas, dan nilai anak dengan kode akses.</span></a>
+    </div>
+
+    <div class="latest" id="latest" hidden>
+      <div class="lh"><h2>Info terbaru dari sekolah</h2><a href="#info">Lihat semua →</a></div>
+      <div id="latestList"></div>
     </div>
 
     <!-- ===== FOOTER BERANDA =====
@@ -126,6 +140,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
           <iframe class="map" title="Peta lokasi sekolah" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=SDS+Islam+At-Taqwa+Rawamangun,+Jl.+Daksinapati+Raya+No.+2,+Jakarta+Timur&hl=id&z=16&output=embed" allowfullscreen></iframe>
           <div class="pills">
             <a href="#beranda">Beranda</a>
+            <a href="#info">Info Terbaru</a>
             <a href="#buku-tamu">Buku Tamu Sekolah</a>
             <a href="#kelas">Administrasi Kelas</a>
             <a href="#kegiatan">Kegiatan (Panitia)</a>
@@ -138,6 +153,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
       <div class="copy">© <span id="thn"></span> SDS Islam At-Taqwa Rawamangun. Seluruh layanan digital ini disiapkan untuk mendukung orang tua, guru, dan tamu sekolah.</div>
     </footer>
   </section>
+  <iframe id="f-info" title="Info Terbaru" hidden></iframe>
+  <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
   <iframe id="f-kelas" title="Administrasi Kelas" hidden></iframe>
   <iframe id="f-kegiatan" title="Kegiatan Sekolah (Panitia)" hidden></iframe>
@@ -145,8 +162,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </main>
 
 <script>
-const PAGES = { 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+const PAGES = { info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
@@ -156,7 +173,7 @@ function route() {
   if (admin) r = 'buku-tamu';
   if (r !== 'beranda' && !PAGES[r]) r = 'beranda';
 
-  document.querySelectorAll('.menu a').forEach(a => a.classList.toggle('on', a.dataset.r === r));
+  document.querySelectorAll('.menu a').forEach(a => a.classList.toggle('on', a.dataset.r === (r === 'info-admin' ? 'info' : r)));
   document.getElementById('beranda').hidden = r !== 'beranda';
   for (const k in PAGES) {
     const f = document.getElementById('f-' + k);
@@ -166,6 +183,13 @@ function route() {
   }
   document.title = TITLES[r];
 }
+// Cuplikan 3 info terbaru di beranda (diam-diam dilewati jika belum ada data / belum disiapkan)
+fetch('/api/info?limit=3').then(r => r.json()).then(d => {
+  if (!d.info || !d.info.length) return;
+  const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  document.getElementById('latestList').innerHTML = d.info.map(x => `<a class="li" href="#info"><b>${esc(x.judul)}</b><span>${new Date(x.tanggal_terbit + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></a>`).join('');
+  document.getElementById('latest').hidden = false;
+}).catch(() => {});
 addEventListener('hashchange', route);
 route();
 </script>

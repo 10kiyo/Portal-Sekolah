@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Info Terbaru</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(900px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
+h2{margin:0;color:var(--navy);font-size:18px}
+.mut{color:var(--mute);font-size:14px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:14px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.bar input{flex:1 1 200px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#fff}
+.bar input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chips button{font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
+.pill.pengumuman{background:#e3f0fb;color:var(--blue)}.pill.agenda{background:#fdf0e3;color:#a65f00}
+.pill.surat{background:#f1e9fb;color:#6b3fa0}.pill.kegiatan{background:#eaf5ee;color:var(--ok)}
+.pin{color:#a65f00;font-weight:700;font-size:12px}
+.agenda{display:grid;gap:8px;margin-top:10px}
+.ag{display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;background:var(--soft)}
+.ag .d{flex:none;width:52px;text-align:center;background:var(--navy);color:#fff;border-radius:10px;padding:6px 0;line-height:1.1}
+.ag .d b{display:block;font-size:20px}.ag .d span{font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.ag .t{font-weight:700;color:var(--navy)}.ag .s{font-size:13px;color:var(--mute)}
+.post h3{margin:8px 0 4px;color:var(--navy);font-size:19px;letter-spacing:-.02em}
+.post .meta{font-size:13px;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.post .isi{margin-top:10px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.post .isi.cut{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.post a{color:var(--blue)}
+.more{margin-top:6px;background:none;border:0;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0}
+.lamp{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:9px 14px;border-radius:10px;background:var(--navy);color:#fff!important;text-decoration:none;font-weight:700;font-size:14px}
+.lamp-img{max-width:100%;max-height:420px;display:block;margin-top:12px;border-radius:12px;border:1px solid var(--line)}
+.empty{text-align:center;color:var(--mute);padding:28px 0}
+.foot{margin-top:24px;text-align:center;font-size:13px}.foot a{color:var(--mute)}
+.emb .wrap{padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Info Terbaru</h1>
+  <div class="mut">Pengumuman, agenda kegiatan, dan surat untuk orang tua</div>
+
+  <div class="card" id="agWrap" hidden>
+    <h2>Agenda mendatang</h2>
+    <div class="agenda" id="agenda"></div>
+  </div>
+
+  <div class="bar"><input id="q" type="search" placeholder="Cari info…" aria-label="Cari info"></div>
+  <div class="chips" id="chips"></div>
+
+  <div id="list"><div class="card empty">Memuat…</div></div>
+
+  <div class="foot"><a href="/#info-admin" target="_top">Kelola info (admin sekolah)</a></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const linkify = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const tglS = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+const KAT = { semua: 'Semua', pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', lainnya: 'Lainnya' };
+if (self !== top) document.body.classList.add('emb');
+
+let DATA = [], TODAY = '', kat = 'semua';
+
+function render() {
+  const q = $('#q').value.trim().toLowerCase();
+  const rows = DATA.filter(x => (kat === 'semua' || x.kategori === kat) && (!q || (x.judul + ' ' + (x.isi || '')).toLowerCase().includes(q)));
+  $('#list').innerHTML = rows.length ? rows.map(x => {
+    const lamp = x.lampiran_url && /^https?:\/\//.test(x.lampiran_url) ? x.lampiran_url : '';
+    const isImg = /\.(jpe?g|png|webp)(\?|$)/i.test(lamp);
+    const long = (x.isi || '').length > 280 || (x.isi || '').split('\n').length > 5;
+    return `<article class="card post">
+      <div class="meta"><span class="pill ${esc(x.kategori)}">${esc(KAT[x.kategori] || 'Info')}</span>${x.sematkan ? '<span class="pin">📌 Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div>
+      <h3>${esc(x.judul)}</h3>
+      ${x.tanggal_agenda ? `<div class="meta">🗓 ${tgl(x.tanggal_agenda)}${x.lokasi ? ' · ' + esc(x.lokasi) : ''}</div>` : (x.lokasi ? `<div class="meta">📍 ${esc(x.lokasi)}</div>` : '')}
+      ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
+      ${isImg ? `<a href="${esc(lamp)}" target="_blank" rel="noopener"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
+      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener">📎 ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
+    </article>`;
+  }).join('') : '<div class="card empty">Belum ada info untuk ditampilkan.</div>';
+  document.querySelectorAll('.more').forEach(b => b.onclick = () => {
+    const c = b.previousElementSibling.classList.toggle('cut'); b.textContent = c ? 'Baca selengkapnya' : 'Tutup';
+  });
+}
+
+function renderChips() {
+  const ada = new Set(DATA.map(x => x.kategori));
+  $('#chips').innerHTML = Object.keys(KAT).filter(k => k === 'semua' || ada.has(k))
+    .map(k => `<button data-k="${k}" class="${k === kat ? 'on' : ''}">${KAT[k]}</button>`).join('');
+  document.querySelectorAll('#chips button').forEach(b => b.onclick = () => { kat = b.dataset.k; renderChips(); render(); });
+}
+
+function renderAgenda() {
+  const ag = DATA.filter(x => x.tanggal_agenda && x.tanggal_agenda >= TODAY).sort((a, b) => a.tanggal_agenda.localeCompare(b.tanggal_agenda)).slice(0, 5);
+  $('#agWrap').hidden = !ag.length;
+  $('#agenda').innerHTML = ag.map(x => {
+    const d = new Date(x.tanggal_agenda + 'T00:00:00');
+    return `<div class="ag"><div class="d"><b>${d.getDate()}</b><span>${d.toLocaleDateString('id-ID', { month: 'short' })}</span></div>
+      <div><div class="t">${esc(x.judul)}</div><div class="s">${esc(x.lokasi || KAT[x.kategori] || '')}</div></div></div>`;
+  }).join('');
+}
+
+$('#q').oninput = render;
+fetch('/api/info').then(r => r.json()).then(d => {
+  if (d.error) throw new Error(d.error);
+  DATA = d.info; TODAY = d.today; renderAgenda(); renderChips(); render();
+}).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat info.')}</div>`; });
+</script>
+</body>
+</html>

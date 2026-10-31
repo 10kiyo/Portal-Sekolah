@@ -9,3 +9,14 @@ MODUL KEGIATAN SEKOLAH - cara pasang
    public/ortu.html                  (DIGANTI - bagian Kegiatan untuk orang tua)
    public/index.html, public/admin.html (DIGANTI - menu/tautan)
 3. Deploy. Tidak ada variabel baru: memakai SUPABASE_SERVICE_ROLE_KEY, ADMIN_PIN, ADMIN_SECRET yang sudah ada.
+
+MODUL INFO TERBARU (pengumuman, agenda, surat)
+1. Supabase > SQL Editor: jalankan supabase-info.sql (membuat tabel info_sekolah + bucket publik "info").
+2. File baru/diganti (struktur sama):
+   functions/api/info.js          (BARU - data publik)
+   functions/api/admin-info.js    (BARU - khusus admin)
+   src/worker.js                  (DIGANTI - menambah 2 route)
+   public/info.html               (BARU - halaman publik)
+   public/info-admin.html         (BARU - panel admin, PIN yang sama)
+   public/index.html              (DIGANTI - menu, tile, footer, cuplikan beranda)
+3. Deploy. Tidak ada variabel baru. Admin mengelola lewat /#info-admin (atau tautan "Kelola info" di bawah halaman Info Terbaru).

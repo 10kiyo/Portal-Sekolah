@@ -7,6 +7,8 @@ import * as submitAttendance from '../functions/api/submit-attendance.js';
 import * as ortuLookup from '../functions/api/ortu-lookup.js';
 import * as ortuKegiatan from '../functions/api/ortu-kegiatan.js';
 import * as adminKegiatan from '../functions/api/admin-kegiatan.js';
+import * as info from '../functions/api/info.js';
+import * as adminInfo from '../functions/api/admin-info.js';
 
 const routes = {
   '/api/admin-auth': adminAuth,
@@ -15,7 +17,9 @@ const routes = {
   '/api/submit-attendance': submitAttendance,
   '/api/ortu-lookup': ortuLookup,
   '/api/ortu-kegiatan': ortuKegiatan,
-  '/api/admin-kegiatan': adminKegiatan
+  '/api/admin-kegiatan': adminKegiatan,
+  '/api/info': info,
+  '/api/admin-info': adminInfo
 };
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 

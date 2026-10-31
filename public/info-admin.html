@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kelola Info Terbaru</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--danger:#bc3d33;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(1000px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+.hidden{display:none!important}
+h1{margin:0;color:var(--navy);font-size:clamp(22px,4.5vw,28px);letter-spacing:-.03em}
+h2{margin:0;color:var(--navy)}
+.mut{color:var(--mute);font-size:13px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+button{border:0;cursor:pointer;font:inherit;font-weight:700;padding:10px 16px;border-radius:10px;background:var(--blue);color:#fff}
+button.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}
+button.bad{background:var(--danger)}
+button.sm{padding:6px 11px;font-size:13px}
+button:disabled{opacity:.6;cursor:wait}
+label{display:block;font-weight:700;color:var(--navy);margin:0 0 5px;font-size:14px}
+input,select,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);font:inherit;color:var(--ink);background:#fff}
+textarea{min-height:140px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.err{margin-top:10px;color:var(--danger);font-weight:650}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
+.pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.blue{background:#e3f0fb;color:var(--blue)}
+.list{display:grid;gap:10px;margin-top:12px}
+.it{border:1px solid #dbe8f2;border-radius:14px;padding:14px;background:#fff}
+.it.off{background:#f7f9fb;opacity:.85}
+.it h3{margin:6px 0 2px;color:var(--navy);font-size:17px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px));box-shadow:0 20px 60px #102a4350}dialog::backdrop{background:#102a4380}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid2 .full{grid-column:1/-1}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600;margin:0}.chk input{width:auto}
+.hint{font-size:12px;color:var(--mute);margin-top:4px}
+.emb .wrap{padding-top:12px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="login" class="card" style="max-width:420px;margin:8vh auto 0;text-align:center">
+  <img src="logo-at-taqwa.png" alt="" width="64" height="64" style="background:#fff;border-radius:16px;padding:6px;box-shadow:0 8px 20px #102a4325">
+  <h1 style="margin-top:10px">Kelola Info Terbaru</h1>
+  <p class="mut">Khusus admin sekolah. Masukkan PIN admin.</p>
+  <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN admin" style="text-align:center;font-size:18px">
+  <p style="margin:12px 0 0"><button id="masuk">Masuk</button></p>
+  <div id="loginErr" class="err"></div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="top">
+    <div><h1>Kelola Info Terbaru</h1><div class="mut">Pengumuman, agenda, dan surat untuk orang tua</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="tambah">+ Tambah info</button><button class="sec" id="muat">Muat ulang</button><button class="sec" id="keluar">Keluar</button></div>
+  </div>
+  <div id="list" class="list"></div>
+</div>
+</div>
+
+<dialog id="dlg">
+  <h2 id="dlgTitle">Tambah info</h2>
+  <div class="grid2" style="margin-top:14px">
+    <div class="full"><label for="f-judul">Judul</label><input id="f-judul" maxlength="150"></div>
+    <div><label for="f-kat">Kategori</label>
+      <select id="f-kat"><option value="pengumuman">Pengumuman</option><option value="agenda">Agenda</option><option value="surat">Surat Edaran</option><option value="kegiatan">Berita Kegiatan</option><option value="lainnya">Lainnya</option></select></div>
+    <div><label for="f-terbit">Tanggal terbit</label><input id="f-terbit" type="date"></div>
+    <div><label for="f-agenda">Tanggal acara / tenggat <span class="mut">(opsional)</span></label><input id="f-agenda" type="date"><div class="hint">Jika diisi, muncul di “Agenda mendatang”.</div></div>
+    <div><label for="f-lokasi">Jam / tempat <span class="mut">(opsional)</span></label><input id="f-lokasi" maxlength="150" placeholder="mis. 08.00 WIB, Aula sekolah"></div>
+    <div class="full"><label for="f-isi">Isi</label><textarea id="f-isi" maxlength="8000"></textarea></div>
+    <div class="full"><label for="f-file">Lampiran <span class="mut">(PDF/gambar maks. 4 MB, atau tempel tautan di bawah)</span></label>
+      <input id="f-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp">
+      <input id="f-url" placeholder="https://… (mis. tautan Google Drive)" style="margin-top:8px">
+      <input id="f-nama" placeholder="Nama tombol lampiran, mis. Surat Edaran Libur" maxlength="100" style="margin-top:8px">
+      <div id="f-cur" class="hint"></div></div>
+    <div><label class="chk"><input type="checkbox" id="f-pin"> 📌 Sematkan di atas</label></div>
+    <div><label class="chk"><input type="checkbox" id="f-pub" checked> Tampilkan ke publik</label></div>
+  </div>
+  <div id="dlgErr" class="err"></div>
+  <div class="acts" style="justify-content:flex-end;margin-top:14px"><button class="sec" id="batal">Batal</button><button id="simpan">Simpan</button></div>
+</dialog>
+
+<script>
+const TOKEN_KEY = 'bukuTamuSekolah.adminToken';   // sama dengan panel lain: sekali login berlaku untuk semua
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+const KAT = { pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', lainnya: 'Lainnya' };
+if (self !== top) document.body.classList.add('emb');
+let D = { info: [], today: '' }, editId = null;
+
+async function api(body) {
+  const h = { Authorization: 'Bearer ' + sessionStorage.getItem(TOKEN_KEY) };
+  if (body) h['Content-Type'] = 'application/json';
+  const r = await fetch('/api/admin-info', body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { sessionStorage.removeItem(TOKEN_KEY); showLogin(); throw new Error(d.error || 'Sesi berakhir.'); }
+  if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.');
+  return d;
+}
+function showLogin() { $('#login').classList.remove('hidden'); $('#app').classList.add('hidden'); }
+$('#masuk').onclick = async () => {
+  $('#loginErr').textContent = '';
+  try {
+    const r = await fetch('/api/admin-auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: $('#pin').value }) });
+    const d = await r.json(); if (!r.ok) throw new Error(d.error || 'PIN salah.');
+    sessionStorage.setItem(TOKEN_KEY, d.token); $('#pin').value = ''; await mulai();
+  } catch (e) { $('#loginErr').textContent = e.message; }
+};
+$('#pin').onkeydown = e => { if (e.key === 'Enter') $('#masuk').click(); };
+async function mulai() {
+  if (!sessionStorage.getItem(TOKEN_KEY)) return showLogin();
+  try { D = await api(); $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); render(); }
+  catch (e) { if (sessionStorage.getItem(TOKEN_KEY)) $('#loginErr').textContent = 'PIN benar, tetapi data gagal dimuat: ' + e.message; }
+}
+
+function render() {
+  $('#list').innerHTML = D.info.length ? D.info.map(x => `<div class="it ${x.terbit ? '' : 'off'}" data-id="${x.id}">
+    <span class="pill blue">${esc(KAT[x.kategori] || x.kategori)}</span>
+    <span class="pill ${x.terbit ? 'ok' : 'warn'}">${x.terbit ? 'Tampil' : 'Disembunyikan'}</span>${x.sematkan ? ' <span class="pill warn">📌 Disematkan</span>' : ''}
+    <h3>${esc(x.judul)}</h3>
+    <div class="mut">Terbit ${tgl(x.tanggal_terbit)}${x.tanggal_agenda ? ' · Acara ' + tgl(x.tanggal_agenda) : ''}${x.lampiran_url ? ' · 📎 ' + esc(x.lampiran_nama || 'Lampiran') : ''}</div>
+    <div class="acts"><button class="sec sm" data-a="edit">Ubah</button>
+      <button class="sec sm" data-a="terbit">${x.terbit ? 'Sembunyikan' : 'Tampilkan'}</button>
+      <button class="sec sm" data-a="pin">${x.sematkan ? 'Lepas sematan' : 'Sematkan'}</button>
+      <button class="bad sm" data-a="hapus">Hapus</button></div></div>`).join('') : '<div class="card mut" style="text-align:center">Belum ada info. Klik “+ Tambah info”.</div>';
+}
+$('#list').onclick = async e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const x = D.info.find(i => i.id === b.closest('.it').dataset.id); if (!x) return;
+  try {
+    if (b.dataset.a === 'edit') return buka(x);
+    if (b.dataset.a === 'hapus') { if (!confirm(`Hapus “${x.judul}” secara permanen?`)) return; await api({ action: 'hapus', id: x.id }); }
+    if (b.dataset.a === 'terbit') await api({ action: 'terbit', id: x.id, nilai: !x.terbit });
+    if (b.dataset.a === 'pin') await api({ action: 'sematkan', id: x.id, nilai: !x.sematkan });
+    D = await api(); render();
+  } catch (err) { alert(err.message); }
+};
+
+function buka(x) {
+  editId = x ? x.id : null;
+  $('#dlgTitle').textContent = x ? 'Ubah info' : 'Tambah info';
+  $('#f-judul').value = x ? x.judul : ''; $('#f-kat').value = x ? x.kategori : 'pengumuman';
+  $('#f-terbit').value = x ? x.tanggal_terbit : D.today; $('#f-agenda').value = x && x.tanggal_agenda || '';
+  $('#f-lokasi').value = x && x.lokasi || ''; $('#f-isi').value = x && x.isi || '';
+  $('#f-url').value = x && x.lampiran_url || ''; $('#f-nama').value = x && x.lampiran_nama || ''; $('#f-file').value = '';
+  $('#f-cur').textContent = x && x.lampiran_url ? 'Lampiran saat ini terpasang. Pilih file baru atau kosongkan tautan untuk menghapusnya.' : '';
+  $('#f-pin').checked = x ? x.sematkan : false; $('#f-pub').checked = x ? x.terbit : true;
+  $('#dlgErr').textContent = ''; $('#dlg').showModal();
+}
+$('#tambah').onclick = () => buka(null);
+$('#batal').onclick = () => $('#dlg').close();
+$('#muat').onclick = mulai;
+$('#keluar').onclick = () => { sessionStorage.removeItem(TOKEN_KEY); showLogin(); };
+
+// Gambar diperkecil di browser agar upload cepat; PDF dikirim apa adanya.
+function bacaFile(f) {
+  return new Promise((ok, no) => {
+    const fr = new FileReader();
+    fr.onerror = () => no(new Error('File tidak bisa dibaca.'));
+    fr.onload = () => {
+      if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return ok(fr.result);
+      const img = new Image();
+      img.onerror = () => no(new Error('Gambar tidak valid.'));
+      img.onload = () => {
+        const s = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        ok(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(f);
+  });
+}
+
+$('#simpan').onclick = async () => {
+  const btn = $('#simpan'); $('#dlgErr').textContent = ''; btn.disabled = true;
+  try {
+    let url = $('#f-url').value.trim(), nama = $('#f-nama').value.trim();
+    const f = $('#f-file').files[0];
+    if (f) {
+      if (f.size > 12 * 1024 * 1024) throw new Error('File terlalu besar.');
+      const up = await api({ action: 'upload', file: await bacaFile(f) });
+      url = up.url; if (!nama) nama = f.name.replace(/\.[^.]+$/, '').slice(0, 100);
+    }
+    await api({
+      action: 'simpan', id: editId, judul: $('#f-judul').value, kategori: $('#f-kat').value,
+      tanggal_terbit: $('#f-terbit').value, tanggal_agenda: $('#f-agenda').value, lokasi: $('#f-lokasi').value,
+      isi: $('#f-isi').value, lampiran_url: url, lampiran_nama: nama,
+      sematkan: $('#f-pin').checked, terbit: $('#f-pub').checked
+    });
+    $('#dlg').close(); D = await api(); render();
+  } catch (e) { $('#dlgErr').textContent = e.message; }
+  finally { btn.disabled = false; }
+};
+mulai();
+</script>
+</body>
+</html>
