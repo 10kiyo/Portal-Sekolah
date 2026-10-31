@@ -18,11 +18,6 @@ h2{margin:0 0 12px;color:var(--navy);font-size:clamp(19px,3vw,23px);letter-spaci
 h3{margin:0 0 4px;color:var(--navy);font-size:16px}
 .card{background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:clamp(16px,3.5vw,26px);box-shadow:0 12px 30px #102a4310;margin-top:16px}
 .card p{line-height:1.7;margin:0 0 10px;overflow-wrap:anywhere}.card p:last-child{margin-bottom:0}
-.id{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-.id div{background:var(--soft);border-radius:14px;padding:12px 14px}
-.id span{display:block;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
-.id b{color:var(--navy);overflow-wrap:anywhere}
-.id a{color:var(--blue);font-weight:700}
 .visi{font-size:clamp(17px,2.6vw,21px);line-height:1.6;color:var(--navy);font-weight:600}
 ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;padding-left:4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
@@ -31,6 +26,29 @@ ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;
 .tags{display:flex;gap:8px;flex-wrap:wrap}.tags span{padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--navy);font-weight:700;font-size:14px}
 .sambutan{border-left:4px solid var(--blue);padding-left:16px}
 .sambutan .by{margin-top:12px;font-weight:700;color:var(--navy)}.sambutan .by span{display:block;font-weight:400;color:var(--mute);font-size:14px}
+.idf{margin-top:16px;background:var(--navy);color:#d9e6f2;border-radius:26px;padding:clamp(22px,4vw,40px);box-shadow:0 18px 45px #102a4330}
+.idf .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
+.idf h3{margin:0 0 14px;color:#8fcbff;font-size:18px;letter-spacing:-.01em}
+.idf .logo{display:flex;align-items:center;gap:12px}
+.idf .logo img{width:56px;height:56px;background:#fff;border-radius:14px;padding:5px;object-fit:contain}
+.idf .logo b{display:block;color:#fff;font-size:18px;letter-spacing:-.02em}
+.idf .logo span{font-size:13px;color:#9db4c9}
+.idf p{margin:0;line-height:1.7;font-size:15px}
+.idf .desc{margin-top:16px;color:#c3d4e4}
+.idf .lbl{display:block;margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.08em;color:#8fcbff;text-transform:uppercase}
+.idf .blk{margin-bottom:16px}.idf .blk b{display:block;color:#fff;margin-bottom:3px}
+.idf a{color:#fff}
+.idf .badge{display:block;margin-top:18px;padding:12px 14px;border:1px solid #ffffff30;border-radius:14px;background:#ffffff0d;font-size:14px}
+.idf .badge b{display:block;color:#8fcbff}.idf .badge a{font-size:13px;color:#c3d4e4}
+.idf .soc{display:flex;gap:10px;margin-top:18px}
+.idf .soc a{width:42px;height:42px;display:grid;place-items:center;border:1px solid #ffffff30;border-radius:50%;background:#ffffff0d;transition:.18s}
+.idf .soc a:hover{background:#ffffff26;transform:translateY(-2px)}
+.idf .soc svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.idf iframe.map{width:100%;height:190px;border:0;border-radius:16px;background:#1d3d5a;display:block}
+.idf .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.idf .pills a{text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border:1px solid #ffffff30;border-radius:99px;background:#ffffff0d}
+.idf .pills a:hover{background:#ffffff26}
+.idf a:focus-visible{outline:3px solid #8fcbff80;outline-offset:2px}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .btns a{text-decoration:none;font-weight:700;font-size:14px;padding:10px 16px;border-radius:10px;background:var(--navy);color:#fff}
 .btns a.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}
@@ -113,14 +131,36 @@ if (self !== top) document.body.classList.add('emb');
 document.getElementById('tagline').textContent = PROFIL.tagline;
 
 const P = PROFIL, out = [];
-const idRows = Object.entries(P.identitas).filter(([, v]) => v);
-out.push(`<section class="card"><h2>Identitas Sekolah</h2><div class="id">${
-  idRows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')
-}<div><span>Alamat</span><b>Jl. Daksinapati Raya No. 2, Komp. UI/UNJ, RT.11/RW.14, Rawamangun, Kec. Pulogadung, Jakarta Timur, 13220</b></div>
-<div><span>WhatsApp</span><a href="https://wa.me/6281220706200" target="_blank" rel="noopener">+62-812-2070-6200</a></div>
-<div><span>Email</span><a href="mailto:info@attaqwa.sch.id">info@attaqwa.sch.id</a></div></div>
-<div class="btns"><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek legalitas →</a>
-<a class="sec" href="https://www.google.com/maps/search/?api=1&query=SDS+Islam+At-Taqwa+Rawamangun" target="_blank" rel="noopener">Buka di Google Maps</a></div></section>`);
+const I = P.identitas;
+const extra = ['Jenjang / Status', 'Tahun Berdiri', 'Kepala Sekolah'].filter(k => I[k]);
+out.push(`<section class="idf" aria-label="Identitas Sekolah"><div class="cols">
+  <div>
+    <div class="logo"><img src="logo-at-taqwa.png" alt=""><div><b>SDS Islam At-Taqwa</b><span>Rawamangun, Jakarta Timur</span></div></div>
+    <p class="desc">${esc(P.tagline)}</p>
+    <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: ${esc(I['NPSN'])} · Akreditasi: ${esc(I['Akreditasi'])}<br><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek legalitas →</a></div>
+    <div class="soc">
+      <a href="https://www.instagram.com/sdi_attaqwa/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/></svg></a>
+      <a href="https://www.tiktok.com/@sdi_attaqwa" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M14 3v11.2a3.7 3.7 0 1 1-3.7-3.7"/><path d="M14 3c.3 2.4 1.9 4 4.4 4.3"/></svg></a>
+      <a href="https://www.youtube.com/@sdiattaqwa2688" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.8" width="18.4" height="12.4" rx="3.6"/><path d="M10 9.4v5.2l4.6-2.6z"/></svg></a>
+    </div>
+  </div>
+  <div>
+    <h3>Hubungi Kami</h3>
+    <div class="blk"><span class="lbl">WhatsApp</span><a href="https://wa.me/6281220706200" target="_blank" rel="noopener">+62-812-2070-6200</a></div>
+    <div class="blk"><span class="lbl">Email</span><a href="mailto:info@attaqwa.sch.id">info@attaqwa.sch.id</a></div>
+    ${I['Jam Layanan'] ? `<div class="blk"><span class="lbl">Jam layanan</span><p>${esc(I['Jam Layanan'])}</p></div>` : ''}
+  </div>
+  <div>
+    <h3>Alamat Sekolah</h3>
+    <div class="blk"><b>SDS Islam At-Taqwa Rawamangun</b><p>Jl. Daksinapati Raya No. 2, Komp. UI/UNJ, RT.11/RW.14, Rawamangun, Kec. Pulogadung, Jakarta Timur, 13220</p></div>
+    ${extra.map(k => `<div class="blk"><span class="lbl">${esc(k)}</span><p>${esc(I[k])}</p></div>`).join('')}
+  </div>
+  <div>
+    <h3>Lokasi Sekolah</h3>
+    <iframe class="map" title="Peta lokasi sekolah" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=SDS+Islam+At-Taqwa+Rawamangun,+Jl.+Daksinapati+Raya+No.+2,+Jakarta+Timur&hl=id&z=16&output=embed" allowfullscreen></iframe>
+    <div class="pills"><a href="https://www.google.com/maps/search/?api=1&query=SDS+Islam+At-Taqwa+Rawamangun" target="_blank" rel="noopener">Buka di Google Maps</a></div>
+  </div>
+</div></section>`);
 
 const ytId = u => {
   try {
