@@ -47,8 +47,12 @@ export async function onRequest({ request, env }) {
         tanggal_kegiatan: String(b.tanggal_kegiatan || ''),
         kuota: b.kuota === null || b.kuota === '' || b.kuota === undefined ? null : Number(b.kuota),
         aktif: b.aktif !== false,
-        tanya_kaos: b.tanya_kaos === true, tanya_kesehatan: b.tanya_kesehatan === true
+        tanya_kaos: b.tanya_kaos === true, tanya_kesehatan: b.tanya_kesehatan === true,
+        // tingkat kosong/null = semua kelas; selain itu hanya murid di tingkat tersebut yang bisa mendaftar
+        tingkat: [...new Set((Array.isArray(b.tingkat) ? b.tingkat : []).map(Number))].filter(n => Number.isInteger(n) && n >= 1 && n <= 6).sort(),
+        untuk_umum: b.untuk_umum === true, tampil_info: b.tampil_info !== false
       };
+      if (!k.tingkat.length) k.tingkat = null;
       if (!k.nama) return json(400, { error: 'Nama kegiatan wajib diisi.' });
       if (!Number.isInteger(k.biaya) || k.biaya < 0 || k.biaya > 100000000) return json(400, { error: 'Biaya tidak valid.' });
       if (![k.buka_daftar, k.tutup_daftar, k.tanggal_kegiatan].every(d => TGL.test(d))) return json(400, { error: 'Tanggal tidak lengkap.' });
@@ -59,7 +63,7 @@ export async function onRequest({ request, env }) {
       const r = id
         ? await fetch(`${c.REST}/kegiatan?id=eq.${id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(k) })
         : await fetch(`${c.REST}/kegiatan`, { method: 'POST', headers: jh, body: JSON.stringify(k) });
-      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan supabase-kegiatan.sql dan supabase-kegiatan-opsi.sql sudah dijalankan.' });
+      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan supabase-kegiatan.sql, supabase-kegiatan-opsi.sql, dan supabase-kegiatan-tingkat.sql sudah dijalankan.' });
       return json(200, { ok: true });
     }
 

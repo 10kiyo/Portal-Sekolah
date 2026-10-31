@@ -84,6 +84,13 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px
         <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" name="tanya_kaos" style="width:auto"> Tanya ukuran kaos</label>
         <label style="font-weight:400;display:flex;gap:8px;align-items:center"><input type="checkbox" name="tanya_kesehatan" style="width:auto"> Tanya alergi / kondisi kesehatan</label>
         <div class="mut" style="margin-top:6px">Nama pengirim, tanggal transfer, foto bukti, dan kontak darurat selalu ada.</div></div>
+      <fieldset class="full" style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0">
+        <legend style="font-weight:700;color:var(--navy);font-size:14px;padding:0 6px">Siapa yang boleh mendaftar</legend>
+        <div class="mut" style="margin-bottom:6px">Centang tingkat kelas yang boleh mendaftar lewat kode akses murid. Jika tidak ada yang dicentang, semua kelas boleh.</div>
+        <div id="tk" style="display:flex;gap:6px 16px;flex-wrap:wrap"></div>
+        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" name="untuk_umum" style="width:auto"> Buka juga untuk umum (peserta dari sekolah lain, tanpa kode akses)</label>
+        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" name="tampil_info" style="width:auto" checked> Tampilkan tautan pendaftaran umum di halaman Info Terbaru</label>
+      </fieldset>
       <div class="full"><label>Rekening tujuan transfer</label><textarea name="rekening" rows="2" maxlength="300" placeholder="Bank … 1234567890 a.n. …"></textarea></div>
       <div><label>Pendaftaran dibuka</label><input name="buka_daftar" type="date" required></div>
       <div><label>Pendaftaran ditutup</label><input name="tutup_daftar" type="date" required></div>
@@ -135,14 +142,25 @@ async function mulai() {
 }
 async function muat() { D = await api(); if (sel && !D.kegiatan.find(k => k.id === sel)) sel = null; renderList(); renderDetail(); }
 
+const tingkatDari = kelas => [...new Set((String(kelas || '').match(/\d+/g) || []).map(Number).filter(n => n >= 1 && n <= 6))];
+const untukLabel = k => (k.tingkat && k.tingkat.length) ? 'Kelas ' + [...k.tingkat].sort().join(', ') : 'Semua kelas';
+const tautanMurid = k => location.origin + '/ortu.html?k=' + k.id, tautanUmum = k => location.origin + '/daftar.html?k=' + k.id;
+async function salin(teks, tombol) {
+  let ok = false;
+  try { await navigator.clipboard.writeText(teks); ok = true; } catch (_) {}
+  if (!ok) { prompt('Salin tautan ini:', teks); return; }
+  const lama = tombol.textContent; tombol.textContent = 'Tersalin ✓'; setTimeout(() => { tombol.textContent = lama; }, 2000);
+}
 const stat = id => { const p = D.pendaftar.filter(x => x.kegiatan_id === id), n = s => p.filter(x => x.status === s).length; return { total: p.length, menunggu: n('menunggu'), lunas: n('lunas'), ditolak: n('ditolak') }; };
 
 function renderList() {
   $('#klist').innerHTML = D.kegiatan.length ? D.kegiatan.map(k => {
     const s = stat(k.id), f = FASE[k.fase];
     return `<div class="k ${k.id === sel ? 'sel' : ''}"><div class="top"><div><h3>${esc(k.nama)}</h3><div class="mut">Kegiatan ${tgl(k.tanggal_kegiatan)} · Daftar ${tgl(k.buka_daftar)} – ${tgl(k.tutup_daftar)} · ${k.biaya ? rp(k.biaya) : 'Gratis'}${k.kuota ? ' · Kuota ' + k.kuota : ''}</div></div><span class="pill ${f[1]}">${f[0]}</span></div>
+    <div style="margin-top:6px"><span class="pill blue">Untuk ${untukLabel(k)}</span> ${k.untuk_umum ? '<span class="pill ok">Terbuka untuk umum</span>' : ''}</div>
     <div class="mut" style="margin-top:6px">${s.total} pendaftar · ${s.lunas} lunas · ${s.menunggu} menunggu</div>
     <div class="acts"><button class="sm" data-a="buka" data-id="${k.id}">Kelola pendaftar</button><button class="sm sec" data-a="edit" data-id="${k.id}">Edit</button><button class="sm sec" data-a="dup" data-id="${k.id}">Duplikat</button>
+    <button class="sm sec" data-a="link" data-id="${k.id}">Salin tautan murid</button>${k.untuk_umum ? `<button class="sm sec" data-a="linku" data-id="${k.id}">Salin tautan umum</button>` : ''}
     ${k.fase !== 'selesai' ? `<button class="sm sec" data-a="aktif" data-id="${k.id}" data-v="${!k.aktif}">${k.aktif ? 'Tutup pendaftaran' : 'Buka pendaftaran'}</button>` : ''}
     <button class="sm sec" data-a="hapus" data-id="${k.id}">Hapus</button></div></div>`;
   }).join('') : '<p class="mut">Belum ada kegiatan. Klik "Tambah kegiatan".</p>';
@@ -153,6 +171,8 @@ $('#klist').onclick = async e => {
   try {
     if (a === 'buka') { sel = k.id; tab = 'daftar'; renderList(); renderDetail(); $('#detail').scrollIntoView({ behavior: 'smooth' }); }
     else if (a === 'edit') formK(k);
+    else if (a === 'link') await salin(tautanMurid(k), b);
+    else if (a === 'linku') await salin(tautanUmum(k), b);
     else if (a === 'dup') formK({ ...k, id: null, nama: k.nama + ' (salinan)', buka_daftar: '', tutup_daftar: '', tanggal_kegiatan: '' });
     else if (a === 'aktif') { await api({ action: 'aktif', id: k.id, aktif: b.dataset.v === 'true' }); await muat(); }
     else if (a === 'hapus' && confirm(`Hapus kegiatan "${k.nama}"? Hanya bisa jika belum ada pendaftar.`)) { await api({ action: 'hapus', id: k.id }); await muat(); }
@@ -166,8 +186,11 @@ function formK(k) {
   const v = k || { biaya: 0, buka_daftar: D.today };
   ['nama', 'deskripsi', 'biaya', 'kuota', 'rekening', 'buka_daftar', 'tutup_daftar', 'tanggal_kegiatan'].forEach(n => f[n].value = v[n] ?? '');
   f.tanya_kaos.checked = !!v.tanya_kaos; f.tanya_kesehatan.checked = !!v.tanya_kesehatan;
+  const tk = new Set((v.tingkat || []).map(Number)); [1, 2, 3, 4, 5, 6].forEach(n => f['tk' + n].checked = tk.has(n));
+  f.untuk_umum.checked = !!v.untuk_umum; f.tampil_info.checked = v.tampil_info !== false;
   $('#dlgK').showModal();
 }
+$('#tk').innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<label style="font-weight:400;display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" name="tk${n}" style="width:auto"> Kelas ${n}</label>`).join('');
 $('#tambah').onclick = () => formK(null);
 $('#batalK').onclick = () => $('#dlgK').close();
 $('#fK').onsubmit = async e => {
@@ -175,6 +198,7 @@ $('#fK').onsubmit = async e => {
   try {
     await api({ action: 'simpan', id: editId, nama: f.nama.value, deskripsi: f.deskripsi.value, biaya: Number(f.biaya.value), kuota: f.kuota.value === '' ? null : Number(f.kuota.value),
       tanya_kaos: f.tanya_kaos.checked, tanya_kesehatan: f.tanya_kesehatan.checked,
+      tingkat: [1, 2, 3, 4, 5, 6].filter(n => f['tk' + n].checked), untuk_umum: f.untuk_umum.checked, tampil_info: f.tampil_info.checked,
       rekening: f.rekening.value, buka_daftar: f.buka_daftar.value, tutup_daftar: f.tutup_daftar.value, tanggal_kegiatan: f.tanggal_kegiatan.value });
     $('#dlgK').close(); await muat();
   } catch (err) { $('#errK').textContent = err.message; } finally { b.disabled = false; }
@@ -186,9 +210,9 @@ function renderDetail() {
   if (!k) { box.classList.add('hidden'); return; }
   box.classList.remove('hidden');
   const s = stat(k.id), ps = D.pendaftar.filter(x => x.kegiatan_id === k.id);
-  const ada = new Set(ps.map(x => x.anak_key)), belum = D.murid.filter(m => !ada.has(m.key)).sort((a, b) => (a.kelas + a.nama).localeCompare(b.kelas + b.nama, 'id', { numeric: true }));
+  const tk = (k.tingkat || []).map(Number), ada = new Set(ps.map(x => x.anak_key)), belum = D.murid.filter(m => !ada.has(m.key) && (!tk.length || tingkatDari(m.kelas).some(t => tk.includes(t)))).sort((a, b) => (a.kelas + a.nama).localeCompare(b.kelas + b.nama, 'id', { numeric: true }));
   const kelasOpt = [...new Set(ps.map(x => x.kelas).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
-  box.innerHTML = `<div class="top"><div><h2>${esc(k.nama)}</h2><div class="mut">Kegiatan ${tgl(k.tanggal_kegiatan)} · ${k.biaya ? rp(k.biaya) : 'Gratis'}</div></div>
+  box.innerHTML = `<div class="top"><div><h2>${esc(k.nama)}</h2><div class="mut">Kegiatan ${tgl(k.tanggal_kegiatan)} · ${k.biaya ? rp(k.biaya) : 'Gratis'} · Untuk ${untukLabel(k)}${k.untuk_umum ? ' + umum' : ''}</div></div>
     <div class="noprint" style="display:flex;gap:8px"><button class="sec sm" id="csv">Ekspor CSV</button><button class="sec sm" id="cetak">Cetak</button></div></div>
     <div class="stats"><div><b>${s.total}</b><span>Pendaftar</span></div><div><b>${s.lunas}</b><span>Lunas</span></div><div><b>${s.menunggu}</b><span>Menunggu</span></div><div><b>${s.ditolak}</b><span>Ditolak</span></div>
     <div><b>${rp(s.lunas * k.biaya)}</b><span>Dana terkonfirmasi</span></div>${k.kuota ? `<div><b>${Math.max(0, k.kuota - k.terpakai)}</b><span>Sisa kuota</span></div>` : ''}</div>
@@ -198,7 +222,7 @@ function renderDetail() {
   $('#cetak').onclick = () => window.print();
   $('#csv').onclick = () => csv(k, ps);
   if (tab === 'belum') {
-    $('#isi').innerHTML = belum.length ? `<div class="scroll"><table><tr><th>Nama</th><th>Kelas</th></tr>${belum.map(m => `<tr><td>${esc(m.nama)}</td><td>${esc(m.kelas)}</td></tr>`).join('')}</table></div>` : '<p class="mut">Semua murid sudah mendaftar.</p>';
+    $('#isi').innerHTML = belum.length ? `<div class="scroll"><table><tr><th>Nama</th><th>Kelas</th></tr>${belum.map(m => `<tr><td>${esc(m.nama)}</td><td>${esc(m.kelas)}</td></tr>`).join('')}</table></div>` : '<p class="mut">Semua murid yang berhak sudah mendaftar.</p>';
     return;
   }
   $('#isi').innerHTML = `<div class="filters noprint"><div><label>Status</label><select id="fs"><option value="">Semua</option><option value="menunggu">Menunggu</option><option value="lunas">Lunas</option><option value="ditolak">Ditolak</option></select></div>
@@ -208,8 +232,8 @@ function renderDetail() {
     const q = $('#fq').value.trim().toLowerCase(), fs = $('#fs').value, fk = $('#fk').value;
     const rows = ps.filter(x => (!fs || x.status === fs) && (!fk || x.kelas === fk) && (!q || x.nama_anak.toLowerCase().includes(q)));
     $('#tbl').innerHTML = rows.length ? `<div class="scroll"><table><tr><th>Anak</th><th>Status</th><th>Transfer</th>${k.tanya_kaos ? '<th>Kaos</th>' : ''}${k.tanya_kesehatan ? '<th>Kesehatan</th>' : ''}<th>Kontak darurat</th><th class="noprint"></th></tr>
-      ${rows.map(x => `<tr><td><b>${esc(x.nama_anak)}</b><div class="mut">${esc(x.kelas)}</div></td><td><span class="pill ${ST[x.status][1]}">${ST[x.status][0]}</span>${x.catatan_panitia ? `<div class="mut">${esc(x.catatan_panitia)}</div>` : ''}</td>
-      <td>${esc(x.nama_pengirim)}<div class="mut">${tgl(x.tanggal_transfer)}</div></td>${k.tanya_kaos ? `<td>${esc(x.data.kaos || '-')}</td>` : ''}${k.tanya_kesehatan ? `<td>${esc(x.data.kesehatan || '-')}</td>` : ''}<td>${esc(x.data.kontak || '-')}</td>
+      ${rows.map(x => `<tr><td><b>${esc(x.nama_anak)}</b><div class="mut">${x.data.umum ? 'Umum · ' + esc(x.data.asal_sekolah || '') + (x.data.kelas_peserta ? ' (kelas ' + esc(x.data.kelas_peserta) + ')' : '') : esc(x.kelas)}</div></td><td><span class="pill ${ST[x.status][1]}">${ST[x.status][0]}</span>${x.catatan_panitia ? `<div class="mut">${esc(x.catatan_panitia)}</div>` : ''}</td>
+      <td>${esc(x.nama_pengirim)}<div class="mut">${tgl(x.tanggal_transfer)}</div></td>${k.tanya_kaos ? `<td>${esc(x.data.kaos || '-')}</td>` : ''}${k.tanya_kesehatan ? `<td>${esc(x.data.kesehatan || '-')}</td>` : ''}<td>${esc(x.data.kontak || '-')}${x.data.nama_ortu ? `<div class="mut">${esc(x.data.nama_ortu)}</div>` : ''}</td>
       <td class="noprint"><button class="sm ${x.status === 'menunggu' ? '' : 'sec'}" data-p="${x.id}">${x.status === 'menunggu' ? 'Periksa' : 'Lihat'}</button></td></tr>`).join('')}</table></div>` : '<p class="mut">Tidak ada data.</p>';
   };
   ['#fq', '#fs', '#fk'].forEach(q => $(q).oninput = draw); draw();
@@ -219,12 +243,13 @@ function renderDetail() {
 async function periksa(p, k) {
   const dlg = $('#dlgP'), body = $('#pBody');
   body.innerHTML = `<h2>${esc(p.nama_anak)}</h2><div class="mut">${esc(p.kelas)} · ${esc(k.nama)}</div>
-    <p style="margin:10px 0 0">Pengirim: <b>${esc(p.nama_pengirim)}</b> · ${tgl(p.tanggal_transfer)}<br>Nominal seharusnya: <b>${rp(k.biaya)}</b></p><div id="bk" class="mut" style="margin:10px 0">Memuat bukti…</div>
+    <p style="margin:10px 0 0">${p.has_bukti ? `Pengirim: <b>${esc(p.nama_pengirim)}</b> · ${tgl(p.tanggal_transfer)}<br>Nominal seharusnya: <b>${rp(k.biaya)}</b>` : 'Tidak ada bukti transfer (kegiatan gratis).'}</p><div id="bk" class="mut" style="margin:10px 0">Memuat bukti…</div>
     <label>Catatan untuk orang tua (wajib jika ditolak)</label><textarea id="cat" rows="2" maxlength="300" placeholder="mis. Nominal kurang Rp50.000 / foto buram, mohon kirim ulang">${esc(p.catatan_panitia || '')}</textarea><div id="perr" class="err"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px"><button class="sec" data-s="x">Tutup</button>
     ${p.status !== 'menunggu' ? '<button class="sec" data-s="menunggu">Kembalikan ke menunggu</button>' : ''}<button class="bad" data-s="ditolak">Tolak</button><button class="good" data-s="lunas">Tandai lunas</button></div>`;
   dlg.showModal();
-  api({ action: 'bukti', id: p.id }).then(d => { $('#bk').innerHTML = `<a href="${esc(d.url)}" target="_blank" rel="noopener"><img class="bukti" src="${esc(d.url)}" alt="Bukti transfer"></a>`; }).catch(e => { $('#bk').textContent = 'Bukti tidak dapat dimuat: ' + e.message; });
+  if (!p.has_bukti) $('#bk').textContent = '';
+  else api({ action: 'bukti', id: p.id }).then(d => { $('#bk').innerHTML = `<a href="${esc(d.url)}" target="_blank" rel="noopener"><img class="bukti" src="${esc(d.url)}" alt="Bukti transfer"></a>`; }).catch(e => { $('#bk').textContent = 'Bukti tidak dapat dimuat: ' + e.message; });
   body.onclick = async e => {
     const b = e.target.closest('[data-s]'); if (!b) return;
     if (b.dataset.s === 'x') return dlg.close();
@@ -236,8 +261,8 @@ async function periksa(p, k) {
 
 function csv(k, ps) {
   const c = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const rows = [['Nama', 'Kelas', 'Status', 'Pengirim', 'Tanggal transfer', ...(k.tanya_kaos ? ['Ukuran kaos'] : []), ...(k.tanya_kesehatan ? ['Kesehatan'] : []), 'Kontak darurat', 'Catatan panitia', 'Waktu daftar'],
-    ...ps.map(x => [x.nama_anak, x.kelas, x.status, x.nama_pengirim, x.tanggal_transfer, ...(k.tanya_kaos ? [x.data.kaos] : []), ...(k.tanya_kesehatan ? [x.data.kesehatan] : []), x.data.kontak, x.catatan_panitia, x.created_at])];
+  const rows = [['Nama', 'Kelas', 'Asal sekolah (umum)', 'Status', 'Pengirim', 'Tanggal transfer', ...(k.tanya_kaos ? ['Ukuran kaos'] : []), ...(k.tanya_kesehatan ? ['Kesehatan'] : []), 'Kontak darurat', 'Catatan panitia', 'Waktu daftar'],
+    ...ps.map(x => [x.nama_anak, x.data.umum ? 'Umum' + (x.data.kelas_peserta ? ' kelas ' + x.data.kelas_peserta : '') : x.kelas, x.data.asal_sekolah || '', x.status, x.nama_pengirim, x.tanggal_transfer, ...(k.tanya_kaos ? [x.data.kaos] : []), ...(k.tanya_kesehatan ? [x.data.kesehatan] : []), x.data.kontak, x.catatan_panitia, x.created_at])];
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.map(r => r.map(c).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = 'pendaftar-' + k.nama.replace(/[^\w]+/g, '-').toLowerCase() + '.csv'; a.click(); URL.revokeObjectURL(a.href);

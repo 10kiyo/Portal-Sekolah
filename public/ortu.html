@@ -79,6 +79,7 @@ const tgl = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'n
 const NS = { H: 'Hadir', I: 'Izin', S: 'Sakit', A: 'Alpa' };
 if (self !== top) document.body.classList.add('emb');
 let kodeAktif = '';
+const FOKUS = new URLSearchParams(location.search).get('k') || '';   // tautan khusus satu kegiatan: ortu.html?k=<id>
 const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 const FASE = { dibuka: '', penuh: 'Kuota sudah penuh.', ditutup: 'Pendaftaran sudah ditutup.' };
 const SPILL = { menunggu: ['warn', 'Menunggu verifikasi'], lunas: ['ok', 'Lunas'], ditolak: ['bad', 'Perlu diperbaiki'] };
@@ -105,8 +106,11 @@ async function kecilkan(file) {
 async function muatKegiatan() {
   const box = $('#kg'); if (!box) return;
   try {
-    const { kegiatan } = await post({ action: 'list' });
-    box.innerHTML = kegiatan.map(k => kartuKegiatan(k)).join('');
+    const { kegiatan: semua, terkunci } = await post({ action: 'list', id: FOKUS });
+    const kegiatan = FOKUS ? [...semua.filter(k => k.id === FOKUS), ...semua.filter(k => k.id !== FOKUS)] : semua;
+    const kunci = terkunci ? `<div class="card kg"><div class="row"><h3>${esc(terkunci.nama)}</h3><span class="pill bad">Bukan untuk kelas ini</span></div>
+      <div class="box">Pendaftaran kegiatan ini khusus untuk <b>${esc(terkunci.untuk)}</b>. Anak ini terdaftar di kelas yang berbeda, sehingga pendaftaran tidak bisa dilakukan dari kode akses ini.</div></div>` : '';
+    box.innerHTML = kunci + kegiatan.map(k => kartuKegiatan(k)).join('');
     box.querySelectorAll('[data-buka]').forEach(b => b.onclick = () => { const f = box.querySelector('form[data-k="' + b.dataset.buka + '"]'); f.classList.toggle('hidden'); b.textContent = f.classList.contains('hidden') ? b.dataset.label : 'Tutup formulir'; });
     box.querySelectorAll('form').forEach(f => f.onsubmit = e => { e.preventDefault(); kirim(f); });
   } catch (e) { box.innerHTML = ''; }
@@ -132,7 +136,7 @@ function kartuKegiatan(k) {
     </form>`;
   }
   return `<div class="card kg"><div class="row"><h3>${esc(k.nama)}</h3>${st ? `<span class="pill ${st[0]}">${st[1]}</span>` : ''}</div>
-    <div class="mut">Kegiatan: ${tgl(k.tanggal_kegiatan)} · Daftar sampai ${tgl(k.tutup_daftar)}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}</div>
+    <div class="mut">Kegiatan: ${tgl(k.tanggal_kegiatan)} · Daftar sampai ${tgl(k.tutup_daftar)}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}${k.terbatas ? ' · Untuk ' + esc(k.untuk) : ''}</div>
     ${k.deskripsi ? `<div class="box">${esc(k.deskripsi)}</div>` : ''}
     <div class="rp">${k.biaya ? rp(k.biaya) : 'Gratis'}</div>
     ${k.biaya && k.rekening ? `<div class="box">Transfer ke:\n${esc(k.rekening)}</div>` : ''}

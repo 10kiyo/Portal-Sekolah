@@ -7,6 +7,7 @@ import * as submitAttendance from '../functions/api/submit-attendance.js';
 import * as ortuLookup from '../functions/api/ortu-lookup.js';
 import * as ortuKegiatan from '../functions/api/ortu-kegiatan.js';
 import * as adminKegiatan from '../functions/api/admin-kegiatan.js';
+import * as umumKegiatan from '../functions/api/umum-kegiatan.js';
 import * as info from '../functions/api/info.js';
 import * as adminInfo from '../functions/api/admin-info.js';
 import * as youtube from '../functions/api/youtube.js';
@@ -25,6 +26,7 @@ const routes = {
   '/api/ortu-lookup': ortuLookup,
   '/api/ortu-kegiatan': ortuKegiatan,
   '/api/admin-kegiatan': adminKegiatan,
+  '/api/umum-kegiatan': umumKegiatan,
   '/api/info': info,
   '/api/admin-info': adminInfo,
   '/api/youtube': youtube,

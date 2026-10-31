@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendaftaran Kegiatan - SDS Islam At-Taqwa</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--danger:#bc3d33;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(680px,calc(100% - 24px));margin:0 auto;padding:28px 0 48px}
+header{text-align:center;margin-bottom:14px}
+header img{width:64px;height:64px;background:#fff;border-radius:16px;padding:6px;box-shadow:0 8px 20px #102a4325}
+h1{margin:10px 0 2px;color:var(--navy);font-size:clamp(22px,5vw,28px);letter-spacing:-.03em}
+header p{margin:0;color:var(--mute);font-size:14px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:12px}
+h2{margin:0;color:var(--navy);font-size:20px}
+.mut{color:var(--mute);font-size:13px}
+.box{background:var(--soft);border-radius:12px;padding:10px 12px;margin:10px 0;white-space:pre-wrap;font-size:14px}
+.rp{font-size:20px;font-weight:800;color:var(--navy)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
+.pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.bad{background:#fbeceb;color:var(--danger)}
+form{display:grid;gap:12px;margin-top:14px}
+label{display:block;font-weight:700;color:var(--navy);margin:0 0 4px;font-size:14px}
+input,textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:16px;color:var(--ink);background:#fff}
+input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-weight:400}.chk input{width:auto;margin-top:4px}
+fieldset{border:1px solid var(--line);border-radius:12px;padding:12px;margin:0;display:grid;gap:12px}
+legend{font-weight:700;color:var(--navy);padding:0 6px;font-size:14px}
+button{border:0;cursor:pointer;font:inherit;font-weight:750;padding:12px 18px;border-radius:10px;background:var(--blue);color:#fff}
+button.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+button:disabled{opacity:.6;cursor:wait}
+button:focus-visible,a:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+.err{margin-top:6px;color:var(--danger);font-weight:650}
+.ok{color:var(--ok);font-weight:700}
+.hidden{display:none!important}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+a{color:var(--blue)}
+@media(max-width:560px){.g2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img src="logo-at-taqwa.png" alt="">
+  <h1>Pendaftaran Kegiatan</h1>
+  <p>SDS Islam At-Taqwa Rawamangun</p>
+</header>
+
+<div id="isi"><div class="card mut">Memuat…</div></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+const ID = new URLSearchParams(location.search).get('k') || '';
+const FASE = { akan: 'Pendaftaran belum dibuka.', penuh: 'Mohon maaf, kuota sudah penuh.', ditutup: 'Pendaftaran sudah ditutup.', selesai: 'Kegiatan ini sudah selesai.' };
+const ST = { menunggu: ['warn', 'Menunggu verifikasi panitia'], lunas: ['ok', 'Terkonfirmasi'], ditolak: ['bad', 'Perlu diperbaiki'] };
+let K = null;
+
+async function api(body) {
+  const r = await fetch('/api/umum-kegiatan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kegiatanId: ID, ...body }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.');
+  return d;
+}
+// Foto dikecilkan di browser agar unggahan dari HP cepat dan hemat kuota.
+async function kecilkan(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+    const sk = Math.min(1, 1600 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+    cv.width = Math.round(img.width * sk); cv.height = Math.round(img.height * sk);
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    let q = .8, out = cv.toDataURL('image/jpeg', q);
+    while (out.length > 2500000 && q > .35) { q -= .15; out = cv.toDataURL('image/jpeg', q); }
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+
+function ringkasan(k) {
+  return `<div class="card">
+    <h2>${esc(k.nama)}</h2>
+    <div class="mut" style="margin-top:4px">Kegiatan ${tgl(k.tanggal_kegiatan)} · Daftar sampai ${tgl(k.tutup_daftar)}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}</div>
+    ${k.deskripsi ? `<div class="box">${esc(k.deskripsi)}</div>` : ''}
+    <div class="rp">${k.biaya ? rp(k.biaya) : 'Gratis'}</div>
+    ${k.biaya && k.rekening ? `<div class="box">Transfer ke:\n${esc(k.rekening)}</div>` : ''}
+  </div>`;
+}
+
+function formHtml(k) {
+  return `<div class="card"><h2 style="font-size:18px">Data peserta</h2>
+  <form id="f" novalidate>
+    <div class="hp" aria-hidden="true"><label>Jangan diisi<input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <div><label for="nama">Nama lengkap peserta</label><input id="nama" name="nama" maxlength="80" required autocomplete="name"></div>
+    <div class="g2">
+      <div><label for="asal">Asal sekolah</label><input id="asal" name="asal_sekolah" maxlength="100" required placeholder="mis. SDN 01 Rawamangun"></div>
+      <div><label for="kls">Kelas</label><input id="kls" name="kelas_peserta" maxlength="30" placeholder="mis. 5"></div>
+    </div>
+    <div class="g2">
+      <div><label for="ortu">Nama orang tua/wali</label><input id="ortu" name="nama_ortu" maxlength="80" autocomplete="off"></div>
+      <div><label for="wa">Nomor WhatsApp yang bisa dihubungi</label><input id="wa" name="kontak" maxlength="40" inputmode="tel" required autocomplete="tel"></div>
+    </div>
+    ${k.tanya_kaos ? '<div><label for="kaos">Ukuran kaos</label><input id="kaos" name="kaos" maxlength="20" required placeholder="mis. M / anak 10"></div>' : ''}
+    ${k.tanya_kesehatan ? '<div><label for="kes">Alergi atau kondisi kesehatan</label><textarea id="kes" name="kesehatan" rows="2" maxlength="200" placeholder="Kosongkan jika tidak ada"></textarea></div>' : ''}
+    ${k.biaya ? `<fieldset><legend>Bukti pembayaran</legend>
+      <div><label for="np">Nama pengirim transfer</label><input id="np" name="nama_pengirim" maxlength="60" required></div>
+      <div class="g2"><div><label for="tt">Tanggal transfer</label><input id="tt" type="date" name="tanggal_transfer" required></div>
+      <div><label for="bk">Foto bukti transfer</label><input id="bk" type="file" name="bukti" accept="image/*" required></div></div></fieldset>` : ''}
+    <label class="chk"><input type="checkbox" name="setuju" required> <span>Saya orang tua/wali peserta dan mengizinkan anak mengikuti kegiatan ini.</span></label>
+    <div><button type="submit" id="kirim">Kirim pendaftaran</button><div id="err" class="err" role="alert"></div></div>
+  </form></div>`;
+}
+
+function cekHtml() {
+  return `<div class="card"><details id="cekBox"><summary style="cursor:pointer;color:var(--blue);font-weight:700">Sudah mendaftar? Cek status pendaftaran</summary>
+  <form id="fc" novalidate>
+    <div class="mut">Isi sama persis seperti saat mendaftar.</div>
+    <div><label for="cn">Nama peserta</label><input id="cn" name="nama" required></div>
+    <div><label for="ca">Asal sekolah</label><input id="ca" name="asal_sekolah" required></div>
+    <div><label for="ck">Nomor WhatsApp</label><input id="ck" name="kontak" inputmode="tel" required></div>
+    <div><button type="submit" class="ghost" id="cekBtn">Cek status</button></div><div id="cekHasil" role="status"></div>
+  </form></details></div>`;
+}
+
+function sukses(gratis) {
+  $('#isi').innerHTML = ringkasan(K) + `<div class="card"><h2 class="ok">Pendaftaran terkirim</h2>
+    <p>${gratis ? 'Panitia akan menghubungi lewat WhatsApp untuk konfirmasi.' : 'Bukti transfer Anda sudah kami terima dan akan diperiksa panitia. Konfirmasi dikirim lewat WhatsApp.'}</p>
+    <p class="mut">Simpan halaman ini. Status pendaftaran bisa dicek kapan saja lewat tautan yang sama.</p></div>` + cekHtml();
+  bindCek();
+}
+
+function bindCek() {
+  const f = $('#fc'); if (!f) return;
+  f.onsubmit = async e => {
+    e.preventDefault(); const b = $('#cekBtn'), out = $('#cekHasil'); out.innerHTML = ''; b.disabled = true;
+    try {
+      const d = await api({ action: 'cek', nama: f.nama.value, asal_sekolah: f.asal_sekolah.value, kontak: f.kontak.value });
+      const s = ST[d.status] || ['', d.status];
+      out.innerHTML = `<p><span class="pill ${s[0]}">${esc(s[1])}</span></p>${d.catatan ? `<div class="box">${esc(d.catatan)}</div>` : ''}${d.status === 'ditolak' ? '<p class="mut">Kirim ulang pendaftaran dengan data yang sama setelah memperbaiki hal di atas.</p>' : ''}`;
+    } catch (err) { out.innerHTML = `<div class="err">${esc(err.message)}</div>`; } finally { b.disabled = false; }
+  };
+}
+
+function bindForm() {
+  const f = $('#f'); if (!f) return;
+  f.onsubmit = async e => {
+    e.preventDefault(); const err = $('#err'), btn = $('#kirim'); err.textContent = '';
+    const fd = new FormData(f);
+    for (const el of f.querySelectorAll('[required]')) {
+      if ((el.type === 'checkbox' && !el.checked) || (el.type !== 'checkbox' && !String(el.value || '').trim())) {
+        err.textContent = el.type === 'checkbox' ? 'Centang persetujuan orang tua/wali terlebih dahulu.' : 'Lengkapi semua kolom yang wajib diisi.'; el.focus(); return;
+      }
+    }
+    btn.disabled = true; btn.textContent = 'Mengirim…';
+    try {
+      let bukti = '';
+      if (K.biaya) { const file = fd.get('bukti'); if (!file || !file.size) throw new Error('Pilih foto bukti transfer.'); bukti = await kecilkan(file); }
+      const d = await api({ action: 'daftar', setuju: f.setuju.checked, bukti, website: fd.get('website'),
+        nama: fd.get('nama'), asal_sekolah: fd.get('asal_sekolah'), kelas_peserta: fd.get('kelas_peserta'), nama_ortu: fd.get('nama_ortu'), kontak: fd.get('kontak'),
+        kaos: fd.get('kaos'), kesehatan: fd.get('kesehatan'), nama_pengirim: fd.get('nama_pengirim'), tanggal_transfer: fd.get('tanggal_transfer') });
+      sukses(d.gratis);
+    } catch (e2) { err.textContent = e2.message || 'Gagal mengirim.'; btn.disabled = false; btn.textContent = 'Kirim pendaftaran'; }
+  };
+}
+
+(async () => {
+  if (!ID) { $('#isi').innerHTML = '<div class="card">Tautan pendaftaran tidak lengkap. Minta tautan yang benar dari panitia atau buka halaman <a href="/#info">Info Terbaru</a>.</div>'; return; }
+  try {
+    const r = await fetch('/api/umum-kegiatan?id=' + encodeURIComponent(ID)), d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Gagal memuat.');
+    K = d.kegiatan; document.title = K.nama + ' - Pendaftaran';
+    const buka = K.fase === 'dibuka';
+    $('#isi').innerHTML = ringkasan(K) + (buka ? formHtml(K) : `<div class="card"><span class="pill warn">${esc(FASE[K.fase] || 'Pendaftaran tidak dibuka.')}</span></div>`) + cekHtml();
+    bindForm(); bindCek();
+  } catch (e) { $('#isi').innerHTML = `<div class="card">${esc(e.message)} <a href="/#info">Lihat Info Terbaru</a></div>`; }
+})();
+</script>
+</body>
+</html>

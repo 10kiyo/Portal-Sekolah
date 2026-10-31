@@ -78,3 +78,24 @@ KARTU PELAJAR (menu Pustakawan: desain kartu, data dari database, PDF)
 5. Pustakawan: atur judul, warna, ukuran huruf, bagian yang tampil + urutannya, lalu "Simpan tampilan" (berlaku untuk semua pustakawan).
    Pilih kelas (atau Semua kelas), centang murid, pilih format (A4 10 kartu/halaman atau 1 kartu/halaman), klik "Unduh PDF".
    Pembuatan PDF memuat pustaka html2canvas & jsPDF dari cdn.jsdelivr.net, jadi perlu internet.
+
+KEGIATAN PER TINGKAT KELAS + PENDAFTARAN UMUM + EDIT DATA MURID OLEH OPERATOR
+1. Supabase > SQL Editor: jalankan supabase-kegiatan-tingkat.sql (SETELAH supabase-kartu.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah kolom kegiatan.tingkat / untuk_umum / tampil_info, kolom lapisan di murid_profil, dan fungsi murid_gabungan().
+2. File baru/diganti (struktur sama):
+   BARU    : functions/api/umum-kegiatan.js, public/daftar.html, supabase-kegiatan-tingkat.sql
+   DIGANTI : functions/_lib/util.js, functions/api/ortu-kegiatan.js, admin-kegiatan.js, info.js, src/worker.js,
+             public/kegiatan.html, ortu.html, info.html, kelas.html, modul-staf.js
+3. Kegiatan per tingkat: menu Kegiatan (Panitia) > Tambah/Edit > "Siapa yang boleh mendaftar" > centang Kelas 1, 2, 3.
+   Tidak ada yang dicentang = semua kelas. Dicek di server (kelas anak diambil dari kode akses), bukan sekadar disembunyikan.
+   Tombol "Salin tautan murid" menghasilkan /ortu.html?k=<id>. Orang tua dari kelas lain yang membukanya melihat pesan
+   "khusus untuk Kelas 1, 2, 3"; kegiatan tidak tampil di daftar mereka.
+4. Pendaftaran umum: centang "Buka juga untuk umum". Tombol "Salin tautan umum" menghasilkan /daftar.html?k=<id>
+   (tanpa login). Peserta mengisi nama, asal sekolah, kontak WhatsApp, (bukti transfer bila berbiaya). Pendaftar muncul di daftar
+   pendaftar yang sama dengan kelas "Umum". Kegiatan umum yang sedang dibuka otomatis tampil di halaman Info Terbaru
+   (hilang sendiri saat ditutup/selesai; hilangkan dengan mencabut centang "Tampilkan ... di halaman Info Terbaru").
+5. Operator > Data murid: ubah nama/kelas/NIS/NISN/TTL/alamat, tambah murid, tempel dari Excel, nonaktifkan/aktifkan.
+   Disimpan di murid_profil (daftar_tamu_gabungan tidak diubah). Guru menerima perubahan lewat sinkron murid otomatis
+   (saat membuka Administrasi Kelas, kembali ke tab setelah >5 menit, atau tombol "Sinkronkan Murid"). Baris murid yang sama
+   diperbarui di tempat, jadi presensi, nilai, dan kode akses TIDAK hilang. Murid nonaktif hanya disembunyikan.
+   Catatan: Buku Tamu masih membaca daftar_tamu_gabungan langsung, jadi murid tambahan operator belum muncul di sana.

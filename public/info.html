@@ -49,6 +49,12 @@ h2{margin:0;color:var(--navy);font-size:18px}
 .sh:hover{background:var(--soft)}.sh:focus-visible{outline:3px solid #1677c850}
 .sh.wa{background:#1fa855;border-color:#1fa855;color:#fff}.sh.wa:hover{filter:brightness(1.08);background:#1fa855}
 .solo .adm{display:none}
+.pd{display:grid;gap:10px;margin-top:10px}
+.pdi{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--soft);border:1px solid #d6e6f3}
+.pdi .t{font-weight:700;color:var(--navy)}.pdi .s{font-size:13px;color:var(--mute);margin-top:2px}
+.pdi .go{flex:none;padding:9px 16px;border-radius:10px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.pdi .go:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+.solo #pdWrap{display:none}
 </style>
 </head>
 <body>
@@ -57,6 +63,12 @@ h2{margin:0;color:var(--navy);font-size:18px}
     <div><h1>Info Terbaru</h1>
     <div class="mut">Pengumuman, agenda kegiatan, dan surat untuk orang tua</div></div>
     <a class="adm" href="/#info-admin" target="_top">⚙ Kelola info (admin)</a>
+  </div>
+
+  <div class="card" id="pdWrap" hidden>
+    <h2>Pendaftaran terbuka untuk umum</h2>
+    <div class="mut" style="margin-top:2px">Peserta dari sekolah lain bisa mendaftar langsung, tanpa kode akses murid.</div>
+    <div class="pd" id="pd"></div>
   </div>
 
   <div class="card" id="agWrap" hidden>
@@ -136,6 +148,18 @@ function renderChips() {
   document.querySelectorAll('#chips button').forEach(b => b.onclick = () => { kat = b.dataset.k; renderChips(); render(); });
 }
 
+function renderPendaftaran(list) {
+  const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+  $('#pdWrap').hidden = !list.length;
+  $('#pd').innerHTML = list.map(k => {
+    const u = location.origin + '/daftar.html?k=' + encodeURIComponent(k.id);
+    return `<div class="pdi"><div><div class="t">${esc(k.nama)}</div>
+      <div class="s">Kegiatan ${tglS(k.tanggal_kegiatan)} · Daftar sampai ${tglS(k.tutup_daftar)} · ${k.biaya ? rp(k.biaya) : 'Gratis'}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}</div>
+      ${k.deskripsi ? `<div class="s" style="margin-top:4px">${esc(k.deskripsi)}</div>` : ''}</div>
+      ${k.fase === 'penuh' ? '<span class="pill">Kuota penuh</span>' : `<a class="go" href="${esc(u)}" target="_top">Daftar sekarang</a>`}</div>`;
+  }).join('');
+}
+
 function renderAgenda() {
   const ag = DATA.filter(x => x.tanggal_agenda && x.tanggal_agenda >= TODAY).sort((a, b) => a.tanggal_agenda.localeCompare(b.tanggal_agenda)).slice(0, 5);
   $('#agWrap').hidden = !ag.length;
@@ -149,7 +173,7 @@ function renderAgenda() {
 $('#q').oninput = render;
 fetch('/api/info?limit=200').then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
-  DATA = d.info; TODAY = d.today;
+  DATA = d.info; TODAY = d.today; renderPendaftaran(d.pendaftaran || []);
   const f = FOKUS && DATA.find(x => x.id === FOKUS);
   if (f) kat = 'semua';
   if (SOLO && f) {                          // dibuka dari tautan bagikan: hanya info ini

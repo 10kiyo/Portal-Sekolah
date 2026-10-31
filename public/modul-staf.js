@@ -38,7 +38,7 @@ const inputBulan = (id, v) => `<input id="${id}" type="month" value="${v}" style
    dari tabel murid_profil; tampilan kartu disimpan di kartu_desain. Semua tabel: supabase-kartu.sql.
    Kolom BARU di murid_profil otomatis muncul sebagai pilihan bagian kartu. PDF dibuat di browser (html2canvas + jsPDF). */
 const KARTU_W = 85.6, KARTU_H = 54;                        // mm (ukuran CR80)
-const KARTU_SISTEM = ['guest_id', 'nama_ref', 'foto_path', 'created_at', 'updated_at'];   // kolom murid_profil yang bukan bagian kartu
+const KARTU_SISTEM = ['guest_id', 'nama_ref', 'foto_path', 'created_at', 'updated_at', 'nama', 'kelas', 'jenis', 'nonaktif', 'sumber'];   // kolom murid_profil yang bukan bagian kartu
 const KARTU_FIELD = [                                       // bagian bawaan; k = kunci, on = tampil di desain awal
   { k: 'kelas', label: 'Kelas', on: true }, { k: 'guest_id', label: 'No. ID', on: false },
   { k: 'nis', label: 'NIS', on: true }, { k: 'nisn', label: 'NISN', on: true },
@@ -511,17 +511,103 @@ MODUL.akun = async function () {
   };
 };
 
+/* Data murid: operator dapat melihat, mengubah, menambah, menonaktifkan, dan menempel banyak murid sekaligus dari Excel.
+   Perubahan disimpan sebagai lapisan di tabel murid_profil (supabase-kegiatan-tingkat.sql); daftar_tamu_gabungan tidak diubah.
+   Guru menerima perubahan lewat sinkron murid otomatis di Administrasi Kelas: baris murid yang sama (guest_id) diperbarui di tempat,
+   sehingga presensi, nilai, dan kode akses murid tidak hilang. Murid yang dinonaktifkan hanya disembunyikan, datanya tetap tersimpan. */
+const kosongNull = v => { v = String(v ?? '').trim(); return v === '' ? null : v; };
+const idBaru = () => 'OP-' + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => (b % 36).toString(36)).join('').toUpperCase();
 MODUL.data = async function () {
   $('#view').innerHTML = '<p>Memuat data murid...</p>';
-  const g = (await dataSiswa()).slice().sort((a, b) => urut(a.instansi_kelas, b.instansi_kelas) || urut(a.guest_name, b.guest_name)), kls = kelasDari(g);
-  const hitung = kls.map(k => `${esc(k)}: ${g.filter(x => String(x.instansi_kelas || '').trim() === k).length}`).join(' · ');
-  $('#view').innerHTML = `<h2>Data murid (${g.length})</h2><p class="mut">${hitung}</p>
-  <p><select id="dk" style="max-width:180px"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select> <input id="dq" type="search" placeholder="Cari nama" style="max-width:260px"> <button id="dCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p><div id="dl"></div>`;
-  const saring = () => { const k = $('#dk').value, q = $('#dq').value.trim().toLowerCase(); return g.filter(x => (!k || String(x.instansi_kelas || '').trim() === k) && (!q || x.guest_name.toLowerCase().includes(q))); };
-  const tampil = () => { const l = saring(); $('#dl').innerHTML = `<p class="mut">${l.length} murid</p><table><tr><th>No</th><th>Nama</th><th>Kelas</th><th>No. induk / ID</th></tr>${l.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.guest_name)}</td><td>${esc(String(x.instansi_kelas || '').trim())}</td><td>${esc(x.guest_id)}</td></tr>`).join('')}</table>`; };
-  $('#dk').onchange = tampil; $('#dq').oninput = tampil;
-  $('#dCsv').onclick = () => csv('data-murid.csv', [['Nama', 'Kelas', 'ID'], ...saring().map(x => [x.guest_name, String(x.instansi_kelas || '').trim(), x.guest_id])]);
-  tampil();
+  _siswa = null; _profil = null;
+  let g, prof;
+  try { [g, prof] = await Promise.all([dataSiswa(), semua(() => sb.from('murid_profil').select('*').order('guest_id'))]); }
+  catch (e) { $('#view').innerHTML = `<p class="msg err">Data murid tidak bisa dibaca: ${esc((e && e.message) || e)}</p><p class="mut">Pastikan supabase-kartu.sql dan supabase-kegiatan-tingkat.sql sudah dijalankan.</p>`; return; }
+  if (prof[0] && !('nonaktif' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom baru belum ada di tabel murid_profil. Jalankan supabase-kegiatan-tingkat.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
+  const pm = new Map(prof.map(p => [String(p.guest_id), p]));
+  const aktif = g.map(x => ({ id: String(x.guest_id), nama: String(x.guest_name).trim(), kelas: String(x.instansi_kelas || '').trim(), jenis: x.jenis_undangan, p: pm.get(String(x.guest_id)) || {}, aktif: true }));
+  const idAktif = new Set(aktif.map(x => x.id));
+  const mati = prof.filter(p => p.nonaktif && !idAktif.has(String(p.guest_id))).map(p => ({ id: String(p.guest_id), nama: p.nama || p.nama_ref || '(tanpa nama)', kelas: p.kelas || '', jenis: p.jenis, p, aktif: false }));
+  const semuaM = [...aktif, ...mati].sort((a, b) => urut(a.kelas, b.kelas) || urut(a.nama, b.nama));
+  const kls = kelasDari(g), jenisList = [...new Set(g.map(x => x.jenis_undangan).filter(Boolean))];
+  const jenisUtama = Object.entries(g.reduce((m, x) => (m[x.jenis_undangan] = (m[x.jenis_undangan] || 0) + 1, m), {})).sort((a, b) => b[1] - a[1]).map(e => e[0])[0] || '';
+  const hitung = kls.map(k => `${esc(k)}: ${aktif.filter(x => x.kelas === k).length}`).join(' · ');
+  let edit = null;
+
+  const formHtml = () => {
+    const m = edit && edit.id ? semuaM.find(x => x.id === edit.id) : null, p = m ? m.p : {};
+    return `<div class="card" style="margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:12px"><h3 style="margin:0 0 8px">${m ? 'Ubah data murid' : 'Tambah murid baru'}</h3>
+    <div class="grid"><div><label for="mn">Nama murid</label><input id="mn" value="${esc(m ? m.nama : '')}" maxlength="100"></div>
+    <div><label for="mk">Kelas</label><input id="mk" list="mkl" value="${esc(m ? m.kelas : '')}" placeholder="mis. 3A"><datalist id="mkl">${kls.map(k => `<option value="${esc(k)}">`).join('')}</datalist></div>
+    ${m ? '' : `<div><label for="mj">Jenis data</label><select id="mj">${opsi(jenisList, jenisUtama)}</select></div>`}
+    <div><label for="mnis">NIS</label><input id="mnis" value="${esc(p.nis || '')}"></div><div><label for="mnisn">NISN</label><input id="mnisn" value="${esc(p.nisn || '')}"></div>
+    <div><label for="mtl">Tempat lahir</label><input id="mtl" value="${esc(p.tempat_lahir || '')}"></div><div><label for="mtg">Tanggal lahir</label><input id="mtg" type="date" value="${esc(p.tanggal_lahir || '')}"></div></div>
+    <label for="mal">Alamat</label><input id="mal" value="${esc(p.alamat || '')}">
+    <p><button class="p" id="mSimpan">Simpan</button> <button id="mBatal">Batal</button></p></div>`;
+  };
+  const tabel = () => {
+    const k = $('#dk').value, q = $('#dq').value.trim().toLowerCase(), st = $('#ds').value;
+    const l = semuaM.filter(x => (!k || x.kelas === k) && (!q || x.nama.toLowerCase().includes(q)) && (st === 'semua' || (st === 'nonaktif') === !x.aktif));
+    $('#dl').innerHTML = `<p class="mut">${l.length} murid</p><table><tr><th>No</th><th>Nama</th><th>Kelas</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>${l.map((x, i) => `<tr${x.aktif ? '' : ' style="opacity:.6"'}><td>${i + 1}</td><td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td><td>${esc(x.kelas)}</td><td>${esc(x.p.nis || '')}</td><td>${esc(x.p.nisn || '')}</td><td>${x.aktif ? 'Aktif' : 'Nonaktif'}</td>
+      <td class="noprint"><button data-ed="${esc(x.id)}">Ubah</button> <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td colspan="7" class="mut">Tidak ada data.</td></tr>'}</table>`;
+    return l;
+  };
+  const selesai = async (t) => { await MODUL.data(); msg(t + ' Guru menerimanya otomatis saat membuka Administrasi Kelas, atau lewat tombol "Sinkronkan Murid". Nilai & presensi yang sudah ada tidak berubah.'); };
+
+  $('#view').innerHTML = `<h2>Data murid (${aktif.length} aktif${mati.length ? `, ${mati.length} nonaktif` : ''})</h2><p class="mut">${hitung}</p>
+  <p class="noprint"><select id="dk" style="max-width:150px"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select> <select id="ds" style="max-width:150px"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option><option value="semua">Semua</option></select>
+  <input id="dq" type="search" placeholder="Cari nama" style="max-width:220px"> <button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
+  <div id="msg" class="msg"></div><div id="dform"></div>
+  <div id="dtempel" class="noprint" hidden><label for="dta">Tempel baris dari Excel: Nama, Kelas, NIS, NISN (dipisah tab atau koma; kolom NIS dan NISN boleh kosong)</label><textarea id="dta" rows="6" placeholder="Budi Santoso&#9;3A&#9;1234&#9;0012345678"></textarea><p><button class="p" id="dImpor">Impor murid</button> <span id="dprev" class="mut"></span></p></div>
+  <div id="dl"></div>`;
+  $('#dk').onchange = $('#ds').onchange = tabel; $('#dq').oninput = tabel; tabel();
+  $('#dCsv').onclick = () => csv('data-murid.csv', [['Nama', 'Kelas', 'ID', 'NIS', 'NISN', 'Tempat lahir', 'Tanggal lahir', 'Alamat', 'Status'], ...tabel().map(x => [x.nama, x.kelas, x.id, x.p.nis, x.p.nisn, x.p.tempat_lahir, x.p.tanggal_lahir, x.p.alamat, x.aktif ? 'aktif' : 'nonaktif'])]);
+  const bukaForm = id => { edit = { id }; $('#dform').innerHTML = formHtml(); $('#mn').focus(); $('#mBatal').onclick = () => { edit = null; $('#dform').innerHTML = ''; };
+    $('#mSimpan').onclick = async () => {
+      const nama = $('#mn').value.trim().replace(/\s+/g, ' '), kelas = $('#mk').value.trim();
+      if (!nama || !kelas) return msg('Nama dan kelas wajib diisi.', true);
+      const profil = { nis: kosongNull($('#mnis').value), nisn: kosongNull($('#mnisn').value), tempat_lahir: kosongNull($('#mtl').value), tanggal_lahir: kosongNull($('#mtg').value), alamat: kosongNull($('#mal').value) };
+      $('#mSimpan').disabled = true;
+      try {
+        if (id) {
+          const m = semuaM.find(x => x.id === id), row = { guest_id: id, ...profil };
+          if (nama !== m.nama) row.nama = nama;          // hanya yang berubah yang disimpan sebagai penimpa
+          if (kelas !== m.kelas) row.kelas = kelas;
+          if (!m.p.guest_id) row.nama_ref = m.nama;
+          await run(sb.from('murid_profil').upsert(row, { onConflict: 'guest_id' }));
+          await selesai('Data murid tersimpan.');
+        } else {
+          if (semuaM.some(x => x.aktif && x.nama.toLowerCase() === nama.toLowerCase() && x.kelas === kelas)) { $('#mSimpan').disabled = false; return msg('Murid dengan nama dan kelas yang sama sudah ada.', true); }
+          await run(sb.from('murid_profil').insert({ guest_id: idBaru(), nama_ref: nama, nama, kelas, jenis: $('#mj').value || jenisUtama, sumber: 'operator', ...profil }));
+          await selesai('Murid baru ditambahkan.');
+        }
+      } catch (e) { $('#mSimpan').disabled = false; }
+    }; };
+  $('#dTambah').onclick = () => bukaForm(null);
+  $('#dTempel').onclick = () => { const b = $('#dtempel'); b.hidden = !b.hidden; };
+  const baca = () => $('#dta').value.split(/\r?\n/).map(r => r.split(/\t|,|;/).map(c => c.trim())).filter(r => r[0] && r[1]).map(r => ({ nama: r[0].replace(/\s+/g, ' '), kelas: r[1], nis: kosongNull(r[2]), nisn: kosongNull(r[3]) }));
+  $('#dta').oninput = () => { const b = baca(); $('#dprev').textContent = b.length ? `${b.length} baris terbaca.` : ''; };
+  $('#dImpor').onclick = async () => {
+    const baris = baca(); if (!baris.length) return msg('Tidak ada baris yang terbaca. Pastikan kolom pertama nama dan kolom kedua kelas.', true);
+    const ada = new Set(semuaM.filter(x => x.aktif).map(x => x.nama.toLowerCase() + '|' + x.kelas)), baru = [];
+    baris.forEach(r => { const k = r.nama.toLowerCase() + '|' + r.kelas; if (!ada.has(k)) { ada.add(k); baru.push({ guest_id: idBaru(), nama_ref: r.nama, nama: r.nama, kelas: r.kelas, jenis: jenisUtama, sumber: 'operator', nis: r.nis, nisn: r.nisn }); } });
+    if (!baru.length) return msg('Semua baris sudah ada di data murid.', true);
+    if (!confirm(`Tambahkan ${baru.length} murid baru${baris.length - baru.length ? ` (${baris.length - baru.length} baris dilewati karena sudah ada)` : ''}?`)) return;
+    $('#dImpor').disabled = true;
+    try { for (let i = 0; i < baru.length; i += 200) await run(sb.from('murid_profil').insert(baru.slice(i, i + 200))); await selesai(`${baru.length} murid ditambahkan.`); }
+    catch (e) { $('#dImpor').disabled = false; }
+  };
+  $('#dl').onclick = async e => {
+    const d = e.target.dataset;
+    if (d.ed) return bukaForm(d.ed);
+    if (d.tg) {
+      const m = semuaM.find(x => x.id === d.tg); if (!m) return;
+      if (m.aktif && !confirm(`Nonaktifkan ${m.nama} (${m.kelas})?\nMurid disembunyikan dari daftar guru. Presensi dan nilainya tetap tersimpan dan kembali bila diaktifkan lagi.`)) return;
+      const row = { guest_id: m.id, nonaktif: m.aktif }; if (!m.p.guest_id) row.nama_ref = m.nama;
+      await run(sb.from('murid_profil').upsert(row, { onConflict: 'guest_id' }));
+      await selesai(m.aktif ? 'Murid dinonaktifkan.' : 'Murid diaktifkan kembali.');
+    }
+  };
 };
 
 MODUL.tugasop = async function () {

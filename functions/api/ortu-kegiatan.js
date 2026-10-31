@@ -1,8 +1,8 @@
 // Cloudflare Worker route: POST /api/ortu-kegiatan
 // Orang tua (lewat kode akses anak): melihat kegiatan yang sedang relevan + mendaftar dengan bukti transfer.
-//   { kode, action: 'list' }
+//   { kode, action: 'list', id? }   (id = tautan khusus satu kegiatan; hanya kegiatan yang sesuai tingkat kelas anak yang ditampilkan)
 //   { kode, action: 'daftar', kegiatanId, nama_pengirim, tanggal_transfer, kaos, kesehatan, kontak, setuju, bukti: 'data:image/jpeg;base64,...' }
-import { json, cfg, dbGet, hariIni, fase, cariAnak } from '../_lib/util.js';
+import { json, cfg, dbGet, hariIni, fase, cariAnak, bolehTingkat, labelTingkat, tingkatKegiatan } from '../_lib/util.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_B64 = 2_800_000; // ~2 MB setelah decode
@@ -27,7 +27,11 @@ export async function onRequestPost({ request, env }) {
     const today = hariIni();
 
     if (b.action === 'list') {
-      const ks = await get(`/kegiatan?buka_daftar=lte.${today}&tanggal_kegiatan=gte.${today}&order=tanggal_kegiatan.asc&select=*`);
+      const sem = await get(`/kegiatan?buka_daftar=lte.${today}&tanggal_kegiatan=gte.${today}&order=tanggal_kegiatan.asc&select=*`);
+      const fokus = /^[0-9a-f-]{36}$/i.test(String(b.id || '')) ? String(b.id).toLowerCase() : '';
+      const ks = sem.filter(k => bolehTingkat(k, anak));
+      // Tautan khusus kegiatan yang bukan untuk tingkat anak ini: beri tahu alasannya (tanpa membuka isi kegiatan).
+      const terkunci = fokus ? sem.filter(k => k.id === fokus && !bolehTingkat(k, anak)).map(k => ({ nama: k.nama, untuk: labelTingkat(k) }))[0] || null : null;
       const ids = ks.map(k => k.id);
       const [tp, mine] = await Promise.all([
         terpakaiMap(get, ids),
@@ -35,11 +39,12 @@ export async function onRequestPost({ request, env }) {
       ]);
       const mm = Object.fromEntries(mine.map(x => [x.kegiatan_id, x]));
       return json(200, {
+        terkunci, anakKelas: anak.kelas,
         kegiatan: ks.map(k => ({
           id: k.id, nama: k.nama, deskripsi: k.deskripsi, biaya: k.biaya, rekening: k.rekening,
           buka_daftar: k.buka_daftar, tutup_daftar: k.tutup_daftar, tanggal_kegiatan: k.tanggal_kegiatan,
           sisa: k.kuota != null ? Math.max(0, k.kuota - (tp[k.id] || 0)) : null,
-          tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan,
+          tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan, untuk: labelTingkat(k), terbatas: tingkatKegiatan(k).length > 0,
           fase: fase(k, tp[k.id] || 0, today), daftar: mm[k.id] || null
         }))
       });
@@ -50,6 +55,7 @@ export async function onRequestPost({ request, env }) {
       if (!UUID.test(kid)) return json(400, { error: 'Kegiatan tidak valid.' });
       const k = (await get(`/kegiatan?id=eq.${kid}&select=*`))[0];
       if (!k) return json(404, { error: 'Kegiatan tidak ditemukan.' });
+      if (!bolehTingkat(k, anak)) return json(403, { error: `Kegiatan ini khusus untuk ${labelTingkat(k)}. Anak ini berada di kelas ${anak.kelas || '-'}.` });
       const [tp, ex] = await Promise.all([
         terpakaiMap(get, [kid]),
         get(`/pendaftaran_kegiatan?kegiatan_id=eq.${kid}&anak_key=eq.${encodeURIComponent(anak.key)}&select=id,status,bukti_path`)

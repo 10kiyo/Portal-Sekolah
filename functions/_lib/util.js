@@ -24,6 +24,13 @@ export function fase(k, terpakai, today) {
   return 'dibuka';
 }
 
+// ---- Tingkat kelas (1-6). Kegiatan boleh dibatasi untuk tingkat tertentu; kosong/null = semua kelas. ----
+// "3A" -> 3; "Kelas 4B, 5A" -> [4, 5]
+export const tingkatDari = kelas => [...new Set((String(kelas || '').match(/\d+/g) || []).map(Number).filter(n => n >= 1 && n <= 6))].sort();
+export const tingkatKegiatan = k => (Array.isArray(k.tingkat) ? k.tingkat : []).map(Number).filter(n => n >= 1 && n <= 6).sort();
+export const bolehTingkat = (k, anak) => { const t = tingkatKegiatan(k); return !t.length || (anak.tingkat || []).some(x => t.includes(x)); };
+export const labelTingkat = k => { const t = tingkatKegiatan(k); return !t.length ? 'Semua kelas' : (t.length === 1 ? 'Kelas ' : 'Kelas ') + t.join(', '); };
+
 // ---- Admin (token dari /api/admin-auth) ----
 const enc = new TextEncoder();
 const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -58,10 +65,8 @@ export async function cariAnak(request, kode, c) {
     const cand = await dbGet(c)(`/kelas_murid?kode_akses=eq.${kode}&aktif=eq.true&select=id,guest_id,nama,kelas_kelas(nama)`);
     const g = cand[0] && cand[0].guest_id;
     if (cand.length === 1 || (g && cand.every(x => x.guest_id === g))) {
-      anak = {
-        key: g || 'm:' + cand[0].id, nama: cand[0].nama,
-        kelas: [...new Set(cand.map(x => x.kelas_kelas && x.kelas_kelas.nama).filter(Boolean))].join(', ')
-      };
+      const kelas = [...new Set(cand.map(x => x.kelas_kelas && x.kelas_kelas.nama).filter(Boolean))].join(', ');
+      anak = { key: g || 'm:' + cand[0].id, nama: cand[0].nama, kelas, tingkat: tingkatDari(kelas) };
     }
   }
   if (!anak) {
@@ -91,4 +96,28 @@ export async function urlFoto(c, path) {
     const d = await r.json();
     return d.signedURL ? `${c.URL}/storage/v1${d.signedURL}` : null;
   } catch (e) { return null; }
+}
+
+// ---- Pendaftaran umum (peserta dari luar sekolah, tanpa kode akses) ----
+// Jumlah pendaftar yang memakai kuota (status selain "ditolak") per kegiatan.
+export async function terpakaiMap(get, ids) {
+  if (!ids.length) return {};
+  const rows = await get(`/pendaftaran_kegiatan?kegiatan_id=in.(${ids.join(',')})&status=neq.ditolak&select=kegiatan_id&limit=10000`);
+  const m = {}; rows.forEach(r => m[r.kegiatan_id] = (m[r.kegiatan_id] || 0) + 1);
+  return m;
+}
+// Pembatas permintaan per alamat IP (dalam memori Worker; cukup untuk menahan pengiriman beruntun dari satu perangkat).
+const batas = new Map();
+export function terlaluSering(request, nama, maks, jendelaMs = 10 * 60 * 1000) {
+  const k = nama + ':' + (request.headers.get('CF-Connecting-IP') || 'unknown'), now = Date.now();
+  let t = batas.get(k); if (!t || now - t.start > jendelaMs) t = { n: 0, start: now };
+  t.n++; batas.set(k, t);
+  if (batas.size > 5000) for (const [kk, v] of batas) if (now - v.start > jendelaMs) batas.delete(kk);
+  return t.n > maks;
+}
+// Kunci peserta umum: sama nama + sama sekolah = orang yang sama (mencegah daftar ganda).
+export async function kunciUmum(nama, asal) {
+  const n = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(n(nama) + '|' + n(asal)));
+  return 'u:' + [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 24);
 }

@@ -427,13 +427,22 @@ async function vGaleri() {
 }
 
 /* ---------- impor murid dari database tamu ---------- */
+// Daftar murid/tamu dari database. Memakai fungsi murid_gabungan() (daftar tamu + perubahan operator, supabase-kegiatan-tingkat.sql);
+// bila fungsinya belum ada, memakai daftar_tamu_gabungan apa adanya seperti sebelumnya.
+let _pakaiGabungan = true;
 async function allGuests() {
-  let out = [], from = 0;
   for (;;) {
-    const { data, error } = await sb.from('daftar_tamu_gabungan').select('guest_id,guest_name,jenis_undangan,instansi_kelas').order('guest_id').range(from, from + 999);
-    if (error) throw error; out = out.concat(data); if (data.length < 1000) break; from += 1000;
+    let out = [], from = 0, gagal = null;
+    for (;;) {
+      const q = _pakaiGabungan ? sb.rpc('murid_gabungan') : sb.from('daftar_tamu_gabungan').select('guest_id,guest_name,jenis_undangan,instansi_kelas');
+      const { data, error } = await q.order('guest_id').range(from, from + 999);
+      if (error) { gagal = error; break; }
+      out = out.concat(data); if (data.length < 1000) break; from += 1000;
+    }
+    if (!gagal) return out;
+    if (_pakaiGabungan && !out.length) { _pakaiGabungan = false; continue; }   // fungsi belum dibuat: pakai tabel lama
+    throw gagal;
   }
-  return out;
 }
 async function vImport() {
   $('#view').innerHTML = '<p>Memuat daftar murid...</p>';
