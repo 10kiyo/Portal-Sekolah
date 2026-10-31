@@ -635,12 +635,13 @@ MODUL.agenda = async function (bln) {
 /* ================= OPERATOR ================= */
 const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'staf'];
 MODUL.akun = async function () {
-  const rows = await run(sb.from('guru_staf').select('id,nama,jabatan,kelompok,peran,username,pin,aktif,auth_user_id').order('nama'));
+  const rows = await run(sb.from('guru_staf').select('id,nama,jabatan,kelompok,peran,peran_tambahan,username,pin,aktif,auth_user_id').order('nama'));
   let lihat = false;
   const gambar = () => {
-    $('#al').innerHTML = `<table><tr><th>Nama</th><th>Jabatan</th><th>Peran menu</th><th>Username</th><th>PIN</th><th>Aktif</th><th class="noprint"></th></tr>
+    $('#al').innerHTML = `<table><tr><th>Nama</th><th>Jabatan</th><th>Peran menu</th><th>Peran tambahan</th><th>Username</th><th>PIN</th><th>Aktif</th><th class="noprint"></th></tr>
     ${rows.map(r => `<tr><td>${esc(r.nama)}</td><td>${esc(r.jabatan)}</td>
     <td><select data-peran="${r.id}" class="noprint">${opsi(r.peran === 'admin' ? [...PERAN, 'admin'] : PERAN, r.peran)}</select><span class="print-only">${esc(r.peran)}</span></td>
+    <td class="noprint">${PERAN.filter(x => x !== 'staf' && x !== r.peran).map(x => `<label style="display:inline-flex;gap:3px;font-weight:400;font-size:12px;margin:0 8px 0 0"><input type="checkbox" style="width:auto" data-tam="${r.id}" data-role="${x}" ${(r.peran_tambahan || []).includes(x) ? 'checked' : ''}> ${x}</label>`).join('')}</td>
     <td><b>${esc(r.username)}</b></td><td><b>${lihat ? esc(r.pin) : '••••••'}</b></td>
     <td><input type="checkbox" style="width:auto" data-aktif="${r.id}" ${r.aktif ? 'checked' : ''}></td>
     <td class="noprint"><button data-nm="${r.id}">Ubah nama</button> <button data-jab="${r.id}">Ubah jabatan</button> <button data-pin="${r.id}">Reset PIN</button></td></tr>`).join('')}</table>`;
@@ -665,6 +666,11 @@ MODUL.akun = async function () {
   $('#view').onchange = async e => {
     const d = e.target.dataset;
     if (d.peran) { await run(sb.from('guru_staf').update({ peran: e.target.value }).eq('id', d.peran)); rows.find(r => r.id === d.peran).peran = e.target.value; msg('Peran diperbarui. Berlaku saat orangnya membuka ulang halaman ini.'); }
+    if (d.tam) {
+      const r = rows.find(x => x.id === d.tam), set = new Set(r.peran_tambahan || []); e.target.checked ? set.add(d.role) : set.delete(d.role);
+      await run(sb.from('guru_staf').update({ peran_tambahan: [...set] }).eq('id', r.id)); r.peran_tambahan = [...set];
+      msg('Peran tambahan ' + r.nama + ' diperbarui. Menunya muncul saat orangnya membuka ulang halaman ini.');
+    }
     if (d.aktif) { await run(sb.from('guru_staf').update({ aktif: e.target.checked }).eq('id', d.aktif)); rows.find(r => r.id === d.aktif).aktif = e.target.checked; msg(e.target.checked ? 'Akun diaktifkan.' : 'Akun dinonaktifkan: tidak tampil di halaman Guru & Staff dan tidak bisa login baru.'); }
   };
   $('#view').onclick = async e => {

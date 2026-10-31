@@ -149,8 +149,9 @@ const GRUP = {
   operator: ['Operator sekolah', [['tugasop', 'Daftar pekerjaan'], ['akun', 'Akun guru & staf'], ['data', 'Data murid']]]
 };
 // Peran -> kelompok menu. "admin" melihat semuanya; "staf" (satpam, kebersihan, dll) hanya Profil.
-const menuPeran = p => p === 'admin' ? Object.values(GRUP) : GRUP[p] ? [GRUP[p]] : [];
-let S = { peran: 'guru', jabatan: '', dnama: '', username: '', kelas: [], kid: null, tab: 'murid', tugas: null, mid: '', mapel: [], ajar: [], prof: null, fotoUrl: '', rid: 0 };
+// Peran utama + peran tambahan digabung (mis. guru wali kelas yang juga Waka SarPras melihat menu Kelas dan Sarana & prasarana).
+const menuPeran = (p, tam = []) => p === 'admin' ? Object.values(GRUP) : [...new Set([p, ...tam])].map(x => GRUP[x]).filter(Boolean);
+let S = { peran: 'guru', peranTambahan: [], jabatan: '', dnama: '', username: '', kelas: [], kid: null, tab: 'murid', tugas: null, mid: '', mapel: [], ajar: [], prof: null, fotoUrl: '', rid: 0 };
 const mn = () => (S.mapel.find(m => m.id === S.mid) || {}).nama || '';
 
 function msg(t, err) { const m = $('#msg'); if (m) { m.textContent = t; m.className = 'msg' + (err ? ' err' : ''); } }
@@ -200,21 +201,26 @@ async function start() {
   if (!(S.prof && S.prof.nama)) await isiNamaDariDaftar();
   buildMenu();
   const adaKelas = ['guru', 'admin'].includes(S.peran);
-  S.tab = adaKelas ? 'murid' : (menuPeran(S.peran)[0] || [0, [['profil']]])[1][0][0];
+  S.tab = adaKelas ? 'murid' : (menuPeran(S.peran, S.peranTambahan)[0] || [0, [['profil']]])[1][0][0];
   if (adaKelas) { await loadKelas(); syncMurid(false); } else show();
   if (!(S.prof && S.prof.nama)) { S.tab = 'profil'; show(); }
 }
 async function loadPeran() {
   try {
     const u = (await sb.auth.getUser()).data.user;
-    const { data } = await sb.from('guru_staf').select('nama,jabatan,peran,username,foto').eq('auth_user_id', u.id).maybeSingle();
-    if (data) { S.peran = data.peran || 'guru'; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; S.fotoGuru = /^https:\/\//.test(data.foto || '') ? data.foto : ''; }
+    const { data } = await sb.from('guru_staf').select('nama,jabatan,kelompok,peran,peran_tambahan,username,foto').eq('auth_user_id', u.id).maybeSingle();
+    if (data) { S.peran = data.peran || 'guru'; S.peranTambahan = data.peran_tambahan || [];
+      // Jabatan Sarana/Prasarana SELALU membawa menu Kelola fasilitas, apa pun isi kolom peran/peran_tambahan.
+      // Bila "sarpras" terlanjur jadi peran utama pada guru/pimpinan, kembalikan ke guru (wali kelas) dan jadikan tambahan.
+      const sarpras = /sarpras|sarana|prasarana/i.test(data.jabatan || '');
+      if (S.peran === 'sarpras' && ['guru', 'pimpinan'].includes(data.kelompok)) { S.peran = 'guru'; S.peranTambahan = [...S.peranTambahan, 'sarpras']; }
+      if (sarpras && S.peran !== 'admin' && S.peran !== 'sarpras' && !S.peranTambahan.includes('sarpras')) S.peranTambahan = [...S.peranTambahan, 'sarpras']; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; S.fotoGuru = /^https:\/\//.test(data.foto || '') ? data.foto : ''; }
   } catch (e) {}
   $('#sideNama').textContent = S.dnama || (S.prof && S.prof.nama) || 'Pengguna';
   $('#sideJab').textContent = S.jabatan || ({ guru: 'Guru', admin: 'Admin' }[S.peran] || 'Staf');
 }
 function buildMenu() {
-  const grup = [...menuPeran(S.peran), ['Akun', [['profil', 'Profil saya']]]];
+  const grup = [...menuPeran(S.peran, S.peranTambahan), ['Akun', [['profil', 'Profil saya']]]];
   $('#menu').innerHTML = grup.map(([judul, items]) => `<h4>${esc(judul)}</h4>` + items.map(([k, l]) => `<button data-t="${k}">${esc(l)}</button>`).join('')).join('');
 }
 $('#menu').onclick = e => {

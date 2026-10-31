@@ -3,13 +3,19 @@
 -- Jalankan di Supabase > SQL Editor SETELAH supabase-peran.sql. JALANKAN SEBELUM DEPLOY. Aman dijalankan ulang.
 -- ============================================================
 
--- 1) Peran baru "sarpras" (menu: Kelola fasilitas). Ditebak otomatis dari jabatan yang memuat sarpras / sarana / prasarana.
+-- 1) PERAN TAMBAHAN. Satu orang bisa punya lebih dari satu menu: peran utama (kolom peran) + peran_tambahan.
+--    Contoh Pak Mahidin: peran = guru (wali kelas) + peran_tambahan = {sarpras} (Waka Sarana & Prasarana) -> kedua menu tampil.
+--    Peran baru "sarpras" = menu Kelola fasilitas. Operator mengatur peran tambahan di Akun guru & staf.
+alter table guru_staf add column if not exists peran_tambahan text[] not null default '{}';
 alter table guru_staf drop constraint if exists guru_staf_peran_chk;
 alter table guru_staf add constraint guru_staf_peran_chk
   check (peran is null or peran in ('guru','pustakawan','keuangan','persuratan','operator','sarpras','staf','admin'));
+alter table guru_staf drop constraint if exists guru_staf_peran_tambahan_chk;
+alter table guru_staf add constraint guru_staf_peran_tambahan_chk
+  check (peran_tambahan <@ array['guru','pustakawan','keuangan','persuratan','operator','sarpras']::text[]);
 
 create or replace function guru_staf_isi() returns trigger language plpgsql as $$
-declare dasar text; calon text; n int := 1;
+declare dasar text; calon text; n int := 1; ubah_jabatan boolean := true;
 begin
   if new.username is null or btrim(new.username) = '' then
     dasar := lower(regexp_replace(split_part(new.nama, ',', 1), '[^A-Za-z ]', '', 'g'));
@@ -32,16 +38,31 @@ begin
       when coalesce(new.jabatan, '') ~* 'bendahara|keuangan' then 'keuangan'
       when coalesce(new.jabatan, '') ~* 'surat|sekretar'     then 'persuratan'
       when coalesce(new.jabatan, '') ~* 'operator'           then 'operator'
-      when coalesce(new.jabatan, '') ~* 'sarpras|sarana|prasarana' then 'sarpras'
       when new.kelompok = 'staf'                             then 'staf'
       else 'guru' end;
+  end if;
+  -- Jabatan sarpras/sarana/prasarana: menu Kelola fasilitas ditambahkan (tanpa mengganti peran utama). Hanya saat baris baru / jabatan berubah,
+  -- supaya operator tetap bisa mencabutnya.
+  if tg_op = 'UPDATE' then ubah_jabatan := old.jabatan is distinct from new.jabatan; end if;
+  if ubah_jabatan and coalesce(new.jabatan, '') ~* 'sarpras|sarana|prasarana' and not ('sarpras' = any(new.peran_tambahan)) then
+    new.peran_tambahan := array_append(new.peran_tambahan, 'sarpras');
   end if;
   return new;
 end $$;
 
--- Waka SarPras (Pak Mahidin) yang sudah ada otomatis diberi peran sarpras (hanya bila perannya masih guru/staf/kosong)
-update guru_staf set peran = 'sarpras'
- where (coalesce(jabatan, '') ~* 'sarpras|sarana|prasarana' or nama ilike 'mahidin%') and (peran is null or peran in ('guru','staf'));
+-- Fungsi akses: benar bila peran utama ATAU peran tambahan cocok (admin selalu boleh)
+create or replace function punya_peran(p text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select peran = 'admin' or peran = p or p = any(peran_tambahan) from guru_staf where auth_user_id = auth.uid() and aktif limit 1), false)
+$$;
+revoke all on function punya_peran(text) from public, anon;
+grant execute on function punya_peran(text) to authenticated;
+
+-- Pak Mahidin / pejabat sarpras yang sudah ada: tambahkan menu sarpras. Bila sebelumnya sempat diberi peran utama 'sarpras'
+-- padahal guru/pimpinan (wali kelas), kembalikan peran utamanya ke guru.
+update guru_staf set peran = 'guru' where peran = 'sarpras' and kelompok in ('guru','pimpinan');
+update guru_staf set peran_tambahan = array_append(peran_tambahan, 'sarpras')
+ where (coalesce(jabatan, '') ~* 'sarpras|sarana|prasarana' or nama ilike 'mahidin%') and peran is distinct from 'sarpras' and not ('sarpras' = any(peran_tambahan));
 
 -- 2) Tabel fasilitas
 create table if not exists fasilitas (
@@ -68,7 +89,7 @@ alter table fasilitas enable row level security;
 revoke all on fasilitas from anon;
 drop policy if exists fasilitas_peran on fasilitas;
 create policy fasilitas_peran on fasilitas for all to authenticated
-  using (peran_saya() in ('sarpras','admin')) with check (peran_saya() in ('sarpras','admin'));
+  using (punya_peran('sarpras')) with check (punya_peran('sarpras'));
 
 -- 4) Bucket foto publik "fasilitas" (foto memang tampil di website); hanya sarpras/admin yang boleh mengunggah & menghapus.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -79,6 +100,6 @@ drop policy if exists fasilitas_foto_tulis on storage.objects;
 drop policy if exists fasilitas_foto_ganti on storage.objects;
 drop policy if exists fasilitas_foto_hapus on storage.objects;
 create policy fasilitas_foto_baca  on storage.objects for select to authenticated using (bucket_id = 'fasilitas');
-create policy fasilitas_foto_tulis on storage.objects for insert to authenticated with check (bucket_id = 'fasilitas' and peran_saya() in ('sarpras','admin'));
-create policy fasilitas_foto_ganti on storage.objects for update to authenticated using (bucket_id = 'fasilitas' and peran_saya() in ('sarpras','admin')) with check (bucket_id = 'fasilitas' and peran_saya() in ('sarpras','admin'));
-create policy fasilitas_foto_hapus on storage.objects for delete to authenticated using (bucket_id = 'fasilitas' and peran_saya() in ('sarpras','admin'));
+create policy fasilitas_foto_tulis on storage.objects for insert to authenticated with check (bucket_id = 'fasilitas' and punya_peran('sarpras'));
+create policy fasilitas_foto_ganti on storage.objects for update to authenticated using (bucket_id = 'fasilitas' and punya_peran('sarpras')) with check (bucket_id = 'fasilitas' and punya_peran('sarpras'));
+create policy fasilitas_foto_hapus on storage.objects for delete to authenticated using (bucket_id = 'fasilitas' and punya_peran('sarpras'));
