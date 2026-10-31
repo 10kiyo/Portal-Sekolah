@@ -32,6 +32,33 @@ a.tile{display:block;text-decoration:none;color:inherit;background:#fff;border:1
 a.tile:hover{border-color:var(--blue);transform:translateY(-2px)}
 a.tile h2{margin:0 0 8px;color:var(--navy);font-size:20px}
 a.tile span{color:var(--mute);font-size:15px}
+/* ===== Footer Beranda ===== */
+footer.site{max-width:1100px;margin:56px auto 0;background:var(--navy);color:#d9e6f2;border-radius:26px;padding:clamp(24px,4vw,40px);box-shadow:0 18px 45px #102a4330}
+footer.site .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
+footer.site h3{margin:0 0 14px;color:#8fcbff;font-size:18px;letter-spacing:-.01em}
+footer.site .logo{display:flex;align-items:center;gap:12px}
+footer.site .logo img{width:56px;height:56px;background:#fff;border-radius:14px;padding:5px;object-fit:contain}
+footer.site .logo b{display:block;color:#fff;font-size:18px;letter-spacing:-.02em}
+footer.site .logo span{font-size:13px;color:#9db4c9}
+footer.site p{margin:0;line-height:1.7;font-size:15px}
+footer.site .desc{margin-top:16px;color:#c3d4e4}
+footer.site .lbl{display:block;margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.08em;color:#8fcbff;text-transform:uppercase}
+footer.site .blk{margin-bottom:16px}
+footer.site .blk b{display:block;color:#fff;margin-bottom:3px}
+footer.site a{color:#fff}
+footer.site .badge{display:block;margin-top:18px;padding:12px 14px;border:1px solid #ffffff30;border-radius:14px;background:#ffffff0d;font-size:14px}
+footer.site .badge b{display:block;color:#8fcbff}
+footer.site .badge a{font-size:13px;color:#c3d4e4}
+footer.site .soc{display:flex;gap:10px;margin-top:18px}
+footer.site .soc a{width:42px;height:42px;display:grid;place-items:center;border:1px solid #ffffff30;border-radius:50%;background:#ffffff0d;transition:.18s}
+footer.site .soc a:hover{background:#ffffff26;transform:translateY(-2px)}
+footer.site .soc svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+footer.site .map{position:static;inset:auto;width:100%;height:190px;border:0;border-radius:16px;background:#1d3d5a;display:block}
+footer.site .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+footer.site .pills a{text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border:1px solid #ffffff30;border-radius:99px;background:#ffffff0d}
+footer.site .pills a:hover{background:#ffffff26}
+footer.site a:focus-visible{outline:3px solid #8fcbff80;outline-offset:2px}
+footer.site .copy{margin-top:28px;padding-top:18px;border-top:1px solid #ffffff22;font-size:13px;color:#9db4c9}
 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}
 </style>
 </head>
@@ -60,6 +87,56 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
       <a class="tile" href="#kegiatan"><h2>Kegiatan (Panitia)</h2><span>Kelola pendaftaran kegiatan dan cek bukti transfer orang tua. Perlu PIN admin.</span></a>
       <a class="tile" href="#ortu"><h2>Pantau Belajar Anak</h2><span>Untuk orang tua: lihat kehadiran, tugas, dan nilai anak dengan kode akses.</span></a>
     </div>
+
+    <!-- ===== FOOTER BERANDA =====
+         Edit teks/tautan di bawah sesuai kebutuhan. Bagian bertanda (isi ...) adalah contoh yang perlu diganti. -->
+    <footer class="site">
+      <div class="cols">
+
+        <!-- Kolom 1: identitas sekolah -->
+        <div>
+          <div class="logo"><img src="logo-at-taqwa.png" alt=""><div><b>SDS Islam At-Taqwa</b><span>Rawamangun, Jakarta Timur</span></div></div>
+          <p class="desc">(isi deskripsi singkat sekolah, misalnya visi, jenjang, atau keunggulan.)</p>
+          <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: (isi NPSN) · Akreditasi: (isi)<br><a href="#" target="_blank" rel="noopener">Cek legalitas →</a></div>
+          <div class="soc">
+            <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/></svg></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M14 3v11.2a3.7 3.7 0 1 1-3.7-3.7"/><path d="M14 3c.3 2.4 1.9 4 4.4 4.3"/></svg></a>
+            <a href="#" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.8" width="18.4" height="12.4" rx="3.6"/><path d="M10 9.4v5.2l4.6-2.6z"/></svg></a>
+          </div>
+        </div>
+
+        <!-- Kolom 2: kontak -->
+        <div>
+          <h3>Hubungi Kami</h3>
+          <div class="blk"><span class="lbl">WhatsApp</span><a href="https://wa.me/62" target="_blank" rel="noopener">+62 (isi nomor)</a></div>
+          <div class="blk"><span class="lbl">Email</span><a href="mailto:">(isi email sekolah)</a></div>
+          <div class="blk"><span class="lbl">Jam layanan</span><p>Senin – Jumat, (isi jam)</p></div>
+        </div>
+
+        <!-- Kolom 3: alamat -->
+        <div>
+          <h3>Alamat Sekolah</h3>
+          <div class="blk"><b>SDS Islam At-Taqwa Rawamangun</b><p>(isi alamat lengkap), Rawamangun, Kec. Pulogadung, Jakarta Timur (isi kode pos)</p></div>
+        </div>
+
+        <!-- Kolom 4: peta + tautan cepat -->
+        <div>
+          <h3>Lokasi Sekolah</h3>
+          <!-- Peta: ganti isi q= dengan nama/alamat tepat jika hasilnya kurang pas -->
+          <iframe class="map" title="Peta lokasi sekolah" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=SDS+Islam+At-Taqwa+Rawamangun&output=embed"></iframe>
+          <div class="pills">
+            <a href="#beranda">Beranda</a>
+            <a href="#buku-tamu">Buku Tamu Sekolah</a>
+            <a href="#kelas">Administrasi Kelas</a>
+            <a href="#kegiatan">Kegiatan (Panitia)</a>
+            <a href="#ortu">Pantau Belajar Anak</a>
+            <!-- Tambah tautan lain di sini: <a href="https://...">Nama</a> -->
+          </div>
+        </div>
+
+      </div>
+      <div class="copy">© <span id="thn"></span> SDS Islam At-Taqwa Rawamangun. Seluruh layanan digital ini disiapkan untuk mendukung orang tua, guru, dan tamu sekolah.</div>
+    </footer>
   </section>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
   <iframe id="f-kelas" title="Administrasi Kelas" hidden></iframe>
@@ -70,6 +147,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 <script>
 const PAGES = { 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
 const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+
+document.getElementById('thn').textContent = new Date().getFullYear();
 
 function route() {
   let r = location.hash.slice(1) || 'beranda';
