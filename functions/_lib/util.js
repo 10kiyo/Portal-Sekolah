@@ -72,3 +72,23 @@ export async function cariAnak(request, kode, c) {
   tries.delete(ip);
   return { anak };
 }
+
+// ---- Foto kiriman (data URL) -> { bytes, mime, ext } atau { err: pesan }. Hanya JPEG/PNG/WEBP, maks ~2 MB, dicek dari byte awal. ----
+export function bacaFoto(s, maxB64 = 2_800_000) {
+  s = String(s || ''); const i = s.indexOf(','), mt = /^data:image\/(jpeg|png|webp);base64$/.exec(s.slice(0, i));
+  if (i < 0 || !mt) return { err: 'Foto harus berupa JPG, PNG, atau WEBP.' };
+  if (s.length - i > maxB64) return { err: 'Ukuran foto terlalu besar. Coba pilih foto lain.' };
+  let bytes; try { bytes = Uint8Array.from(atob(s.slice(i + 1)), ch => ch.charCodeAt(0)); } catch (e) { return { err: 'Foto tidak terbaca.' }; }
+  const ok = (mt[1] === 'jpeg' && bytes[0] === 0xFF && bytes[1] === 0xD8) || (mt[1] === 'png' && bytes[0] === 0x89 && bytes[1] === 0x50) ||
+             (mt[1] === 'webp' && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57);
+  return ok ? { bytes, mime: 'image/' + mt[1], ext: mt[1] === 'jpeg' ? 'jpg' : mt[1] } : { err: 'Berkas bukan foto yang valid.' };
+}
+// URL sementara (1 jam) untuk foto di bucket privat "jurnal"
+export async function urlFoto(c, path) {
+  if (!path) return null;
+  try {
+    const r = await fetch(`${c.URL}/storage/v1/object/sign/jurnal/${path}`, { method: 'POST', headers: { ...c.h, 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) });
+    const d = await r.json();
+    return d.signedURL ? `${c.URL}/storage/v1${d.signedURL}` : null;
+  } catch (e) { return null; }
+}

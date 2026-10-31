@@ -20,3 +20,20 @@ MODUL INFO TERBARU (pengumuman, agenda, surat)
    public/info-admin.html         (BARU - panel admin, PIN yang sama)
    public/index.html              (DIGANTI - menu, tile, footer, cuplikan beranda)
 3. Deploy. Tidak ada variabel baru. Admin mengelola lewat /#info-admin (atau tautan "Kelola info" di bawah halaman Info Terbaru).
+
+MENU KEGIATAN (Jurnal Murid, Ekstrakurikuler, Club, Kegiatan Unggulan)
+1. Supabase > SQL Editor: jalankan supabase-jurnal.sql (tabel jurnal_murid, bucket privat "jurnal", kolom info_sekolah.jenis_kegiatan).
+   JALANKAN SEBELUM DEPLOY: kode admin-info sekarang menyimpan kolom jenis_kegiatan.
+2. File baru/diganti:
+   functions/api/jurnal.js, murid-jurnal.js, admin-jurnal.js   (BARU)
+   functions/api/info.js, admin-info.js, functions/_lib/util.js  (DIGANTI)
+   src/worker.js                                               (DIGANTI - menambah 3 route)
+   public/jurnal.html, kegiatan-sekolah.html                   (BARU)
+   public/info-admin.html, public/index.html                   (DIGANTI)
+3. Alur: murid masuk dengan kode akses (sama dengan Pantau Belajar Anak) > kirim jurnal > admin menyetujui di
+   Kelola info > tab "Jurnal murid" > tayang di menu Kegiatan > Jurnal Murid.
+   Ekskul/Club/Kegiatan Unggulan: di Kelola info, isi kolom "Jenis kegiatan" pada info (kategori disarankan "Berita Kegiatan").
+
+GURU & STAFF OTOMATIS DARI SUPABASE
+   functions/api/guru.js (BARU), public/guru.html, public/data-guru.js, public/footer-sekolah.js.
+   Cek jenis undangan: buka /api/guru?jenis=1 . Atur manual dengan variabel GURU_JENIS di Cloudflare bila perlu.

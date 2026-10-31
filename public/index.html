@@ -134,10 +134,17 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <div class="menu">
     <a href="#beranda" data-r="beranda">Beranda</a>
     <button type="button" class="dd" id="ddBtnP" aria-haspopup="true" aria-expanded="false" aria-controls="ddpP">Profil <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <a href="#info" data-r="info">Info Terbaru</a>
+        <button type="button" class="dd" id="ddBtnK" aria-haspopup="true" aria-expanded="false" aria-controls="ddpK">Kegiatan <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="#info" data-r="info">Info Terbaru</a>
     <button type="button" class="dd" id="ddBtn" aria-haspopup="true" aria-expanded="false" aria-controls="ddp">Layanan <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <a href="#ortu" data-r="ortu">Pantau Belajar Anak</a>
   </div>
+<div class="ddp" id="ddpK" hidden>
+  <a href="#jurnal" data-r="jurnal">Jurnal Murid</a>
+  <a href="#ekskul" data-r="ekskul">Ekstrakurikuler</a>
+  <a href="#club" data-r="club">Club</a>
+  <a href="#unggulan" data-r="unggulan">Kegiatan Unggulan</a>
+</div>
 <div class="ddp" id="ddpP" hidden>
   <a href="#profil" data-r="profil">Profil Sekolah</a>
   <a href="#guru" data-r="guru">Guru &amp; Staff</a>
@@ -221,6 +228,10 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
             <a href="#guru">Guru &amp; Staff</a>
             <a href="#lulusan">Profil Lulusan</a>
             <a href="#spmb">SPMB</a>
+            <a href="#jurnal">Jurnal Murid</a>
+            <a href="#ekskul">Ekstrakurikuler</a>
+            <a href="#club">Club</a>
+            <a href="#unggulan">Kegiatan Unggulan</a>
             <a href="#info">Info Terbaru</a>
             <a href="#buku-tamu">Buku Tamu Sekolah</a>
             <a href="#kelas">Administrasi Kelas</a>
@@ -238,6 +249,10 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <iframe id="f-profil" title="Profil Sekolah" hidden></iframe>
   <iframe id="f-guru" title="Guru dan Staff" hidden></iframe>
   <iframe id="f-lulusan" title="Profil Lulusan" hidden></iframe>
+  <iframe id="f-jurnal" title="Jurnal Murid" hidden></iframe>
+  <iframe id="f-ekskul" title="Ekstrakurikuler" hidden></iframe>
+  <iframe id="f-club" title="Club" hidden></iframe>
+  <iframe id="f-unggulan" title="Kegiatan Unggulan" hidden></iframe>
   <iframe id="f-info" title="Info Terbaru" hidden></iframe>
   <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
@@ -247,13 +262,13 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </main>
 
 <script>
-const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', lulusan: 'lulusan.html', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', lulusan: 'Profil Lulusan', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', lulusan: 'lulusan.html', jurnal: 'jurnal.html', ekskul: 'kegiatan-sekolah.html?j=ekskul', club: 'kegiatan-sekolah.html?j=club', unggulan: 'kegiatan-sekolah.html?j=unggulan', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', lulusan: 'Profil Lulusan', jurnal: 'Jurnal Murid', ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
 // ===== Dropdown "Profil" dan "Layanan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
-const DDS = [['ddBtnP', 'ddpP'], ['ddBtn', 'ddp']].map(([b, p]) => ({ btn: document.getElementById(b), pnl: document.getElementById(p) }));
+const DDS = [['ddBtnP', 'ddpP'], ['ddBtnK', 'ddpK'], ['ddBtn', 'ddp']].map(([b, p]) => ({ btn: document.getElementById(b), pnl: document.getElementById(p) }));
 function ddClose() { DDS.forEach(d => { d.pnl.hidden = true; d.btn.setAttribute('aria-expanded', 'false'); }); }
 DDS.forEach(d => {
   d.btn.onclick = e => {
@@ -279,13 +294,14 @@ function route() {
   const [r0, seg = ''] = (location.hash.slice(1) || 'beranda').split('/');
   let r = r0;
   // #info/<id> membuka info tertentu, #info/prestasi membuka daftar berkategori prestasi
-  const q = r === 'info' ? (UUID.test(seg) ? '?id=' + seg : KATS.includes(seg) ? '?kat=' + seg : '') : '';
+  const q = r === 'info' ? (UUID.test(seg) ? '?id=' + seg : KATS.includes(seg) ? '?kat=' + seg : '') : r === 'jurnal' && UUID.test(seg) ? '?id=' + seg : '';
   const admin = r === 'admin';            // tautan lama /#admin tetap dikenali
   if (admin) r = 'buku-tamu';
   if (r !== 'beranda' && !PAGES[r]) r = 'beranda';
 
   document.querySelectorAll('.menu a, .ddp a').forEach(a => a.classList.toggle('on', a.dataset.r === (r === 'info-admin' ? 'info' : r)));
   document.getElementById('ddBtn').classList.toggle('on', ['buku-tamu', 'kelas', 'kegiatan'].includes(r));
+  document.getElementById('ddBtnK').classList.toggle('on', ['jurnal', 'ekskul', 'club', 'unggulan'].includes(r));
   document.getElementById('ddBtnP').classList.toggle('on', ['profil', 'guru', 'lulusan'].includes(r));
   ddClose();
   document.getElementById('cta').classList.toggle('on', r === 'spmb');
@@ -294,7 +310,7 @@ function route() {
     const f = document.getElementById('f-' + k);
     f.hidden = k !== r;
     // halaman dimuat sekali saat pertama dibuka, lalu dipertahankan (login dan isian tidak hilang)
-    const qk = k === 'info' ? q : '';
+    const qk = k === r ? q : '';
     if (k === r && (!f.getAttribute('src') || admin || f.dataset.q !== qk)) { f.dataset.q = qk; f.src = PAGES[k] + qk + (admin ? '?t=' + Date.now() + '#admin' : ''); }
   }
   document.title = TITLES[r];

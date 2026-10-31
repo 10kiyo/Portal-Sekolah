@@ -37,7 +37,18 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid2 .full{grid-column:1/-1}
 .chk{display:flex;gap:8px;align-items:center;font-weight:600;margin:0}.chk input{width:auto}
 .hint{font-size:12px;color:var(--mute);margin-top:4px}
+.tabsA{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.tabsA button{background:#fff;color:var(--navy);border:1px solid var(--line);border-radius:99px;padding:8px 16px;font-size:14px}
+.tabsA button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pill.bad{background:#fbeae8;color:var(--danger)}
+.jr{display:flex;gap:14px;align-items:flex-start}
+.jr img{flex:none;width:130px;height:96px;object-fit:cover;border-radius:10px;cursor:zoom-in}
+.jr .isi{margin-top:8px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.jr .isi.cut{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.jr textarea{min-height:60px;margin-top:8px;font-size:14px}
+.link{background:none;border:0;color:var(--blue);padding:0;font-weight:700;font-size:13px}
 .emb .wrap{padding-top:12px}
+@media(max-width:560px){.jr{flex-direction:column}.jr img{width:100%;height:auto;aspect-ratio:16/10}}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -55,10 +66,20 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
 
 <div id="app" class="hidden">
   <div class="top">
-    <div><h1>Kelola Info Terbaru</h1><div class="mut">Pengumuman, agenda, dan surat untuk orang tua</div></div>
+    <div><h1>Kelola Info Terbaru</h1><div class="mut">Pengumuman, agenda, surat, kegiatan sekolah, dan verifikasi jurnal murid</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="tambah">+ Tambah info</button><button class="sec" id="muat">Muat ulang</button><button class="sec" id="keluar">Keluar</button></div>
   </div>
-  <div id="list" class="list"></div>
+  <div class="tabsA"><button class="on" data-t="info">Info &amp; kegiatan</button><button data-t="jurnal">Jurnal murid <span id="nMenunggu"></span></button></div>
+
+  <section id="pInfo"><div id="list" class="list"></div></section>
+
+  <section id="pJurnal" class="hidden">
+    <div class="tabsA" id="fJ" style="margin-top:12px">
+      <button class="on" data-s="menunggu">Menunggu</button><button data-s="revisi">Revisi</button><button data-s="disetujui">Tayang</button><button data-s="ditolak">Ditolak</button><button data-s="semua">Semua</button>
+    </div>
+    <div class="mut" style="margin-top:8px">Periksa isi, ejaan, dan foto sebelum menyetujui. Jurnal baru tayang di halaman Jurnal Murid setelah disetujui.</div>
+    <div id="listJ" class="list"></div>
+  </section>
 </div>
 </div>
 
@@ -68,6 +89,9 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
     <div class="full"><label for="f-judul">Judul</label><input id="f-judul" maxlength="150"></div>
     <div><label for="f-kat">Kategori</label>
       <select id="f-kat"><option value="pengumuman">Pengumuman</option><option value="agenda">Agenda</option><option value="surat">Surat Edaran</option><option value="kegiatan">Berita Kegiatan</option><option value="prestasi">Prestasi</option><option value="lainnya">Lainnya</option></select></div>
+    <div class="full"><label for="f-jenis">Jenis kegiatan <span class="mut">(opsional)</span></label>
+      <select id="f-jenis"><option value="">— Bukan kegiatan khusus —</option><option value="ekskul">Ekstrakurikuler</option><option value="club">Club</option><option value="unggulan">Kegiatan Unggulan</option></select>
+      <div class="hint">Jika dipilih, info ini juga tampil di menu Kegiatan (Ekstrakurikuler / Club / Kegiatan Unggulan). Disarankan kategori “Berita Kegiatan”.</div></div>
     <div><label for="f-terbit">Tanggal terbit</label><input id="f-terbit" type="date"></div>
     <div><label for="f-agenda">Tanggal acara / tenggat <span class="mut">(opsional)</span></label><input id="f-agenda" type="date"><div class="hint">Jika diisi, muncul di “Agenda mendatang”.</div></div>
     <div><label for="f-lokasi">Jam / tempat <span class="mut">(opsional)</span></label><input id="f-lokasi" maxlength="150" placeholder="mis. 08.00 WIB, Aula sekolah"></div>
@@ -90,6 +114,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 const KAT = { pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', prestasi: 'Prestasi', lainnya: 'Lainnya' };
+const JK = { ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan' };
 if (self !== top) document.body.classList.add('emb');
 let D = { info: [], today: '' }, editId = null;
 
@@ -114,13 +139,13 @@ $('#masuk').onclick = async () => {
 $('#pin').onkeydown = e => { if (e.key === 'Enter') $('#masuk').click(); };
 async function mulai() {
   if (!sessionStorage.getItem(TOKEN_KEY)) return showLogin();
-  try { D = await api(); $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); render(); }
+  try { D = await api(); $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); render(); muatJ(); }
   catch (e) { if (sessionStorage.getItem(TOKEN_KEY)) $('#loginErr').textContent = 'PIN benar, tetapi data gagal dimuat: ' + e.message; }
 }
 
 function render() {
   $('#list').innerHTML = D.info.length ? D.info.map(x => `<div class="it ${x.terbit ? '' : 'off'}" data-id="${x.id}">
-    <span class="pill blue">${esc(KAT[x.kategori] || x.kategori)}</span>
+    <span class="pill blue">${esc(KAT[x.kategori] || x.kategori)}</span>${x.jenis_kegiatan ? ` <span class="pill ok">${esc(JK[x.jenis_kegiatan] || x.jenis_kegiatan)}</span>` : ''}
     <span class="pill ${x.terbit ? 'ok' : 'warn'}">${x.terbit ? 'Tampil' : 'Disembunyikan'}</span>${x.sematkan ? ' <span class="pill warn">📌 Disematkan</span>' : ''}
     <h3>${esc(x.judul)}</h3>
     <div class="mut">Terbit ${tgl(x.tanggal_terbit)}${x.tanggal_agenda ? ' · Acara ' + tgl(x.tanggal_agenda) : ''}${x.lampiran_url ? ' · 📎 ' + esc(x.lampiran_nama || 'Lampiran') : ''}</div>
@@ -149,6 +174,7 @@ function buka(x) {
   $('#f-lokasi').value = x && x.lokasi || ''; $('#f-isi').value = x && x.isi || '';
   $('#f-url').value = x && x.lampiran_url || ''; $('#f-nama').value = x && x.lampiran_nama || ''; $('#f-file').value = '';
   $('#f-cur').textContent = x && x.lampiran_url ? 'Lampiran saat ini terpasang. Pilih file baru atau kosongkan tautan untuk menghapusnya.' : '';
+  $('#f-jenis').value = x && x.jenis_kegiatan || '';
   $('#f-pin').checked = x ? x.sematkan : false; $('#f-pub').checked = x ? x.terbit : true;
   $('#dlgErr').textContent = ''; $('#dlg').showModal();
 }
@@ -192,12 +218,63 @@ $('#simpan').onclick = async () => {
       action: 'simpan', id: editId, judul: $('#f-judul').value, kategori: $('#f-kat').value,
       tanggal_terbit: $('#f-terbit').value, tanggal_agenda: $('#f-agenda').value, lokasi: $('#f-lokasi').value,
       isi: $('#f-isi').value, lampiran_url: url, lampiran_nama: nama,
-      sematkan: $('#f-pin').checked, terbit: $('#f-pub').checked
+      jenis_kegiatan: $('#f-jenis').value, sematkan: $('#f-pin').checked, terbit: $('#f-pub').checked
     });
     $('#dlg').close(); D = await api(); render();
   } catch (e) { $('#dlgErr').textContent = e.message; }
   finally { btn.disabled = false; }
 };
+
+/* ---------- Verifikasi jurnal murid ---------- */
+let J = [], sJ = 'menunggu', bukaJ = new Set();
+const SJ = { menunggu: ['Menunggu', 'warn'], revisi: ['Revisi diminta', 'blue'], disetujui: ['Tayang', 'ok'], ditolak: ['Ditolak', 'bad'] };
+async function apiJ(body) {
+  const h = { Authorization: 'Bearer ' + sessionStorage.getItem(TOKEN_KEY) };
+  if (body) h['Content-Type'] = 'application/json';
+  const r = await fetch('/api/admin-jurnal', body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { sessionStorage.removeItem(TOKEN_KEY); showLogin(); throw new Error(d.error || 'Sesi berakhir.'); }
+  if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.');
+  return d;
+}
+async function muatJ() {
+  try { J = (await apiJ()).jurnal; } catch (e) { $('#listJ').innerHTML = `<div class="card err">${esc(e.message)}</div>`; return; }
+  const n = J.filter(x => x.status === 'menunggu').length; $('#nMenunggu').textContent = n ? `(${n})` : '';
+  renderJ();
+}
+function renderJ() {
+  const rows = J.filter(x => sJ === 'semua' || x.status === sJ);
+  $('#listJ').innerHTML = rows.length ? rows.map(x => {
+    const long = x.isi.length > 260, buka = bukaJ.has(x.id), st = SJ[x.status] || [x.status, ''];
+    return `<div class="it" data-id="${x.id}"><div class="jr">${x.foto ? `<img src="${esc(x.foto)}" alt="" data-a="zoom">` : ''}<div style="flex:1;min-width:0">
+      <span class="pill ${st[1]}">${st[0]}</span> <span class="mut">${new Date(x.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+      <h3>${esc(x.judul)}</h3><div class="mut">Oleh <b>${esc(x.nama_anak)}</b>${x.kelas ? ' · Kelas ' + esc(x.kelas) : ''}</div>
+      <div class="isi ${long && !buka ? 'cut' : ''}">${esc(x.isi)}</div>${long ? `<button class="link" data-a="lebih">${buka ? 'Tutup' : 'Baca lengkap'}</button>` : ''}
+      ${x.catatan_admin ? `<div class="mut" style="margin-top:6px">Catatan terkirim: ${esc(x.catatan_admin)}</div>` : ''}
+      ${x.status === 'disetujui' ? '' : `<textarea placeholder="Catatan untuk murid (wajib bila minta revisi / menolak)" data-c></textarea>`}
+      <div class="acts">${x.status !== 'disetujui' ? '<button class="sm" data-a="disetujui" style="background:var(--ok)">✓ Setujui &amp; tayangkan</button>' : '<button class="sec sm" data-a="menunggu">Tarik dari tayang</button>'}
+        ${x.status !== 'disetujui' ? '<button class="sec sm" data-a="revisi">Minta revisi</button><button class="sec sm" data-a="ditolak">Tolak</button>' : ''}
+        <button class="bad sm" data-a="hapusJ">Hapus</button></div></div></div></div>`;
+  }).join('') : '<div class="card mut" style="text-align:center">Tidak ada jurnal di kategori ini.</div>';
+}
+$('#fJ').onclick = e => { const b = e.target.closest('button[data-s]'); if (!b) return; sJ = b.dataset.s; document.querySelectorAll('#fJ button').forEach(x => x.classList.toggle('on', x === b)); renderJ(); };
+$('#listJ').onclick = async e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const el = b.closest('.it'), x = J.find(i => i.id === el.dataset.id); if (!x) return;
+  const a = b.dataset.a;
+  if (a === 'zoom') return window.open(x.foto, '_blank', 'noopener');
+  if (a === 'lebih') { bukaJ.has(x.id) ? bukaJ.delete(x.id) : bukaJ.add(x.id); return renderJ(); }
+  try {
+    if (a === 'hapusJ') { if (!confirm(`Hapus jurnal “${x.judul}” secara permanen?`)) return; await apiJ({ action: 'hapus', id: x.id }); }
+    else { const c = el.querySelector('[data-c]'); await apiJ({ action: 'status', id: x.id, status: a, catatan: c ? c.value : '' }); }
+    await muatJ();
+  } catch (err) { alert(err.message); }
+};
+document.querySelectorAll('.tabsA[class="tabsA"] button[data-t]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabsA button[data-t]').forEach(x => x.classList.toggle('on', x === b));
+  $('#pInfo').classList.toggle('hidden', b.dataset.t !== 'info'); $('#pJurnal').classList.toggle('hidden', b.dataset.t !== 'jurnal');
+  if (b.dataset.t === 'jurnal') muatJ();
+});
 mulai();
 </script>
 </body>

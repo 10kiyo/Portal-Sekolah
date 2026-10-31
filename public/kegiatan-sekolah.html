@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kegiatan Sekolah</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(900px,calc(100% - 24px));margin:0 auto;padding:24px 0 40px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
+h2{margin:0 0 12px;color:var(--navy);font-size:20px}
+.mut{color:var(--mute);font-size:14px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:14px}
+.tags{display:flex;gap:8px;flex-wrap:wrap}.tags span{padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--navy);font-weight:700;font-size:14px}
+.post h3{margin:8px 0 4px;color:var(--navy);font-size:19px;letter-spacing:-.02em}
+.post .meta{font-size:13px;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.post .isi{margin-top:10px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.post .isi.cut{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.post a{color:var(--blue)}
+.more{margin-top:6px;background:none;border:0;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0}
+.lamp{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:9px 14px;border-radius:10px;background:var(--navy);color:#fff!important;text-decoration:none;font-weight:700;font-size:14px}
+.lamp-img{max-width:100%;max-height:420px;display:block;margin-top:12px;border-radius:12px;border:1px solid var(--line)}
+.pin{color:#a65f00;font-weight:700;font-size:12px}
+.empty{text-align:center;color:var(--mute);padding:30px 0}
+.emb .wrap{padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="judul">Kegiatan</h1>
+  <div class="mut" id="sub"></div>
+  <div class="card" id="kenal" hidden><h2 id="kenalJudul"></h2><div class="tags" id="kenalTags"></div><p id="kenalIsi" style="margin:12px 0 0;line-height:1.7"></p></div>
+  <h2 style="margin:26px 0 0">Kabar &amp; dokumentasi terbaru</h2>
+  <div id="list"><div class="card empty">Memuat…</div></div>
+</div>
+<script>
+/* ============================================================
+   ISI HALAMAN KEGIATAN — edit data di bawah ini.
+   Kabar/dokumentasi (foto, teks) dikelola admin lewat "Kelola info" dengan mengisi
+   kolom "Jenis kegiatan" (Ekstrakurikuler / Club / Kegiatan Unggulan).
+   ============================================================ */
+const JENIS = {
+  ekskul: {
+    judul: 'Ekstrakurikuler', sub: 'Kegiatan pengembangan minat dan bakat di luar jam pelajaran',
+    kenalJudul: 'Pilihan ekstrakurikuler',
+    daftar: ['Pramuka', 'Futsal', 'Seni Lukis', 'Karate', 'Paduan Suara', 'Robotik', 'Karya Ilmiah Remaja', 'Karya Tulis Ilmiah', 'Karya Seni', 'Karya Budaya', 'Karya Olahraga'],
+    isi: ''
+  },
+  club: {
+    judul: 'Club', sub: 'Komunitas belajar murid sesuai minat',
+    kenalJudul: 'Club yang tersedia',
+    daftar: ['Dokter Kecil', 'English Club', 'Rohis', 'Paduan Suara', 'Robotik', 'Karya Ilmiah Remaja', 'Karya Tulis Ilmiah', 'Karya Seni', 'Karya Budaya', 'Karya Olahraga'],
+    isi: ''
+  },
+  unggulan: {
+    judul: 'Kegiatan Unggulan', sub: 'Program dan kegiatan khas SDS Islam At-Taqwa Rawamangun',
+    kenalJudul: 'Program unggulan',
+    daftar: [],            // contoh: ['Tahfidz Qur\'an', 'Market Day']
+    isi: ''
+  }
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const linkify = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const tglS = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+if (self !== top) document.body.classList.add('emb');
+const j = new URLSearchParams(location.search).get('j'), J = JENIS[j] || JENIS.unggulan, jk = JENIS[j] ? j : 'unggulan';
+document.title = J.judul; $('#judul').textContent = J.judul; $('#sub').textContent = J.sub;
+if (J.daftar.length || J.isi) {
+  $('#kenal').hidden = false; $('#kenalJudul').textContent = J.kenalJudul;
+  $('#kenalTags').innerHTML = J.daftar.map(x => `<span>${esc(x)}</span>`).join(''); $('#kenalIsi').textContent = J.isi; $('#kenalIsi').hidden = !J.isi;
+}
+fetch('/api/info?limit=100&jenis=' + jk).then(r => r.json()).then(d => {
+  if (d.error) throw new Error(d.error);
+  const rows = d.info || [];
+  $('#list').innerHTML = rows.length ? rows.map(x => {
+    const lamp = /^https?:\/\//.test(x.lampiran_url || '') ? x.lampiran_url : '', isImg = /\.(jpe?g|png|webp)(\?|$)/i.test(lamp);
+    const long = (x.isi || '').length > 280 || (x.isi || '').split('\n').length > 5;
+    return `<article class="card post"><div class="meta">${x.sematkan ? '<span class="pin">📌 Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div><h3>${esc(x.judul)}</h3>
+      ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
+      ${isImg ? `<a href="${esc(lamp)}" target="_blank" rel="noopener"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
+      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener">📎 ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}</article>`;
+  }).join('') : '<div class="card empty">Belum ada kabar untuk ditampilkan.</div>';
+  document.querySelectorAll('.more').forEach(b => b.onclick = () => { const c = b.previousElementSibling.classList.toggle('cut'); b.textContent = c ? 'Baca selengkapnya' : 'Tutup'; });
+}).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat.')}</div>`; });
+</script>
+<script src="footer-sekolah.js"></script>
+</body>
+</html>

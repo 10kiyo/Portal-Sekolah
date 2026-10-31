@@ -54,6 +54,9 @@ export async function onRequest({ request, env }) {
         lampiran_nama: lamp ? (String(b.lampiran_nama || '').trim().slice(0, 100) || 'Lampiran') : null,
         updated_at: new Date().toISOString()
       };
+      const jk = String(b.jenis_kegiatan || '');
+      if (jk && !['ekskul', 'club', 'unggulan'].includes(jk)) return json(400, { error: 'Jenis kegiatan tidak valid.' });
+      if (jk || b.id) k.jenis_kegiatan = jk || null;   // kolom dari supabase-jurnal.sql
       if (!k.judul) return json(400, { error: 'Judul wajib diisi.' });
       if (!KAT.includes(k.kategori)) return json(400, { error: 'Kategori tidak valid.' });
       if (!TGL.test(k.tanggal_terbit) || (k.tanggal_agenda && !TGL.test(k.tanggal_agenda))) return json(400, { error: 'Format tanggal tidak valid.' });

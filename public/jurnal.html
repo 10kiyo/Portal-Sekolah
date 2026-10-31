@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jurnal Murid</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--danger:#bc3d33;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(1000px,calc(100% - 24px));margin:0 auto;padding:24px 0 40px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
+h2{margin:0 0 10px;color:var(--navy);font-size:20px}
+.mut{color:var(--mute);font-size:14px}
+.tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-top:14px}
+.j{display:flex;flex-direction:column;background:#fff;border:1px solid #dbe8f2;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px #102a430d;cursor:pointer;text-align:left;font:inherit;color:inherit;padding:0;transition:border-color .18s,transform .18s}
+.j:hover{border-color:var(--blue);transform:translateY(-2px)}.j:focus-visible{outline:3px solid #1677c850}
+.j .ph{aspect-ratio:16/10;background:linear-gradient(135deg,#102a43,#1677c8);display:grid;place-items:center}
+.j .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.j .ph.no img{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:14px;padding:6px}
+.j .bd{padding:12px 16px 16px;display:flex;flex-direction:column;gap:6px}
+.j b{color:var(--navy);line-height:1.3;font-size:17px}
+.j p{margin:0;font-size:14px;line-height:1.55;color:var(--ink)}
+.by{font-size:13px;color:var(--mute)}.by strong{color:var(--navy)}
+.empty{text-align:center;color:var(--mute);padding:34px 0}
+label{display:block;font-weight:700;color:var(--navy);margin:14px 0 5px;font-size:14px}
+input,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);font:inherit;color:var(--ink);background:#fff}
+textarea{min-height:200px;resize:vertical;line-height:1.6}
+input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.btn{border:0;cursor:pointer;font:inherit;font-weight:700;padding:11px 18px;border-radius:10px;background:var(--blue);color:#fff}
+.btn.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}.btn.bad{background:var(--danger)}.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.6;cursor:wait}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hint{font-size:13px;color:var(--mute);margin-top:4px}
+.msg{margin-top:12px;font-weight:650}.msg.err{color:var(--danger)}.msg.ok{color:var(--ok)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:800;background:#eef2f6;color:var(--mute)}
+.pill.menunggu{background:#fdf0e3;color:#a65f00}.pill.disetujui{background:#eaf5ee;color:var(--ok)}.pill.revisi{background:#e3f0fb;color:var(--blue)}.pill.ditolak{background:#fbeae8;color:var(--danger)}
+.mine{border:1px solid #dbe8f2;border-radius:14px;padding:14px;margin-top:10px;display:flex;gap:14px;align-items:flex-start}
+.mine img{flex:none;width:96px;height:72px;object-fit:cover;border-radius:10px}
+.mine h3{margin:4px 0;color:var(--navy);font-size:16px}
+.cat{margin-top:8px;padding:10px 12px;border-radius:10px;background:#fff8e6;border:1px solid #f1dca0;font-size:14px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:600;margin:16px 0 0}.chk input{width:auto;margin-top:3px}
+.prev{max-width:260px;max-height:180px;border-radius:10px;margin-top:8px;display:block}
+dialog{border:0;border-radius:18px;padding:0;width:min(720px,calc(100% - 24px));max-height:90vh;box-shadow:0 20px 60px #102a4350}dialog::backdrop{background:#102a4380}
+dialog .in{padding:clamp(16px,4vw,26px)}
+dialog .big{width:100%;max-height:360px;object-fit:cover;display:block}
+dialog h2{font-size:clamp(20px,4vw,26px);letter-spacing:-.02em;margin:0 0 6px}
+dialog .isi{margin-top:14px;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
+.emb .wrap{padding-top:12px}
+@media(max-width:520px){.mine{flex-direction:column}.mine img{width:100%;height:auto;aspect-ratio:16/10}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Jurnal Murid</h1>
+  <div class="mut">Karya tulis dan berita buatan murid At-Taqwa — belajar jurnalistik dan menulis dari rumah</div>
+  <div class="tabs" role="tablist">
+    <button class="on" data-t="baca" role="tab">Baca jurnal</button>
+    <button data-t="tulis" role="tab">✏️ Tulis jurnalku</button>
+  </div>
+
+  <section id="baca">
+    <div class="grid" id="daftar"><div class="card empty" style="grid-column:1/-1">Memuat…</div></div>
+  </section>
+
+  <section id="tulis" hidden>
+    <div class="card" id="masuk">
+      <h2>Masuk dengan kode akses</h2>
+      <p class="mut" style="margin:0">Pakai <b>kode akses murid</b> yang sama dengan menu “Pantau Belajar Anak”. Belum punya? Tanyakan ke wali kelas.</p>
+      <label for="kode">Kode akses</label>
+      <div class="row"><input id="kode" maxlength="12" autocomplete="off" autocapitalize="characters" style="max-width:240px;text-transform:uppercase" placeholder="Contoh: AB12CD"><button class="btn" id="btnMasuk">Masuk</button></div>
+      <div id="masukMsg" class="msg err"></div>
+    </div>
+
+    <div id="area" hidden>
+      <div class="card">
+        <div class="row" style="justify-content:space-between"><div><b id="siapa"></b><div class="mut" id="kls"></div></div><button class="btn sec sm" id="keluar">Keluar</button></div>
+      </div>
+
+      <div class="card">
+        <h2 id="ftitle">Tulis jurnal baru</h2>
+        <p class="mut" style="margin:0">Tulis beritamu sendiri: apa yang terjadi, siapa saja, kapan, di mana, dan bagaimana. Setelah dikirim, tulisanmu dibaca dan diverifikasi guru sebelum tayang di website.</p>
+        <label for="judul">Judul</label>
+        <input id="judul" maxlength="120" placeholder="Judul berita atau tulisanmu">
+        <label for="isi">Tulisan <span class="mut" id="cnt">(0 huruf, minimal 100)</span></label>
+        <textarea id="isi" maxlength="5000" placeholder="Mulai menulis di sini…"></textarea>
+        <label for="foto">Foto <span class="mut">(opsional)</span></label>
+        <input id="foto" type="file" accept="image/jpeg,image/png,image/webp">
+        <img id="prev" class="prev" alt="Pratinjau foto" hidden>
+        <div class="row" id="fotoAct" hidden style="margin-top:6px"><button class="btn sec sm" id="hapusFoto" type="button">Hapus foto</button></div>
+        <div class="hint">Gunakan foto buatanmu sendiri atau fotomu bersama teman yang diizinkan. Jangan unggah foto yang berisi data pribadi.</div>
+        <label class="chk"><input type="checkbox" id="setuju"> <span>Orang tua mengizinkan tulisan ini (beserta nama dan kelas anak) ditayangkan di website sekolah.</span></label>
+        <div class="row" style="margin-top:16px"><button class="btn" id="kirim">Kirim untuk diverifikasi</button><button class="btn sec" id="batal" hidden>Batal ubah</button></div>
+        <div id="kmsg" class="msg"></div>
+      </div>
+
+      <div class="card"><h2>Jurnalku</h2><div id="mine"><div class="mut">Memuat…</div></div></div>
+    </div>
+  </section>
+</div>
+
+<dialog id="dlg"><div id="dlgBody"></div><div class="in" style="padding-top:0;text-align:right"><button class="btn sec" id="tutup">Tutup</button></div></dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+if (self !== top) document.body.classList.add('emb');
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const KEY = 'jurnalMurid.kode';
+const ST = { menunggu: 'Menunggu verifikasi', revisi: 'Perlu diperbaiki', disetujui: 'Sudah tayang', ditolak: 'Tidak dapat ditayangkan' };
+
+/* ---------- tab ---------- */
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  $('#baca').hidden = b.dataset.t !== 'baca'; $('#tulis').hidden = b.dataset.t !== 'tulis';
+  if (b.dataset.t === 'tulis') autoMasuk();
+});
+
+/* ---------- baca ---------- */
+let LIST = [];
+fetch('/api/jurnal?limit=60').then(r => r.json()).then(d => {
+  if (d.error) throw new Error(d.error);
+  LIST = d.jurnal || [];
+  $('#daftar').innerHTML = LIST.length ? LIST.map(kartu).join('') : '<div class="card empty" style="grid-column:1/-1">Belum ada jurnal yang tayang. Jadilah yang pertama — klik “Tulis jurnalku”!</div>';
+  const id = new URLSearchParams(location.search).get('id'); if (id && UUID.test(id)) buka(id);
+}).catch(e => { $('#daftar').innerHTML = `<div class="card empty" style="grid-column:1/-1">${esc(e.message || 'Gagal memuat jurnal.')}</div>`; });
+function kartu(x) {
+  const ph = x.foto ? `<div class="ph"><img src="${esc(x.foto)}" alt="" loading="lazy"></div>` : '<div class="ph no"><img src="logo-at-taqwa.png" alt=""></div>';
+  return `<button class="j" data-id="${esc(x.id)}">${ph}<div class="bd"><b>${esc(x.judul)}</b><div class="by">Oleh <strong>${esc(x.nama)}</strong>${x.kelas ? ' · Kelas ' + esc(x.kelas) : ''}${x.tanggal ? ' · ' + tgl(x.tanggal) : ''}</div><p>${esc(x.cuplikan)}</p></div></button>`;
+}
+$('#daftar').onclick = e => { const b = e.target.closest('.j'); if (b) buka(b.dataset.id); };
+async function buka(id) {
+  try {
+    const d = await (await fetch('/api/jurnal?id=' + id)).json(); if (d.error) throw new Error(d.error);
+    const x = d.jurnal;
+    $('#dlgBody').innerHTML = `${x.foto ? `<img class="big" src="${esc(x.foto)}" alt="">` : ''}<div class="in"><h2>${esc(x.judul)}</h2><div class="by">Oleh <strong>${esc(x.nama)}</strong>${x.kelas ? ' · Kelas ' + esc(x.kelas) : ''}${x.tanggal ? ' · ' + tgl(x.tanggal) : ''}</div><div class="isi">${esc(x.isi)}</div></div>`;
+    $('#dlg').showModal();
+  } catch (e) { alert(e.message); }
+}
+$('#tutup').onclick = () => $('#dlg').close();
+$('#dlg').onclick = e => { if (e.target === $('#dlg')) $('#dlg').close(); };
+
+/* ---------- tulis ---------- */
+let kode = '', editId = null, fotoData = '', fotoLama = '', hapusFotoFlag = false;
+async function api(body) {
+  const r = await fetch('/api/murid-jurnal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kode, ...body }) });
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.'); return d;
+}
+async function masuk(k) {
+  kode = k.trim().toUpperCase(); $('#masukMsg').textContent = '';
+  if (!kode) return;
+  $('#btnMasuk').disabled = true;
+  try {
+    const d = await api({ action: 'list' });
+    sessionStorage.setItem(KEY, kode);
+    $('#siapa').textContent = d.anak.nama; $('#kls').textContent = d.anak.kelas ? 'Kelas ' + d.anak.kelas : '';
+    $('#masuk').hidden = true; $('#area').hidden = false; tampilMine(d.jurnal);
+  } catch (e) { kode = ''; sessionStorage.removeItem(KEY); $('#masukMsg').textContent = e.message; }
+  finally { $('#btnMasuk').disabled = false; }
+}
+function autoMasuk() { if (!kode && sessionStorage.getItem(KEY)) masuk(sessionStorage.getItem(KEY)); }
+$('#btnMasuk').onclick = () => masuk($('#kode').value);
+$('#kode').onkeydown = e => { if (e.key === 'Enter') masuk($('#kode').value); };
+$('#keluar').onclick = () => { kode = ''; sessionStorage.removeItem(KEY); $('#area').hidden = true; $('#masuk').hidden = false; $('#kode').value = ''; resetForm(); };
+
+let MINE = [];
+function tampilMine(rows) {
+  MINE = rows;
+  $('#mine').innerHTML = rows.length ? rows.map(x => `<div class="mine" data-id="${x.id}">${x.foto ? `<img src="${esc(x.foto)}" alt="">` : ''}<div style="flex:1;min-width:0"><span class="pill ${x.status}">${ST[x.status]}</span><h3>${esc(x.judul)}</h3>
+    ${x.catatan_admin ? `<div class="cat"><b>Catatan guru:</b> ${esc(x.catatan_admin)}</div>` : ''}
+    <div class="row" style="margin-top:8px">${x.status === 'disetujui' ? `<span class="mut">Tayang di tab “Baca jurnal”.</span>` : `<button class="btn sec sm" data-a="ubah">${x.status === 'revisi' ? 'Perbaiki & kirim lagi' : 'Ubah'}</button><button class="btn bad sm" data-a="hapus">Hapus</button>`}</div></div></div>`).join('')
+    : '<div class="mut">Belum ada jurnal. Tulis jurnal pertamamu di atas!</div>';
+}
+$('#mine').onclick = async e => {
+  const b = e.target.closest('button[data-a]'); if (!b) return;
+  const x = MINE.find(m => m.id === b.closest('.mine').dataset.id); if (!x) return;
+  if (b.dataset.a === 'hapus') {
+    if (!confirm(`Hapus jurnal “${x.judul}”?`)) return;
+    try { await api({ action: 'hapus', id: x.id }); await muat(); } catch (err) { alert(err.message); }
+  } else {
+    editId = x.id; $('#ftitle').textContent = 'Perbaiki jurnal'; $('#judul').value = x.judul; $('#isi').value = x.isi; hitung();
+    fotoData = ''; hapusFotoFlag = false; fotoLama = x.foto || ''; tampilFoto(fotoLama);
+    $('#batal').hidden = false; $('#kirim').textContent = 'Kirim ulang untuk diverifikasi'; $('#setuju').checked = false; $('#kmsg').textContent = '';
+    $('#judul').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+};
+async function muat() { const d = await api({ action: 'list' }); tampilMine(d.jurnal); }
+
+function hitung() { const n = $('#isi').value.trim().length; $('#cnt').textContent = `(${n} huruf, minimal 100)`; }
+$('#isi').oninput = hitung;
+function tampilFoto(src) { $('#prev').hidden = !src; if (src) $('#prev').src = src; $('#fotoAct').hidden = !src; }
+$('#hapusFoto').onclick = () => { fotoData = ''; fotoLama = ''; hapusFotoFlag = true; $('#foto').value = ''; tampilFoto(''); };
+$('#foto').onchange = async () => {
+  const f = $('#foto').files[0]; if (!f) return;
+  try { fotoData = await kecilkan(f); hapusFotoFlag = false; tampilFoto(fotoData); }
+  catch (e) { $('#foto').value = ''; $('#kmsg').className = 'msg err'; $('#kmsg').textContent = e.message; }
+};
+function kecilkan(f) {   // diperkecil di browser agar upload cepat dari HP
+  return new Promise((ok, no) => {
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return no(new Error('Foto harus JPG, PNG, atau WEBP.'));
+    const fr = new FileReader(); fr.onerror = () => no(new Error('Foto tidak bisa dibaca.'));
+    fr.onload = () => { const img = new Image(); img.onerror = () => no(new Error('Foto tidak valid.'));
+      img.onload = () => { const s = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); ok(c.toDataURL('image/jpeg', 0.82)); };
+      img.src = fr.result; };
+    fr.readAsDataURL(f);
+  });
+}
+function resetForm() { editId = null; fotoData = ''; fotoLama = ''; hapusFotoFlag = false; $('#ftitle').textContent = 'Tulis jurnal baru'; $('#judul').value = ''; $('#isi').value = ''; $('#foto').value = ''; $('#setuju').checked = false; tampilFoto(''); hitung(); $('#batal').hidden = true; $('#kirim').textContent = 'Kirim untuk diverifikasi'; }
+$('#batal').onclick = () => { resetForm(); $('#kmsg').textContent = ''; };
+$('#kirim').onclick = async () => {
+  const m = $('#kmsg'); m.className = 'msg'; m.textContent = ''; $('#kirim').disabled = true;
+  try {
+    const body = { action: editId ? 'ubah' : 'kirim', id: editId, judul: $('#judul').value, isi: $('#isi').value, setuju: $('#setuju').checked };
+    if (fotoData) body.foto = fotoData; else if (hapusFotoFlag) body.hapusFoto = true;
+    await api(body);
+    resetForm(); m.className = 'msg ok'; m.textContent = 'Terkirim! Tulisanmu sedang menunggu verifikasi guru. Cek statusnya di “Jurnalku”.';
+    await muat();
+  } catch (e) { m.className = 'msg err'; m.textContent = e.message; }
+  finally { $('#kirim').disabled = false; }
+};
+</script>
+<script src="footer-sekolah.js"></script>
+</body>
+</html>
