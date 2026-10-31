@@ -74,6 +74,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <a class="brand" href="#beranda"><img src="logo-at-taqwa.png" alt=""><span>SDS Islam At-Taqwa</span></a>
   <div class="menu">
     <a href="#beranda" data-r="beranda">Beranda</a>
+    <a href="#profil" data-r="profil">Profil Sekolah</a>
     <a href="#info" data-r="info">Info Terbaru</a>
     <a href="#buku-tamu" data-r="buku-tamu">Buku Tamu Sekolah</a>
     <a href="#kelas" data-r="kelas">Administrasi Kelas</a>
@@ -90,6 +91,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
       <p>Pilih layanan di menu atas atau di bawah ini.</p>
     </div>
     <div class="tiles">
+      <a class="tile" href="#profil"><h2>Profil Sekolah</h2><span>Kenali SDS Islam At-Taqwa: identitas, akreditasi, dan informasi sekolah.</span></a>
       <a class="tile" href="#info"><h2>Info Terbaru</h2><span>Pengumuman, agenda kegiatan, dan surat untuk orang tua dari sekolah.</span></a>
       <a class="tile" href="#buku-tamu"><h2>Buku Tamu Sekolah</h2><span>Konfirmasi kehadiran tamu kegiatan. Panel admin tersedia di dalam halaman ini.</span></a>
       <a class="tile" href="#kelas"><h2>Administrasi Kelas</h2><span>Untuk guru: presensi, jurnal, jadwal, tugas, dan nilai. Perlu login.</span></a>
@@ -140,6 +142,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
           <iframe class="map" title="Peta lokasi sekolah" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=SDS+Islam+At-Taqwa+Rawamangun,+Jl.+Daksinapati+Raya+No.+2,+Jakarta+Timur&hl=id&z=16&output=embed" allowfullscreen></iframe>
           <div class="pills">
             <a href="#beranda">Beranda</a>
+            <a href="#profil">Profil Sekolah</a>
             <a href="#info">Info Terbaru</a>
             <a href="#buku-tamu">Buku Tamu Sekolah</a>
             <a href="#kelas">Administrasi Kelas</a>
@@ -153,6 +156,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
       <div class="copy">© <span id="thn"></span> SDS Islam At-Taqwa Rawamangun. Seluruh layanan digital ini disiapkan untuk mendukung orang tua, guru, dan tamu sekolah.</div>
     </footer>
   </section>
+  <iframe id="f-profil" title="Profil Sekolah" hidden></iframe>
   <iframe id="f-info" title="Info Terbaru" hidden></iframe>
   <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
@@ -162,8 +166,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </main>
 
 <script>
-const PAGES = { info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+const PAGES = { profil: 'profil.html', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', profil: 'Profil Sekolah', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
