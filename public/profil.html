@@ -8,8 +8,8 @@
 <style>
 :root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--mute:#627d98}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
-.wrap{width:min(960px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(960px,calc(100% - 24px));margin:0 auto;padding:24px 0 40px}
 .hero{text-align:center;padding:clamp(8px,3vw,24px) 0}
 .hero img{width:96px;height:96px;background:#fff;border-radius:24px;padding:9px;box-shadow:0 10px 26px #102a4325}
 h1{margin:16px 0 8px;color:var(--navy);font-size:clamp(26px,5.5vw,40px);letter-spacing:-.04em;line-height:1.1}
@@ -26,7 +26,9 @@ ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;
 .tags{display:flex;gap:8px;flex-wrap:wrap}.tags span{padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--navy);font-weight:700;font-size:14px}
 .sambutan{border-left:4px solid var(--blue);padding-left:16px}
 .sambutan .by{margin-top:12px;font-weight:700;color:var(--navy)}.sambutan .by span{display:block;font-weight:400;color:var(--mute);font-size:14px}
-.idf{margin-top:16px;background:var(--navy);color:#d9e6f2;border-radius:26px;padding:clamp(22px,4vw,40px);box-shadow:0 18px 45px #102a4330}
+.idf{flex:none;background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(26px,4vw,44px) clamp(18px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
+.idf .in{max-width:1100px;margin:0 auto}
+.idf .copy{margin-top:28px;padding-top:18px;border-top:1px solid #ffffff22;font-size:13px;color:#9db4c9}
 .idf .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
 .idf h3{margin:0 0 14px;color:#8fcbff;font-size:18px;letter-spacing:-.01em}
 .idf .logo{display:flex;align-items:center;gap:12px}
@@ -68,6 +70,7 @@ ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;
   </div>
   <div id="isi"></div>
 </div>
+<footer class="idf" id="foot" aria-label="Identitas Sekolah"></footer>
 
 <script>
 /* ============================================================
@@ -133,7 +136,7 @@ document.getElementById('tagline').textContent = PROFIL.tagline;
 const P = PROFIL, out = [];
 const I = P.identitas;
 const extra = ['Jenjang / Status', 'Tahun Berdiri', 'Kepala Sekolah'].filter(k => I[k]);
-out.push(`<section class="idf" aria-label="Identitas Sekolah"><div class="cols">
+document.getElementById('foot').innerHTML = (`<div class="in"><div class="cols">
   <div>
     <div class="logo"><img src="logo-at-taqwa.png" alt=""><div><b>SDS Islam At-Taqwa</b><span>Rawamangun, Jakarta Timur</span></div></div>
     <p class="desc">${esc(P.tagline)}</p>
@@ -160,7 +163,8 @@ out.push(`<section class="idf" aria-label="Identitas Sekolah"><div class="cols">
     <iframe class="map" title="Peta lokasi sekolah" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=SDS+Islam+At-Taqwa+Rawamangun,+Jl.+Daksinapati+Raya+No.+2,+Jakarta+Timur&hl=id&z=16&output=embed" allowfullscreen></iframe>
     <div class="pills"><a href="https://www.google.com/maps/search/?api=1&query=SDS+Islam+At-Taqwa+Rawamangun" target="_blank" rel="noopener">Buka di Google Maps</a></div>
   </div>
-</div></section>`);
+</div>
+<div class="copy">© ${new Date().getFullYear()} SDS Islam At-Taqwa Rawamangun. Seluruh layanan digital ini disiapkan untuk mendukung orang tua, guru, dan tamu sekolah.</div></div>`);
 
 const ytId = u => {
   try {
