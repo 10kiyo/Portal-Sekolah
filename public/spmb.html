@@ -10,10 +10,13 @@
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
 .wrap{width:min(960px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
-.hero{border-radius:26px;padding:clamp(26px,5vw,52px);color:#fff;background:linear-gradient(135deg,#102a43,#1d4f86);box-shadow:0 18px 45px #102a4330}
+.hero{--pad:clamp(26px,5vw,52px);border-radius:26px;padding:var(--pad);color:#fff;display:grid;grid-template-columns:minmax(0,1fr) clamp(230px,33%,330px);column-gap:clamp(16px,3vw,32px);align-items:center;overflow:hidden;background:linear-gradient(135deg,#102a43,#1d4f86);box-shadow:0 18px 45px #102a4330}
 .eyebrow{display:inline-block;background:var(--gold);color:var(--navy);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:99px}
 .hero h1{margin:14px 0 8px;font-size:clamp(28px,6vw,46px);letter-spacing:-.04em;line-height:1.08}
-.hero h1 em{font-style:normal;color:var(--gold)}
+.hero-img{align-self:end;justify-self:end;width:100%;margin:calc(var(--pad)*-1) 0 calc(var(--pad)*-1) 0;padding-top:var(--pad)}
+.hero-img img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 24px #0000004d)}
+@media(max-width:699px){.hero{grid-template-columns:1fr}.hero-img{justify-self:center;width:min(340px,86%);margin:18px auto calc(var(--pad)*-1);padding-top:0}}
+.hero h1 em{font-style:normal;white-space:nowrap;color:var(--gold)}
 .hero p{margin:0;max-width:62ch;line-height:1.65;color:#dbe8f5;font-size:clamp(15px,2.2vw,18px)}
 .status{display:inline-flex;gap:8px;align-items:center;margin-top:16px;padding:8px 14px;border-radius:12px;background:#ffffff1f;font-weight:700;font-size:14px}
 .status i{width:9px;height:9px;border-radius:50%;background:#5bd68f;flex:none}.status.off i{background:#f5b335}
@@ -121,11 +124,14 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
 <body>
 <div class="wrap">
   <section class="hero">
-    <span class="eyebrow" id="eyebrow"></span>
-    <h1>Mau jadi siswa <em>At-Taqwa?</em></h1>
-    <p id="pengantar"></p>
-    <div class="status" id="status"></div>
-    <div class="btns" id="btns"></div>
+    <div class="hero-txt">
+      <span class="eyebrow" id="eyebrow"></span>
+      <h1>Mau jadi siswa <em>At-Taqwa?</em></h1>
+      <p id="pengantar"></p>
+      <div class="status" id="status"></div>
+      <div class="btns" id="btns"></div>
+    </div>
+    <div class="hero-img"><img src="foto-spmb.webp" width="900" height="641" alt="Tiga siswa SDS Islam At-Taqwa berseragam batik hijau" fetchpriority="high"></div>
   </section>
   <div class="facts" id="facts"></div>
   <div class="tabs" id="tabs" role="tablist" aria-label="Jalur pendaftaran"></div>
