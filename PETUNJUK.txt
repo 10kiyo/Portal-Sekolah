@@ -66,3 +66,15 @@ MENU PER PERAN + MENU SAMPING (Administrasi Guru dan Staf)
 4. Menu: guru (kelas & nilai) | pustakawan (kartu pelajar, ekskul & club, peminjaman buku) | keuangan (kas, laporan, proposal, LPJ)
    | persuratan (surat masuk, surat keluar, agenda) | operator (pekerjaan, akun guru & staf, data murid). Semua punya Profil saya.
 5. Halaman Guru & Staff kini hanya menampilkan yang ada di tabel guru_staf (tidak ada nama ganda dari daftar tamu).
+
+KARTU PELAJAR (menu Pustakawan: desain kartu, data dari database, PDF)
+1. Supabase > SQL Editor: jalankan supabase-kartu.sql (SETELAH supabase-peran.sql). Membuat tabel murid_profil (NIS, NISN, tempat/tanggal lahir,
+   alamat, foto_path; terisi satu baris kosong per murid), tabel kartu_desain, bucket privat "foto-murid", dan aturan akses.
+2. File diganti: public/modul-staf.js, public/kelas.html. Tidak ada variabel baru.
+3. Admin utama melengkapi data di Table Editor > murid_profil (tanggal_lahir format YYYY-MM-DD). Data baru langsung bisa dipakai pustakawan
+   setelah klik "Muat ulang data". Kolom baru (mis. agama) cukup ditambahkan di tabel: otomatis muncul di daftar "Bagian yang tampil di kartu".
+   Murid baru di daftar tamu: jalankan ulang bagian 2 di supabase-kartu.sql.
+4. Foto (opsional): unggah ke Storage > foto-murid (mis. 3A/budi.jpg), isi kolom foto_path dengan "3A/budi.jpg". Tanpa foto, kotak foto kosong tampil.
+5. Pustakawan: atur judul, warna, ukuran huruf, bagian yang tampil + urutannya, lalu "Simpan tampilan" (berlaku untuk semua pustakawan).
+   Pilih kelas (atau Semua kelas), centang murid, pilih format (A4 10 kartu/halaman atau 1 kartu/halaman), klik "Unduh PDF".
+   Pembuatan PDF memuat pustaka html2canvas & jsPDF dari cdn.jsdelivr.net, jadi perlu internet.

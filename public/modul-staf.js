@@ -1,6 +1,6 @@
 /* ============================================================
    MENU STAF PER PERAN untuk halaman Administrasi Guru dan Staf (kelas.html).
-   Pustakawan: kartu pelajar, ekskul & club, peminjaman buku.
+   Pustakawan: kartu pelajar (desain + PDF), ekskul & club, peminjaman buku.
    Keuangan  : kas masuk/keluar, laporan, proposal, LPJ.
    Persuratan: surat masuk, surat keluar, agenda surat.
    Operator  : akun guru & staf, data murid, daftar pekerjaan.
@@ -32,31 +32,250 @@ async function semua(f) {                     // ambil semua baris (lebih dari 1
 const inputBulan = (id, v) => `<input id="${id}" type="month" value="${v}" style="max-width:190px">`;
 
 /* ================= PUSTAKAWAN ================= */
-MODUL.kartu = async function () {
+/* ================= PUSTAKAWAN: KARTU PELAJAR =================
+   Data dasar (nama, kelas, ID) dari daftar_tamu_gabungan; data tambahan (NIS, NISN, tempat/tanggal lahir, alamat, foto, dst)
+   dari tabel murid_profil; tampilan kartu disimpan di kartu_desain. Semua tabel: supabase-kartu.sql.
+   Kolom BARU di murid_profil otomatis muncul sebagai pilihan bagian kartu. PDF dibuat di browser (html2canvas + jsPDF). */
+const KARTU_W = 85.6, KARTU_H = 54;                        // mm (ukuran CR80)
+const KARTU_SISTEM = ['guest_id', 'nama_ref', 'foto_path', 'created_at', 'updated_at'];   // kolom murid_profil yang bukan bagian kartu
+const KARTU_FIELD = [                                       // bagian bawaan; k = kunci, on = tampil di desain awal
+  { k: 'kelas', label: 'Kelas', on: true }, { k: 'guest_id', label: 'No. ID', on: false },
+  { k: 'nis', label: 'NIS', on: true }, { k: 'nisn', label: 'NISN', on: true },
+  { k: 'ttl', label: 'TTL', on: true }, { k: 'alamat', label: 'Alamat', on: true }];
+const KARTU_PAKAI = new Set([...KARTU_SISTEM, ...KARTU_FIELD.map(f => f.k), 'tempat_lahir', 'tanggal_lahir']);
+const KARTU_BAWAAN = { judul: 'KARTU PELAJAR', sekolah: 'SDS Islam At-Taqwa Rawamangun', footer: 'Tahun ajaran {ta}',
+  warna: '#102a43', warnaTeks: '#ffffff', font: 10, logo: true, foto: true, fotoKanan: false };
+const LIB_H2C = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+const LIB_PDF = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+
+let _profil = null, _kolom = [], _profilErr = '';
+const _fotoUrl = new Map();                                 // foto_path -> alamat sementara (1 jam)
+const kelasX = x => String(x.instansi_kelas || '').trim();
+const profilX = x => (_profil && _profil.get(String(x.guest_id))) || {};
+const warnaOk = (v, cad) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : cad;
+const judulKolom = c => c.replace(/_/g, ' ').replace(/^\w/, s => s.toUpperCase());
+const tglPanjang = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || '')); return m ? `${+m[3]} ${BLN[+m[2] - 1]} ${m[1]}` : ''; };
+
+async function muatProfil() {
+  if (_profil) return _profil;
+  const peta = new Map(); _profilErr = ''; _kolom = [];
+  try {
+    const rows = await semua(() => sb.from('murid_profil').select('*').order('guest_id'));
+    if (rows[0]) _kolom = Object.keys(rows[0]);
+    rows.forEach(r => peta.set(String(r.guest_id), r));
+  } catch (e) { _profilErr = (e && e.message) || 'tabel murid_profil tidak bisa dibaca'; }
+  return (_profil = peta);
+}
+async function muatDesain() {
+  const { data, error } = await sb.from('kartu_desain').select('config').eq('id', 'utama').maybeSingle();
+  return (!error && data && data.config) || {};
+}
+async function muatFoto(paths) {                            // mengembalikan jumlah alamat foto yang baru didapat
+  const baru = [...new Set(paths.filter(p => p && !_fotoUrl.has(p)))]; let n = 0;
+  for (let i = 0; i < baru.length; i += 100) {
+    const { data } = await sb.storage.from('foto-murid').createSignedUrls(baru.slice(i, i + 100), 3600);
+    (data || []).forEach(r => { if (r.signedUrl) { _fotoUrl.set(r.path, r.signedUrl); n++; } });
+  }
+  return n;
+}
+const fotoX = x => { const p = profilX(x).foto_path; return p ? _fotoUrl.get(p) || '' : ''; };
+
+function fieldTersedia() {
+  const extra = _kolom.filter(c => !KARTU_PAKAI.has(c)).map(c => ({ k: c, label: judulKolom(c), on: false }));
+  return [...KARTU_FIELD.map(f => ({ ...f })), ...extra];
+}
+function susunDesain(saved) {
+  saved = saved || {};
+  const d = { ...KARTU_BAWAAN, ...saved }, tersedia = fieldTersedia(), ada = new Set();
+  d.warna = warnaOk(d.warna, KARTU_BAWAAN.warna); d.warnaTeks = warnaOk(d.warnaTeks, KARTU_BAWAAN.warnaTeks);
+  d.font = Math.min(13, Math.max(7, Number(d.font) || KARTU_BAWAAN.font));
+  d.fields = [];
+  (Array.isArray(saved.fields) ? saved.fields : []).forEach(f => {
+    const t = tersedia.find(a => a.k === f.k);
+    if (t && !ada.has(t.k)) { ada.add(t.k); d.fields.push({ k: t.k, label: String(f.label || t.label).slice(0, 24), on: !!f.on }); }
+  });
+  tersedia.forEach(t => { if (!ada.has(t.k)) d.fields.push(t); });
+  return d;
+}
+function nilaiField(k, x, p) {
+  if (k === 'kelas') return kelasX(x);
+  if (k === 'guest_id') return String(x.guest_id ?? '');
+  if (k === 'ttl') return [p.tempat_lahir, tglPanjang(p.tanggal_lahir)].filter(Boolean).join(', ');
+  const v = p[k]; return v == null ? '' : (tglPanjang(v) || String(v)).trim();
+}
+function kartuHtml(x, p, d, ta, src) {
+  const baris = d.fields.filter(f => f.on).map(f => { const v = nilaiField(f.k, x, p);
+    return `<span class="kl">${esc(f.label)}</span><span class="kv${v ? '' : ' kosong'}">${v ? esc(v) : '-'}</span>`; }).join('');
+  const foto = d.foto ? `<div class="kfoto${src.foto ? ' ada' : ''}"${src.foto ? ` style="background-image:url('${esc(src.foto)}')"` : ''}>${src.foto ? '' : 'FOTO'}</div>` : '';
+  return `<div class="kartu" style="font-size:${d.font}px"><div class="kh" style="background:${d.warna};color:${d.warnaTeks}">${d.logo ? `<img src="${esc(src.logo)}" alt="">` : ''}<div><b>${esc(d.judul)}</b><span>${esc(d.sekolah)}</span></div></div>
+  <div class="kb${d.fotoKanan ? ' rev' : ''}">${foto}<div class="ki"><b style="color:${d.warna}">${esc(x.guest_name)}</b><div class="kgrid">${baris}</div></div></div>
+  <div class="kf">${esc(String(d.footer).split('{ta}').join(ta))}</div></div>`;
+}
+function kartuTerpotong(el) {                               // isi lebih tinggi dari ruang yang tersedia?
+  const kb = el.querySelector('.kb'), ki = el.querySelector('.ki'); if (!kb || !ki) return false;
+  const cs = getComputedStyle(kb);
+  return ki.offsetHeight > kb.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) + 1;
+}
+
+const _skrip = {};
+const muatSkrip = src => _skrip[src] || (_skrip[src] = new Promise((ok, gagal) => {
+  const s = document.createElement('script'); s.src = src; s.onload = ok;
+  s.onerror = () => { delete _skrip[src]; gagal(new Error('Pustaka PDF gagal dimuat dari internet. Periksa koneksi lalu coba lagi.')); };
+  document.head.appendChild(s); }));
+const keDataUrl = async url => {
+  const r = await fetch(url); if (!r.ok) throw new Error('gagal mengambil gambar');
+  const b = await r.blob();
+  return new Promise((ok, no) => { const f = new FileReader(); f.onload = () => ok(f.result); f.onerror = no; f.readAsDataURL(b); });
+};
+
+// Membuat PDF dari daftar murid. mode: 'a4' (10 kartu per halaman, 2 x 5) atau 'kartu' (1 kartu per halaman seukuran kartu).
+async function buatPdf(list, d, ta, mode, nama, status, dibatalkan) {
+  await Promise.all([muatSkrip(LIB_H2C), muatSkrip(LIB_PDF)]);
+  await muatFoto(list.map(x => profilX(x).foto_path));
+  const logo = d.logo ? await keDataUrl('logo-at-taqwa.png') : '', a4 = mode === 'a4';
+  const pdf = new window.jspdf.jsPDF(a4 ? { unit: 'mm', format: 'a4', orientation: 'portrait' } : { unit: 'mm', format: [KARTU_W, KARTU_H], orientation: 'landscape' });
+  const host = document.createElement('div');               // di belakang layar penutup; html2canvas butuh elemen yang benar-benar terlayout
+  host.style.cssText = 'position:absolute;left:0;top:0;z-index:-1;width:max-content;background:#fff';
+  document.body.appendChild(host);
+  let terpotong = 0, dibuat = 0;
+  const gx = 4, gy = 2.5, mx = (210 - 2 * KARTU_W - gx) / 2, my = (297 - 5 * KARTU_H - 4 * gy) / 2;
+  try {
+    for (let i = 0; i < list.length; i++) {
+      if (dibatalkan()) return { batal: true };
+      status(`Membuat kartu ${i + 1} dari ${list.length}...`);
+      const x = list[i]; let foto = '';
+      const u = fotoX(x); if (u) { try { foto = await keDataUrl(u); } catch (e) { /* foto gagal: kartu tetap dibuat tanpa foto */ } }
+      host.innerHTML = kartuHtml(x, profilX(x), d, ta, { logo, foto });
+      const el = host.firstElementChild;
+      if (kartuTerpotong(el)) terpotong++;
+      const cv = await window.html2canvas(el, { scale: 3, backgroundColor: '#ffffff', logging: false });
+      const img = cv.toDataURL('image/jpeg', 0.92);
+      if (a4) {
+        const n = i % 10; if (i > 0 && n === 0) pdf.addPage();
+        pdf.addImage(img, 'JPEG', mx + (n % 2) * (KARTU_W + gx), my + Math.floor(n / 2) * (KARTU_H + gy), KARTU_W, KARTU_H);
+      } else {
+        if (i > 0) pdf.addPage([KARTU_W, KARTU_H], 'landscape');
+        pdf.addImage(img, 'JPEG', 0, 0, KARTU_W, KARTU_H);
+      }
+      dibuat++;
+    }
+  } finally { host.remove(); }
+  pdf.save(nama);
+  return { dibuat, terpotong };
+}
+
+MODUL.kartu = async function (bawaan) {
+  const rid = S.rid;
   $('#view').innerHTML = '<p>Memuat daftar murid...</p>';
-  const g = await dataSiswa(), kls = kelasDari(g);
+  const [g, , saved] = await Promise.all([dataSiswa(), muatProfil(), bawaan === true ? {} : muatDesain()]);
+  if (rid !== S.rid) return;
+  const kls = kelasDari(g);
   if (!kls.length) { $('#view').innerHTML = '<p class="msg err">Data murid tidak ditemukan di database.</p>'; return; }
   const y = new Date().getFullYear(), ta = new Date().getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
-  let kel = kls[0];
+  let kel = kls[0], cari = '', d = susunDesain(saved), pilih = new Set(), tok = 0;
+  const info = _profilErr
+    ? `<p class="msg err">Data tambahan murid (NIS, NISN, tempat/tanggal lahir, alamat) belum bisa dibaca: ${esc(_profilErr)}. Jalankan <b>supabase-kartu.sql</b> di Supabase > SQL Editor, lalu klik "Muat ulang data".</p>`
+    : !_profil.size ? '<p class="msg err">Tabel murid_profil masih kosong, atau akun ini tidak punya akses membacanya. Bagian selain nama, kelas, dan ID akan tampil "-".</p>' : '';
+
   $('#view').innerHTML = `<div class="noprint"><h2>Kartu pelajar</h2>
-  <p class="mut">Pilih kelas dan murid, lalu cetak. Ukuran kartu 85,6 x 54 mm; atur kertas A4 dan skala 100% saat mencetak. Foto murid ditempel setelah dicetak.</p>
-  <div class="grid"><div><label for="kk">Kelas</label><select id="kk">${opsi(kls, kel)}</select></div>
-  <div><label for="kt">Tahun ajaran</label><input id="kt" value="${ta}"></div></div>
-  <p><button id="kAll">Pilih semua</button> <button id="kNone">Kosongkan</button> <button class="p" id="kPrint">Cetak kartu</button></p>
-  <div id="kl" class="chklist"></div></div><div id="kp" class="kwrap"></div>`;
-  const daftar = () => g.filter(x => String(x.instansi_kelas || '').trim() === kel).sort((a, b) => urut(a.guest_name, b.guest_name));
-  const kartu = x => `<div class="kartu"><div class="kh"><img src="logo-at-taqwa.png" alt=""><div><b>KARTU PELAJAR</b><span>SDS Islam At-Taqwa Rawamangun</span></div></div>
-    <div class="kb"><div class="kfoto">FOTO</div><div class="ki"><b>${esc(x.guest_name)}</b><div>Kelas ${esc(kel)}</div><div>No. ${esc(x.guest_id)}</div></div></div>
-    <div class="kf">Tahun ajaran ${esc($('#kt').value)}</div></div>`;
-  const gambar = () => { const ids = new Set([...document.querySelectorAll('#kl input:checked')].map(i => i.dataset.id)); $('#kp').innerHTML = daftar().filter(x => ids.has(String(x.guest_id))).map(kartu).join(''); };
-  const isi = () => { $('#kl').innerHTML = daftar().map(x => `<label class="chk"><input type="checkbox" data-id="${esc(x.guest_id)}" checked> ${esc(x.guest_name)}</label>`).join('') || '<span class="mut">Tidak ada murid.</span>'; gambar(); };
-  $('#kk').onchange = e => { kel = e.target.value; isi(); };
+  <p class="mut">Data murid ditarik dari database. NIS, NISN, tempat/tanggal lahir, dan alamat dilengkapi admin utama di tabel <b>murid_profil</b> (Supabase). Ukuran kartu ${KARTU_W.toString().replace('.', ',')} x ${KARTU_H} mm.</p>${info}
+  <details class="kpanel" open><summary>Atur tampilan &amp; isi kartu</summary>
+  <div class="grid" id="kdes" style="margin-top:12px">
+   <div><label for="d1">Judul kartu</label><input id="d1" data-d="judul" value="${esc(d.judul)}" maxlength="40"></div>
+   <div><label for="d2">Nama sekolah</label><input id="d2" data-d="sekolah" value="${esc(d.sekolah)}" maxlength="60"></div>
+   <div><label for="d3">Teks bawah kartu</label><input id="d3" data-d="footer" value="${esc(d.footer)}" maxlength="60"><span class="mut">{ta} diganti tahun ajaran</span></div>
+   <div><label for="d4">Warna header</label><input id="d4" type="color" data-d="warna" value="${d.warna}"></div>
+   <div><label for="d5">Warna teks header</label><input id="d5" type="color" data-d="warnaTeks" value="${d.warnaTeks}"></div>
+   <div><label for="d6">Ukuran huruf: <span id="kfv">${d.font}</span> px</label><input id="d6" type="range" min="7" max="13" step="0.5" data-d="font" value="${d.font}"></div>
+   <div class="kcb"><label class="chk"><input type="checkbox" data-d="logo" ${d.logo ? 'checked' : ''}> Tampilkan logo</label>
+    <label class="chk"><input type="checkbox" data-d="foto" ${d.foto ? 'checked' : ''}> Tampilkan kotak foto</label>
+    <label class="chk"><input type="checkbox" data-d="fotoKanan" ${d.fotoKanan ? 'checked' : ''}> Foto di sisi kanan</label></div>
+  </div>
+  <h3 style="color:var(--navy);margin:14px 0 4px">Bagian yang tampil di kartu</h3>
+  <p class="mut">Centang untuk menampilkan, ubah nama labelnya, atur urutan dengan tombol panah. Nama murid selalu tampil. Kolom baru yang ditambahkan admin di tabel murid_profil otomatis muncul di daftar ini.</p>
+  <div id="kfl"></div>
+  <p><button class="p" id="kSave">Simpan tampilan</button> <button id="kReset">Kembalikan standar</button></p></details>
+  <div class="grid" style="margin-top:14px">
+   <div><label for="kk">Kelas</label><select id="kk"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select></div>
+   <div><label for="kt">Tahun ajaran</label><input id="kt" value="${ta}"></div>
+   <div><label for="kq">Cari nama</label><input id="kq" type="search" placeholder="Ketik nama murid"></div>
+   <div><label for="kf">Format PDF</label><select id="kf"><option value="a4">A4, 10 kartu per halaman</option><option value="kartu">1 kartu per halaman (ukuran kartu)</option></select></div></div>
+  <p><button id="kAll">Pilih semua</button> <button id="kNone">Kosongkan</button> <button id="kReload">Muat ulang data</button> <button class="p" id="kPdf">Unduh PDF</button></p>
+  <p class="mut" id="kn"></p><div id="kl" class="chklist"></div><div id="msg" class="msg"></div></div>
+  <h3 class="noprint" style="color:var(--navy)">Pratinjau</h3><p class="msg err noprint" id="kwarn"></p><div id="kp" class="kwrap"></div>`;
+  $('#kk').value = kel;
+
+  const kelasList = () => g.filter(x => !kel || kelasX(x) === kel).sort((a, b) => (kel ? 0 : urut(kelasX(a), kelasX(b))) || urut(a.guest_name, b.guest_name));
+  const daftar = () => kelasList().filter(x => !cari || x.guest_name.toLowerCase().includes(cari));
+  const terpilih = () => kelasList().filter(x => pilih.has(String(x.guest_id)));
+  const pilihSemua = () => { pilih = new Set(kelasList().map(x => String(x.guest_id))); };
+  const kurang = x => d.fields.filter(f => f.on && !nilaiField(f.k, x, profilX(x))).map(f => f.label);
+
+  const gambar = () => {
+    const t = ++tok, pil = terpilih(), tampil = pil.slice(0, 6);
+    const render = () => {
+      $('#kp').innerHTML = tampil.map(x => kartuHtml(x, profilX(x), d, $('#kt').value, { logo: 'logo-at-taqwa.png', foto: fotoX(x) })).join('');
+      const n = [...document.querySelectorAll('#kp .kartu')].filter(kartuTerpotong).length;
+      $('#kwarn').textContent = n ? `Isi ${n} kartu di pratinjau terpotong. Kecilkan ukuran huruf atau kurangi bagian yang tampil.` : '';
+    };
+    render();
+    $('#kn').textContent = `${pil.length} dari ${kelasList().length} murid dipilih.` + (pil.length > 6 ? ' Pratinjau menampilkan 6 kartu pertama.' : '');
+    muatFoto(tampil.map(x => profilX(x).foto_path)).then(n => { if (n && t === tok && rid === S.rid) render(); }).catch(() => {});
+  };
+  const isi = () => {
+    const l = daftar(), lengkap = kelasList().filter(x => kurang(x).length).length;
+    $('#kl').innerHTML = l.map(x => { const k = kurang(x);
+      return `<label class="chk"><input type="checkbox" data-id="${esc(x.guest_id)}" ${pilih.has(String(x.guest_id)) ? 'checked' : ''}> ${esc(x.guest_name)}${kel ? '' : ` <span class="mut">(${esc(kelasX(x))})</span>`}${k.length ? ` <span class="kwarn" title="Data belum ada">belum ada: ${esc(k.join(', '))}</span>` : ''}</label>`; }).join('') || '<span class="mut">Tidak ada murid.</span>';
+    gambar();
+    if (lengkap) $('#kn').textContent += ` ${lengkap} murid datanya belum lengkap untuk bagian yang dicentang; minta admin utama melengkapinya di Supabase (tabel murid_profil), lalu klik "Muat ulang data".`;
+  };
+  const isiField = () => {
+    $('#kfl').innerHTML = d.fields.map((f, i) => `<div class="kfrow"><input type="checkbox" data-fon="${i}" ${f.on ? 'checked' : ''} aria-label="Tampilkan ${esc(f.label)}">
+      <input type="text" data-flab="${i}" value="${esc(f.label)}" maxlength="24" aria-label="Label ${esc(f.k)}">
+      <button data-fup="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Naikkan">&uarr;</button><button data-fdn="${i}" ${i === d.fields.length - 1 ? 'disabled' : ''} aria-label="Turunkan">&darr;</button>
+      <span class="mut">${esc(f.k === 'ttl' ? 'tempat_lahir + tanggal_lahir' : f.k === 'kelas' || f.k === 'guest_id' ? f.k + ' (daftar tamu)' : f.k)}</span></div>`).join('');
+  };
+
+  const desain = e => {
+    const k = e.target.dataset.d; if (!k) return;
+    d[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.type === 'range' ? Number(e.target.value) : e.target.value;
+    if (k === 'font') $('#kfv').textContent = d.font;
+    gambar();
+  };
+  $('#kdes').oninput = desain; $('#kdes').onchange = desain;
+  $('#kfl').onchange = e => { const t = e.target.dataset; if (t.fon !== undefined) { d.fields[+t.fon].on = e.target.checked; isi(); } };
+  $('#kfl').oninput = e => { const t = e.target.dataset; if (t.flab !== undefined) { d.fields[+t.flab].label = e.target.value; gambar(); } };
+  $('#kfl').onclick = e => {
+    const t = e.target.dataset, i = +(t.fup ?? t.fdn), j = t.fup !== undefined ? i - 1 : i + 1;
+    if ((t.fup === undefined && t.fdn === undefined) || !d.fields[j]) return;
+    [d.fields[i], d.fields[j]] = [d.fields[j], d.fields[i]]; isiField(); gambar();
+  };
+  $('#kSave').onclick = async () => {
+    const { error } = await sb.from('kartu_desain').upsert({ id: 'utama', config: d, updated_at: new Date().toISOString() });
+    msg(error ? `Gagal menyimpan: ${error.message}. Jalankan supabase-kartu.sql bila tabel kartu_desain belum ada.` : 'Tampilan kartu tersimpan dan dipakai semua pustakawan.', !!error);
+  };
+  $('#kReset').onclick = () => { if (confirm('Kembalikan tampilan kartu ke pengaturan standar? (Belum disimpan sampai Anda klik Simpan tampilan.)')) MODUL.kartu(true); };
+  $('#kReload').onclick = () => { _siswa = null; _profil = null; _fotoUrl.clear(); MODUL.kartu(); };
+  $('#kk').onchange = e => { kel = e.target.value; pilihSemua(); isi(); };
   $('#kt').oninput = gambar;
-  $('#kl').onchange = gambar;
-  $('#kAll').onclick = () => { document.querySelectorAll('#kl input').forEach(i => i.checked = true); gambar(); };
-  $('#kNone').onclick = () => { document.querySelectorAll('#kl input').forEach(i => i.checked = false); gambar(); };
-  $('#kPrint').onclick = () => print();
-  isi();
+  $('#kq').oninput = e => { cari = e.target.value.trim().toLowerCase(); isi(); };
+  $('#kl').onchange = e => { const id = e.target.dataset.id; if (!id) return; e.target.checked ? pilih.add(id) : pilih.delete(id); gambar(); };
+  $('#kAll').onclick = () => { daftar().forEach(x => pilih.add(String(x.guest_id))); isi(); };
+  $('#kNone').onclick = () => { daftar().forEach(x => pilih.delete(String(x.guest_id))); isi(); };
+  $('#kPdf').onclick = async () => {
+    const pil = terpilih(); if (!pil.length) return msg('Pilih minimal satu murid.', true);
+    let batal = false; const ov = document.createElement('div'); ov.className = 'kov';
+    ov.innerHTML = '<div><b id="kovt">Menyiapkan PDF...</b><p class="mut">Jangan tutup atau pindah halaman sampai selesai.</p><button id="kovb">Batalkan</button></div>';
+    document.body.appendChild(ov); ov.querySelector('#kovb').onclick = () => { batal = true; };
+    const nama = 'kartu-pelajar-' + (kel || 'semua-kelas').replace(/[^\w-]+/g, '-') + '.pdf';
+    try {
+      const h = await buatPdf(pil, d, $('#kt').value, $('#kf').value, nama, t => { ov.querySelector('#kovt').textContent = t; }, () => batal);
+      msg(h.batal ? 'Pembuatan PDF dibatalkan.' : `PDF selesai: ${h.dibuat} kartu (${nama}).` + (h.terpotong ? ` ${h.terpotong} kartu isinya terpotong; kecilkan ukuran huruf atau kurangi bagian yang tampil.` : ''), !!(h.batal || h.terpotong));
+    } catch (e) { msg('Gagal membuat PDF: ' + ((e && e.message) || e), true); }
+    finally { ov.remove(); }
+  };
+
+  pilihSemua(); isiField(); isi();
 };
 
 MODUL.ekskul = async function () {
