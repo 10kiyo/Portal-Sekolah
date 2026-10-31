@@ -37,7 +37,6 @@ h3{margin:0 0 6px;color:var(--navy);font-size:17px}
 .sum div{background:var(--soft);border-radius:14px;padding:12px 14px}
 .sum span{display:block;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}.sum b{color:var(--navy)}
 .bd{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:800;background:#e3f0fb;color:var(--blue)}
-.bd.now{background:var(--ok);color:#fff}.bd.done{background:#e8edf2;color:var(--mute)}
 .pts{margin:6px 0 0;padding-left:20px;line-height:1.65}.pts li{margin-bottom:4px;overflow-wrap:anywhere}
 .pts .lb{font-weight:700;color:var(--navy)}.pts ul{margin:4px 0 6px;padding-left:20px}
 .scroll{overflow-x:auto}
@@ -66,10 +65,6 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
 .num::after{content:"";position:absolute;top:0;right:0;width:13px;height:13px;background:var(--gold);clip-path:polygon(0 0,100% 100%,0 100%)}
 .tt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
 .tt b{font-size:15.5px;line-height:1.25;color:var(--navy);text-align:left}
-.st.now .num{background:var(--ok)}
-.st.done .num{background:var(--mute)}
-.st.done .st-t,.st.done .st-d{opacity:.6}
-.st.done .st-b{opacity:.5}
 .arc{display:block;position:relative;grid-row:var(--ra);background:linear-gradient(to bottom,var(--ca) 50%,var(--cb) 50%)}
 .arc::after{content:"";position:absolute;top:var(--T);bottom:var(--T);background:#fff}
 .arc.rt{grid-column:4;border-radius:0 var(--R) var(--R) 0}
@@ -143,7 +138,7 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
 /* ============================================================
    ISI HALAMAN SPMB — bersumber dari Panduan SPMB 2027/2028 (TK Dalam & TK Luar, 7 Oktober 2026).
    Edit data di bawah ini saja. Bagian yang dikosongkan ("" atau []) otomatis tidak ditampilkan.
-   Tanggal untuk status "sedang berlangsung / selesai" ditulis format 'TTTT-BB-HH'.
+   Tanggal `mulai`/`selesai` hanya dipakai untuk label status pendaftaran di bagian atas; timeline jadwal tidak memakai status. Format 'TTTT-BB-HH'.
 
    Cara kerja tampilan baru:
    - Jadwal  : tiap item di `jadwal` jadi satu tahap di jalur berkelok (2 tahap per baris).
@@ -321,10 +316,6 @@ function poin(p) {
   if (typeof p === 'string') return `<li>${esc(p)}</li>`;
   return `<li><span class="lb">${esc(p.label)}</span><ul>${p.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></li>`;
 }
-function status(x) {
-  const a = x.mulai, b = x.selesai || x.mulai;
-  return TODAY > b ? ['done', 'Selesai'] : TODAY >= a ? ['now', 'Sedang berlangsung'] : ['', 'Akan datang'];
-}
 
 // Jadwal: jalur berkelok, 2 tahap per baris (baris genap ke kanan, baris ganjil ke kiri)
 const PER = 2;
@@ -337,10 +328,10 @@ function jadwal(list) {
   }
   list.forEach((x, i) => {
     const r = Math.floor(i / PER), j = i % PER, rev = r % 2 === 1;
-    const [bc, fg] = WARNA(i), [c, l] = status(x);
-    const cls = [rev ? 'rtl' : 'ltr', j > 0 ? 'ov' : '', (j < PER - 1 || i === n - 1) ? 'tip' : '', c].filter(Boolean).join(' ');
+    const [bc, fg] = WARNA(i);
+    const cls = [rev ? 'rtl' : 'ltr', j > 0 ? 'ov' : '', (j < PER - 1 || i === n - 1) ? 'tip' : ''].filter(Boolean).join(' ');
     h += `<div class="st ${cls}" style="--c:${rev ? 3 - j : 2 + j};--rt:${r * 3 + 1};--rb:${r * 3 + 2};--rd:${r * 3 + 3};--bc:${bc};--fg:${fg};--z:${60 - i}">
-      <div class="st-t"><span class="num">${String(i + 1).padStart(2, '0')}</span><div class="tt"><b>${esc(x.judul)}</b>${c ? `<span class="bd ${c}">${l}</span>` : ''}</div></div>
+      <div class="st-t"><span class="num">${String(i + 1).padStart(2, '0')}</span><div class="tt"><b>${esc(x.judul)}</b></div></div>
       <div class="st-b">${esc(x.tanggal)}</div>
       <div class="st-d">${x.isi ? esc(x.isi) : ''}</div></div>`;
   });

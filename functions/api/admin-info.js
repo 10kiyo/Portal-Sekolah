@@ -3,7 +3,7 @@ import { json, cfg, dbGet, hariIni, adminOk } from '../_lib/util.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TGL = /^\d{4}-\d{2}-\d{2}$/;
-const KAT = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'lainnya'];
+const KAT = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'];
 const MAXFILE = 4 * 1024 * 1024;
 const TIPE = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 

@@ -67,7 +67,7 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
   <div class="grid2" style="margin-top:14px">
     <div class="full"><label for="f-judul">Judul</label><input id="f-judul" maxlength="150"></div>
     <div><label for="f-kat">Kategori</label>
-      <select id="f-kat"><option value="pengumuman">Pengumuman</option><option value="agenda">Agenda</option><option value="surat">Surat Edaran</option><option value="kegiatan">Berita Kegiatan</option><option value="lainnya">Lainnya</option></select></div>
+      <select id="f-kat"><option value="pengumuman">Pengumuman</option><option value="agenda">Agenda</option><option value="surat">Surat Edaran</option><option value="kegiatan">Berita Kegiatan</option><option value="prestasi">Prestasi</option><option value="lainnya">Lainnya</option></select></div>
     <div><label for="f-terbit">Tanggal terbit</label><input id="f-terbit" type="date"></div>
     <div><label for="f-agenda">Tanggal acara / tenggat <span class="mut">(opsional)</span></label><input id="f-agenda" type="date"><div class="hint">Jika diisi, muncul di “Agenda mendatang”.</div></div>
     <div><label for="f-lokasi">Jam / tempat <span class="mut">(opsional)</span></label><input id="f-lokasi" maxlength="150" placeholder="mis. 08.00 WIB, Aula sekolah"></div>
@@ -89,7 +89,7 @@ const TOKEN_KEY = 'bukuTamuSekolah.adminToken';   // sama dengan panel lain: sek
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-const KAT = { pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', lainnya: 'Lainnya' };
+const KAT = { pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', prestasi: 'Prestasi', lainnya: 'Lainnya' };
 if (self !== top) document.body.classList.add('emb');
 let D = { info: [], today: '' }, editId = null;
 
