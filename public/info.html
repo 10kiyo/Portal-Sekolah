@@ -44,6 +44,11 @@ h2{margin:0;color:var(--navy);font-size:18px}
 .foot{margin-top:24px;text-align:center;font-size:13px}.foot a{color:var(--mute)}
 .post.hl{border-color:var(--blue);box-shadow:0 0 0 4px #1677c826,0 12px 30px #102a4310}
 .emb .wrap{padding-top:12px}
+.share{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #e6eef5;font-size:13px;color:var(--mute)}
+.sh{font:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy);text-decoration:none}
+.sh:hover{background:var(--soft)}.sh:focus-visible{outline:3px solid #1677c850}
+.sh.wa{background:#1fa855;border-color:#1fa855;color:#fff}.sh.wa:hover{filter:brightness(1.08);background:#1fa855}
+.solo .adm{display:none}
 </style>
 </head>
 <body>
@@ -75,8 +80,31 @@ const tglS = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: '
 const KAT = { semua: 'Semua', pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', prestasi: 'Prestasi', lainnya: 'Lainnya' };
 if (self !== top) document.body.classList.add('emb');
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Tautan bagikan: /bagikan/<id> (pratinjau judul + ringkasan di WhatsApp dll), lalu membuka hanya info itu saja.
+function bagiHtml(x) {
+  if (!UUID.test(x.id)) return '';
+  const u = location.origin + '/bagikan/' + x.id, t = x.judul, e = encodeURIComponent;
+  return `<div class="share" data-u="${esc(u)}" data-t="${esc(t)}"><span>Bagikan:</span>
+    <a class="sh wa" href="https://wa.me/?text=${esc(e(t + '\n' + u))}" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="sh" href="https://www.facebook.com/sharer/sharer.php?u=${esc(e(u))}" target="_blank" rel="noopener">Facebook</a>
+    <a class="sh" href="https://t.me/share/url?url=${esc(e(u))}&text=${esc(e(t))}" target="_blank" rel="noopener">Telegram</a>
+    <a class="sh" href="https://twitter.com/intent/tweet?url=${esc(e(u))}&text=${esc(e(t))}" target="_blank" rel="noopener">X</a>
+    <button class="sh" data-copy>Salin tautan</button>${navigator.share ? '<button class="sh" data-native>Lainnya…</button>' : ''}</div>`;
+}
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('button.sh'); if (!b) return;
+  const w = b.closest('.share'), u = w.dataset.u, t = w.dataset.t;
+  if (b.dataset.native !== undefined) { try { await navigator.share({ title: t, text: t, url: u }); } catch (_) {} return; }
+  let ok = false;
+  try { await navigator.clipboard.writeText(u); ok = true; }
+  catch (_) { const a = document.createElement('textarea'); a.value = u; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch (_) {} a.remove(); }
+  if (!ok) { prompt('Salin tautan ini:', u); return; }
+  b.textContent = 'Tautan disalin ✓'; setTimeout(() => { b.textContent = 'Salin tautan'; }, 2500);
+});
+
 let DATA = [], TODAY = '', kat = 'semua';
-const QS = new URLSearchParams(location.search), FOKUS = QS.get('id') || '';
+const QS = new URLSearchParams(location.search), FOKUS = QS.get('id') || '', SOLO = QS.get('solo') === '1';
 if (QS.get('kat') && KAT[QS.get('kat')]) kat = QS.get('kat');
 
 function render() {
@@ -93,6 +121,7 @@ function render() {
       ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
       ${isImg ? `<a href="${esc(lamp)}" target="_blank" rel="noopener"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
       ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener">📎 ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
+      ${bagiHtml(x)}
     </article>`;
   }).join('') : '<div class="card empty">Belum ada info untuk ditampilkan.</div>';
   document.querySelectorAll('.more').forEach(b => b.onclick = () => {
@@ -123,7 +152,12 @@ fetch('/api/info?limit=200').then(r => r.json()).then(d => {
   DATA = d.info; TODAY = d.today;
   const f = FOKUS && DATA.find(x => x.id === FOKUS);
   if (f) kat = 'semua';
-  renderAgenda(); renderChips(); render();
+  if (SOLO && f) {                          // dibuka dari tautan bagikan: hanya info ini
+    DATA = [f]; document.body.classList.add('solo');
+    document.querySelector('.bar').style.display = 'none'; $('#chips').style.display = 'none';
+    $('#list').insertAdjacentHTML('afterend', '<p style="text-align:center;margin-top:18px"><a class="lamp" href="/#info" target="_top">Lihat info lainnya →</a></p>');
+    render();
+  } else { renderAgenda(); renderChips(); render(); }
   if (f) {                                  // dibuka dari beranda: tampilkan info yang dituju, isi lengkap
     const el = document.querySelector(`article[data-id="${CSS.escape(f.id)}"]`);
     if (el) { el.classList.add('hl'); const t = el.querySelector('.isi'); if (t) t.classList.remove('cut'); const b = el.querySelector('.more'); if (b) b.textContent = 'Tutup'; el.scrollIntoView({ block: 'start' }); }

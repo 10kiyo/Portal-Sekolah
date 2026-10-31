@@ -253,7 +253,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <iframe id="f-ekskul" title="Ekstrakurikuler" hidden></iframe>
   <iframe id="f-club" title="Club" hidden></iframe>
   <iframe id="f-unggulan" title="Kegiatan Unggulan" hidden></iframe>
-  <iframe id="f-info" title="Info Terbaru" hidden></iframe>
+  <iframe id="f-info" title="Info Terbaru" allow="web-share; clipboard-write" hidden></iframe>
   <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
   <iframe id="f-kelas" title="Administrasi Guru dan Staf" hidden></iframe>
@@ -291,10 +291,10 @@ document.querySelector('.menu').addEventListener('scroll', ddClose);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, KATS = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'];
 function route() {
-  const [r0, seg = ''] = (location.hash.slice(1) || 'beranda').split('/');
+  const [r0, seg = '', mode = ''] = (location.hash.slice(1) || 'beranda').split('/');
   let r = r0;
   // #info/<id> membuka info tertentu, #info/prestasi membuka daftar berkategori prestasi
-  const q = r === 'info' ? (UUID.test(seg) ? '?id=' + seg : KATS.includes(seg) ? '?kat=' + seg : '') : r === 'jurnal' && UUID.test(seg) ? '?id=' + seg : '';
+  const q = r === 'info' ? (UUID.test(seg) ? '?id=' + seg + (mode === 'saja' ? '&solo=1' : '') : KATS.includes(seg) ? '?kat=' + seg : '') : r === 'jurnal' && UUID.test(seg) ? '?id=' + seg : '';
   const admin = r === 'admin';            // tautan lama /#admin tetap dikenali
   if (admin) r = 'buku-tamu';
   if (r !== 'beranda' && !PAGES[r]) r = 'beranda';
