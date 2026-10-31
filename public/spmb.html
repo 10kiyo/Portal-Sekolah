@@ -36,18 +36,8 @@ h3{margin:0 0 6px;color:var(--navy);font-size:17px}
 .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .sum div{background:var(--soft);border-radius:14px;padding:12px 14px}
 .sum span{display:block;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}.sum b{color:var(--navy)}
-.tl{display:grid;gap:10px}
-.tl>div{display:grid;grid-template-columns:minmax(140px,200px) 1fr;gap:14px;padding:12px 14px;border-radius:14px;background:var(--soft)}
-.tl .d{font-weight:800;color:var(--navy)}
-.tl .t{font-weight:700;color:var(--navy)}.tl .s{font-size:14px;color:var(--mute);margin-top:2px}
-.tl>div.now{background:#e6f6ee;box-shadow:inset 0 0 0 2px #19724d55}
-.tl>div.done{opacity:.62}
-.bd{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:800;vertical-align:middle;background:#e3f0fb;color:var(--blue)}
-.bd.now{background:#19724d;color:#fff}.bd.done{background:#e8edf2;color:var(--mute)}
-.steps{list-style:none;margin:0;padding:0;display:grid;gap:18px;counter-reset:s}
-.steps>li{counter-increment:s;display:flex;gap:14px;align-items:flex-start}
-.steps>li::before{content:counter(s);flex:none;width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;display:grid;place-items:center}
-.steps>li>div{flex:1;min-width:0;padding-top:4px}
+.bd{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:800;background:#e3f0fb;color:var(--blue)}
+.bd.now{background:var(--ok);color:#fff}.bd.done{background:#e8edf2;color:var(--mute)}
 .pts{margin:6px 0 0;padding-left:20px;line-height:1.65}.pts li{margin-bottom:4px;overflow-wrap:anywhere}
 .pts .lb{font-weight:700;color:var(--navy)}.pts ul{margin:4px 0 6px;padding-left:20px}
 .scroll{overflow-x:auto}
@@ -61,7 +51,76 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
 .kontak a:hover{border-color:var(--blue)}.kontak b{display:block;color:var(--navy)}.kontak span{color:var(--blue);font-weight:700;font-size:14px}
 .notes{margin:0;padding-left:20px;line-height:1.7}
 .emb .wrap{padding-top:12px}
-@media(max-width:560px){.tl>div{grid-template-columns:1fr;gap:4px}.tabs button{font-size:14px}}
+
+/* ===== Jadwal SPMB: jalur berkelok ===== */
+.snake{--T:52px;--R:108px;--hp:22px;display:grid;grid-template-columns:var(--gl,var(--R)) minmax(0,1fr) minmax(0,1fr) var(--gr,var(--R));margin-top:6px}
+.st{display:contents}
+.st-t{grid-column:var(--c);grid-row:var(--rt);display:flex;align-items:center;justify-content:center;gap:10px;padding:16px 8px 12px}
+.st-b{grid-column:var(--c);grid-row:var(--rb);height:var(--T);display:flex;align-items:center;justify-content:center;padding:0 var(--hp);position:relative;z-index:var(--z);background:var(--bc);color:var(--fg);font-weight:800;font-size:clamp(12px,1.75vw,16px);letter-spacing:.02em;text-transform:uppercase;text-align:center;line-height:1.15}
+.st-d{grid-column:var(--c);grid-row:var(--rd);padding:12px 12px 16px;font-size:14px;line-height:1.5;color:var(--mute);text-align:center}
+.ltr.tip .st-b{clip-path:polygon(0 0,calc(100% - var(--hp)) 0,100% 50%,calc(100% - var(--hp)) 100%,0 100%)}
+.rtl.tip .st-b{clip-path:polygon(var(--hp) 0,100% 0,100% 100%,var(--hp) 100%,0 50%)}
+.ltr.ov .st-b{margin-left:calc(var(--hp) * -1);padding-left:calc(var(--hp) * 2)}
+.rtl.ov .st-b{margin-right:calc(var(--hp) * -1);padding-right:calc(var(--hp) * 2)}
+.num{position:relative;flex:none;width:44px;height:44px;display:grid;place-items:center;font-weight:800;font-size:18px;color:#fff;background:var(--navy);border-radius:10px 0 10px 10px;clip-path:polygon(0 0,calc(100% - 13px) 0,100% 13px,100% 100%,0 100%)}
+.num::after{content:"";position:absolute;top:0;right:0;width:13px;height:13px;background:var(--gold);clip-path:polygon(0 0,100% 100%,0 100%)}
+.tt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.tt b{font-size:15.5px;line-height:1.25;color:var(--navy);text-align:left}
+.st.now .num{background:var(--ok)}
+.st.done .num{background:var(--mute)}
+.st.done .st-t,.st.done .st-d{opacity:.6}
+.st.done .st-b{opacity:.5}
+.arc{display:block;position:relative;grid-row:var(--ra);background:linear-gradient(to bottom,var(--ca) 50%,var(--cb) 50%)}
+.arc::after{content:"";position:absolute;top:var(--T);bottom:var(--T);background:#fff}
+.arc.rt{grid-column:4;border-radius:0 var(--R) var(--R) 0}
+.arc.rt::after{left:-1px;right:var(--T);border-radius:0 calc(var(--R) - var(--T)) calc(var(--R) - var(--T)) 0}
+.arc.lf{grid-column:1;border-radius:var(--R) 0 0 var(--R)}
+.arc.lf::after{right:-1px;left:var(--T);border-radius:calc(var(--R) - var(--T)) 0 0 calc(var(--R) - var(--T))}
+
+/* ===== Alur pendaftaran: kartu langkah ===== */
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.fs{position:relative;display:flex;flex-direction:column;background:var(--soft);border-radius:18px;border-top:5px solid var(--bc);padding:16px 16px 12px}
+.fs::after{content:"›";position:absolute;right:-23px;top:34px;width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--navy);font-weight:900;font-size:22px;line-height:1;display:grid;place-items:center;padding-bottom:3px;z-index:3;box-shadow:0 2px 6px #102a4330}
+.fs:nth-child(3n)::after,.fs:last-child::after{display:none}
+.fs-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.fs-ic{width:48px;height:48px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:24px;box-shadow:0 4px 12px #102a431a}
+.fs-n{font-size:13px;font-weight:800;color:var(--bc);background:#fff;border-radius:99px;padding:3px 11px}
+.fs .fs-w{align-self:flex-start;margin:2px 0 4px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:800;color:var(--blue)}
+.fs-l{list-style:none;margin:10px 0 12px;padding:0;display:grid;gap:8px}
+.fs-l li{position:relative;padding-left:24px;font-size:14.5px;line-height:1.5}
+.fs-l li::before{content:"";position:absolute;left:2px;top:.42em;width:11px;height:6px;border-left:2.5px solid var(--ok);border-bottom:2.5px solid var(--ok);transform:rotate(-45deg)}
+.fs .btn.sm{align-self:flex-start;font-size:14px;padding:10px 16px;margin:0 0 12px}
+.fs-more{margin-top:auto;border-top:1px dashed var(--line);padding-top:4px}
+.fs-more summary{cursor:pointer;list-style:none;font-weight:700;font-size:14px;color:var(--blue);padding:8px 0}
+.fs-more summary::-webkit-details-marker{display:none}
+.fs-more summary::after{content:" ▾"}
+.fs-more[open] summary::after{content:" ▴"}
+.fs-more .pts{font-size:14px;margin-bottom:8px}
+
+@media(max-width:860px){.snake{--T:46px;--R:76px;--hp:18px}}
+@media(max-width:900px){
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fs:nth-child(3n)::after{display:grid}
+  .fs:nth-child(2n)::after,.fs:last-child::after{display:none}
+}
+@media(max-width:699px){
+  .snake{display:block}
+  .arc{display:none}
+  .st{display:block;position:relative;padding:0 0 22px 60px}
+  .st::before{content:"";position:absolute;left:20px;top:46px;bottom:2px;width:4px;border-radius:2px;background:var(--bc)}
+  .st:last-child{padding-bottom:0}
+  .st:last-child::before{display:none}
+  .st-t{padding:0;min-height:44px;justify-content:flex-start}
+  .num{position:absolute;left:0;top:0}
+  .st-b{display:inline-flex;height:auto;margin:8px 0 0 !important;padding:7px 14px !important;border-radius:10px;clip-path:none !important;font-size:13px;z-index:auto}
+  .st-d{padding:8px 0 0;text-align:left}
+}
+@media(max-width:560px){
+  .tabs button{font-size:14px}
+  .flow{grid-template-columns:1fr;gap:30px}
+  .fs::after,.fs:nth-child(3n)::after,.fs:nth-child(2n)::after{display:grid;right:auto;left:50%;top:auto;bottom:-29px;margin-left:-14px;transform:rotate(90deg)}
+  .fs:last-child::after{display:none}
+}
 </style>
 </head>
 <body>
@@ -85,6 +144,12 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
    ISI HALAMAN SPMB — bersumber dari Panduan SPMB 2027/2028 (TK Dalam & TK Luar, 7 Oktober 2026).
    Edit data di bawah ini saja. Bagian yang dikosongkan ("" atau []) otomatis tidak ditampilkan.
    Tanggal untuk status "sedang berlangsung / selesai" ditulis format 'TTTT-BB-HH'.
+
+   Cara kerja tampilan baru:
+   - Jadwal  : tiap item di `jadwal` jadi satu tahap di jalur berkelok (2 tahap per baris).
+               Pakai `isi` untuk keterangan singkat di bawah tanggal.
+   - Alur    : tiap item di `tahapan` jadi satu kartu langkah. `ringkas` = poin singkat yang selalu tampil,
+               `poin` = isi lengkap yang muncul saat "Lihat detail lengkap" dibuka.
    ============================================================ */
 const KONTAK = [
   { nama: 'Ibu Zulmy',       wa: '6281220706200', tampil: '0812 2070 6200' },
@@ -109,15 +174,21 @@ const PEMBAYARAN = { label: 'Pembayaran (transfer dan sertakan nama peserta didi
   'IPSP, IPP, dan SPP: Bank BNI a.n. Yayasan Masjid At-Taqwa Kampus Rawamangun, no. rek. 8888-21-0033.',
   'Uang seragam dan alat: Bank Mandiri a.n. Mundi Indriyadi / Efayanti, S.Pd, no. rek. 0060010547960.'] };
 const TAHAP_LANJUT = [
-  { judul: 'Wawancara Orang Tua', poin: [
+  { judul: 'Wawancara Orang Tua', ikon: '🤝', waktu: '12 – 13 Des 2026',
+    ringkas: ['Wajib dihadiri Bapak dan Ibu', 'Syarat: administrasi keuangan sudah selesai', 'Pilih waktu sesuai tanggal tersebut'],
+    poin: [
     'Wajib diikuti oleh orang tua (Bapak dan Ibu) peserta didik yang telah menyelesaikan administrasi keuangan.',
     'Dilaksanakan pada 12 – 13 Desember 2026. Orang tua dapat memilih waktu sesuai tanggal tersebut.'] },
-  { judul: 'Pengukuran Seragam', poin: [
+  { judul: 'Pengukuran Seragam', ikon: '📏', waktu: '12 – 13 Des 2026',
+    ringkas: ['Siswa wajib hadir', 'Orang tua mengisi surat pernyataan ukuran seragam', 'Tidak ada pengukuran atau penukaran di luar jadwal'],
+    poin: [
     'Dilaksanakan pada 12 – 13 Desember 2026. Siswa wajib hadir.',
     'Orang tua wajib mengisi surat pernyataan ukuran seragam peserta didik dan akan menerima jadwal mengenakan seragam.',
     'Tidak ada pelayanan komplain/penukaran seragam di luar ukuran yang telah disepakati.',
     'Tidak ada pelayanan pengukuran di luar jadwal yang telah ditentukan.'] },
-  { judul: 'Hari Pertama Tahun Ajaran 2027/2028', poin: [
+  { judul: 'Hari Pertama Tahun Ajaran 2027/2028', ikon: '🎒', waktu: 'Senin, 12 Juli 2027',
+    ringkas: ['Tiba paling lambat 06.50 WIB, pulang 10.10 WIB', 'Orang tua wajib mengantar selama MPLS', 'Pekan pertama boleh menunggu; mulai pekan ke-2 mandiri'],
+    poin: [
     'Seluruh peserta didik hadir pada Senin, 12 Juli 2027 dengan seragam sesuai ketentuan (jika ada perubahan, akan diberitahu melalui telepon dan web sekolah).',
     'Tiba di sekolah paling lambat pukul 06.50 WIB dan pulang pukul 10.10 WIB.',
     'Selama MPLS, orang tua (Bapak dan Ibu) wajib mengantar peserta didik ke sekolah.',
@@ -125,15 +196,21 @@ const TAHAP_LANJUT = [
     'Jadwal pembelajaran dan kegiatan sekolah diberikan pada pertemuan orang tua/wali di awal tahun ajaran.'] }
 ];
 const tahapan = (hariSabtu, tombol) => [
-  { judul: 'Pendaftaran', tombol, poin: [
+  { judul: 'Pendaftaran', ikon: '📝', waktu: '1 Okt – 13 Nov 2026', tombol,
+    ringkas: ['Isi formulir online, lalu daftar di Tata Usaha', 'Senin – Jumat 07.30 – 14.00 WIB, Sabtu ' + hariSabtu, 'Usia minimal 5 tahun 10 bulan per Juli 2027'],
+    poin: [
     'Tempat pendaftaran: Tata Usaha SDS Islam At-Taqwa Rawamangun.',
     'Pendaftaran setiap hari kerja (Senin – Jumat) pukul 07.30 – 14.00 WIB.',
     'Hari Sabtu pukul ' + hariSabtu + '.',
     'Usia calon peserta didik per Juli 2027 minimal 5 tahun 10 bulan.',
     'Isi formulir pendaftaran online melalui tombol di atas.'] },
-  { judul: 'Pemantauan Calon Peserta Didik', poin: [
+  { judul: 'Pemantauan Calon Peserta Didik', ikon: '🧒', waktu: '14 Nov 2026 · 08.00 – 11.00 WIB',
+    ringkas: ['Tiba paling lambat 07.50 WIB; lewat 08.30 dianggap mundur', 'Bawa alat tulis, minum, dan makanan kecil', 'Dinilai: bahasa, logika, motorik, kematangan belajar, hafalan surat pendek, doa harian, Iqra', 'Pengumuman: Senin, 23 Nov 2026'],
+    poin: [
     'Sabtu, 14 November 2026, pukul 08.00 – 11.00 WIB.', 'Pengumuman: Senin, 23 November 2026.', PERSIAPAN, MATERI] },
-  { judul: 'Daftar Ulang', poin: [
+  { judul: 'Daftar Ulang', ikon: '🧾', waktu: '23 Nov – 7 Des 2026',
+    ringkas: ['Siapkan fotokopi akte, KK, dan rapor TK B yang dilegalisir', 'Transfer IPSP, IPP, SPP, serta seragam dan alat sampai lunas', 'Serahkan bukti transfer ke sekolah atau WhatsApp Ibu Zulmy', 'Lewat 7 Des belum lunas = dianggap mengundurkan diri'],
+    poin: [
     BERKAS,
     'Daftar ulang dan penyerahan bukti pembayaran: hadir ke sekolah atau via WhatsApp ke Ibu Zulmy (0812 2070 6200), tanggal 23 November – 7 Desember 2026.',
     PEMBAYARAN,
@@ -160,12 +237,11 @@ const SPMB = {
       periode: { mulai: '2026-10-01', selesai: '2026-11-13' },
       ringkas: [['Periode pendaftaran', '1 Oktober – 13 November 2026'], ['Biaya formulir', 'Gratis (sampai 31 Desember 2026)'], ['Tempat', 'Tata Usaha SDS Islam At-Taqwa']],
       jadwal: [
-        { tanggal: '1 Okt – 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran (formulir gratis)', isi: 'Senin – Jumat 07.30 – 14.00 WIB · Sabtu 08.00 – 12.00 WIB' },
+        { tanggal: '1 Okt – 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran', isi: 'Formulir gratis. Senin – Jumat 07.30 – 14.00 WIB, Sabtu 08.00 – 12.00 WIB' },
         { tanggal: '14 Nov 2026', mulai: '2026-11-14', judul: 'Pemantauan calon peserta didik', isi: 'Pukul 08.00 – 11.00 WIB' },
-        { tanggal: '23 Nov 2026', mulai: '2026-11-23', judul: 'Pengumuman hasil SPMB' },
-        { tanggal: '23 Nov – 7 Des 2026', mulai: '2026-11-23', selesai: '2026-12-07', judul: 'Daftar ulang dan pelunasan' },
-        { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua' },
-        { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Pengukuran seragam' },
+        { tanggal: '23 Nov 2026', mulai: '2026-11-23', judul: 'Pengumuman hasil SPMB', isi: 'Hasil pemantauan calon peserta didik' },
+        { tanggal: '23 Nov – 7 Des 2026', mulai: '2026-11-23', selesai: '2026-12-07', judul: 'Daftar ulang dan pelunasan', isi: 'Lunasi pembayaran dan serahkan bukti transfer' },
+        { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua dan pengukuran seragam', isi: 'Wawancara wajib dihadiri Bapak dan Ibu; siswa hadir untuk ukur seragam' },
         { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/2028', isi: 'Tiba paling lambat 06.50 WIB, pulang 10.10 WIB' }
       ],
       tahapan: tahapan('08.00 – 12.00 WIB', { teks: 'Isi formulir pendaftaran →', url: 'https://bit.ly/FORMULIRSPMBSDISLAMATTAQWA2027-2028KBTKATTAQWA' }),
@@ -187,12 +263,11 @@ const SPMB = {
       periode: { mulai: '2026-10-01', selesai: '2026-11-13' },
       ringkas: [['Periode pendaftaran', '1 Oktober – 13 November 2026'], ['Biaya formulir', 'Rp 375.000'], ['Tempat', 'Tata Usaha SDS Islam At-Taqwa']],
       jadwal: [
-        { tanggal: '1 Okt – 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran (biaya formulir Rp 375.000)', isi: 'Senin – Jumat 07.30 – 14.00 WIB · Sabtu 08.00 – 12.00 WIB (dengan perjanjian)' },
+        { tanggal: '1 Okt – 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran', isi: 'Formulir Rp 375.000. Senin – Jumat 07.30 – 14.00 WIB, Sabtu 08.00 – 12.00 WIB (dengan perjanjian)' },
         { tanggal: '14 Nov 2026', mulai: '2026-11-14', judul: 'Pemantauan calon peserta didik', isi: 'Pukul 08.00 – 11.00 WIB' },
-        { tanggal: '23 Nov 2026', mulai: '2026-11-23', judul: 'Pengumuman hasil SPMB' },
-        { tanggal: '23 Nov – 7 Des 2026', mulai: '2026-11-23', selesai: '2026-12-07', judul: 'Daftar ulang dan pelunasan' },
-        { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua' },
-        { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Pengukuran seragam' },
+        { tanggal: '23 Nov 2026', mulai: '2026-11-23', judul: 'Pengumuman hasil SPMB', isi: 'Hasil pemantauan calon peserta didik' },
+        { tanggal: '23 Nov – 7 Des 2026', mulai: '2026-11-23', selesai: '2026-12-07', judul: 'Daftar ulang dan pelunasan', isi: 'Lunasi pembayaran dan serahkan bukti transfer' },
+        { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua dan pengukuran seragam', isi: 'Wawancara wajib dihadiri Bapak dan Ibu; siswa hadir untuk ukur seragam' },
         { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/2028', isi: 'Tiba paling lambat 06.50 WIB, pulang 10.10 WIB' }
       ],
       tahapan: tahapan('08.00 – 12.00 WIB (dengan perjanjian)', { teks: 'Isi formulir pendaftaran →', url: 'https://bit.ly/FORMULIRPENDAFTARANSPMBSDISLAMATTAQWARAWAMANGUNTAHUNAJARAN20272028TKLUAR' }),
@@ -250,14 +325,48 @@ function status(x) {
   const a = x.mulai, b = x.selesai || x.mulai;
   return TODAY > b ? ['done', 'Selesai'] : TODAY >= a ? ['now', 'Sedang berlangsung'] : ['', 'Akan datang'];
 }
+
+// Jadwal: jalur berkelok, 2 tahap per baris (baris genap ke kanan, baris ganjil ke kiri)
+const PER = 2;
+const WARNA = i => i % 2 === 0 ? ['var(--navy)', '#fff'] : ['var(--gold)', 'var(--navy)'];
+function jadwal(list) {
+  const n = list.length, rows = Math.ceil(n / PER);
+  let h = '';
+  for (let r = 0; r < rows - 1; r++) {
+    h += `<i class="arc ${r % 2 ? 'lf' : 'rt'}" style="--ra:${r * 3 + 2} / ${r * 3 + 6};--ca:${WARNA((r + 1) * PER - 1)[0]};--cb:${WARNA((r + 1) * PER)[0]}"></i>`;
+  }
+  list.forEach((x, i) => {
+    const r = Math.floor(i / PER), j = i % PER, rev = r % 2 === 1;
+    const [bc, fg] = WARNA(i), [c, l] = status(x);
+    const cls = [rev ? 'rtl' : 'ltr', j > 0 ? 'ov' : '', (j < PER - 1 || i === n - 1) ? 'tip' : '', c].filter(Boolean).join(' ');
+    h += `<div class="st ${cls}" style="--c:${rev ? 3 - j : 2 + j};--rt:${r * 3 + 1};--rb:${r * 3 + 2};--rd:${r * 3 + 3};--bc:${bc};--fg:${fg};--z:${60 - i}">
+      <div class="st-t"><span class="num">${String(i + 1).padStart(2, '0')}</span><div class="tt"><b>${esc(x.judul)}</b>${c ? `<span class="bd ${c}">${l}</span>` : ''}</div></div>
+      <div class="st-b">${esc(x.tanggal)}</div>
+      <div class="st-d">${x.isi ? esc(x.isi) : ''}</div></div>`;
+  });
+  const gutter = (rows > 2 ? '' : '--gl:0px;') + (rows > 1 ? '' : '--gr:0px;');
+  return `<div class="snake" style="${gutter}">${h}</div>`;
+}
+
+// Alur pendaftaran: kartu langkah (ringkas + detail lengkap yang bisa dibuka)
+const WARNA_LANGKAH = ['var(--navy)', 'var(--blue)', '#c98a0a'];
+function alur(list) {
+  return `<ol class="flow">${list.map((t, i) => `<li class="fs" style="--bc:${WARNA_LANGKAH[i % 3]}">
+    <div class="fs-top"><span class="fs-ic" aria-hidden="true">${esc(t.ikon || '')}</span><span class="fs-n">Langkah ${i + 1}</span></div>
+    <h3>${esc(t.judul)}</h3>
+    ${t.waktu ? `<div class="fs-w">${esc(t.waktu)}</div>` : ''}
+    ${t.ringkas && t.ringkas.length ? `<ul class="fs-l">${t.ringkas.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
+    ${t.tombol && https(t.tombol.url) ? `<a class="btn dark sm" href="${esc(t.tombol.url)}" target="_blank" rel="noopener">${esc(t.tombol.teks)}</a>` : ''}
+    ${t.poin && t.poin.length ? `<details class="fs-more"><summary>Lihat detail lengkap</summary><ul class="pts">${t.poin.map(poin).join('')}</ul></details>` : ''}
+  </li>`).join('')}</ol>`;
+}
+
 function panel(j) {
   const out = [];
   out.push(`<section class="card"><h2>Pendaftaran — ${esc(j.nama)}</h2><div class="sum">${j.ringkas.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
     <div class="btns">${https(j.daftarUrl) ? `<a class="btn dark" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">Isi formulir pendaftaran →</a>` : ''}${https(j.panduanUrl) || j.panduanUrl ? `<a class="btn line" href="${esc(j.panduanUrl)}" target="_blank" rel="noopener">Unduh buku panduan (PDF)</a>` : ''}</div></section>`);
-  out.push(`<section class="card"><h2>Jadwal SPMB</h2><div class="tl">${j.jadwal.map(x => { const [c, l] = status(x);
-    return `<div class="${c}"><div class="d">${esc(x.tanggal)}</div><div><div class="t">${esc(x.judul)}<span class="bd ${c}">${l}</span></div>${x.isi ? `<div class="s">${esc(x.isi)}</div>` : ''}</div></div>`; }).join('')}</div></section>`);
-  out.push(`<section class="card"><h2>Alur Pendaftaran</h2><ol class="steps">${j.tahapan.map(t => `<li><div><h3>${esc(t.judul)}</h3>
-    <ul class="pts">${t.poin.map(poin).join('')}</ul>${t.tombol && https(t.tombol.url) ? `<div class="btns"><a class="btn dark" href="${esc(t.tombol.url)}" target="_blank" rel="noopener">${esc(t.tombol.teks)}</a></div>` : ''}</div></li>`).join('')}</ol></section>`);
+  out.push(`<section class="card"><h2>Jadwal SPMB</h2>${jadwal(j.jadwal)}</section>`);
+  out.push(`<section class="card"><h2>Alur Pendaftaran</h2><p class="mut" style="margin:-6px 0 18px">Ikuti langkahnya secara berurutan. Buka Lihat detail lengkap pada tiap kartu untuk aturan selengkapnya.</p>${alur(j.tahapan)}</section>`);
   const b = j.biaya, tot = b.kolom.map((_, i) => b.baris.reduce((s, r) => s + r[i + 1], 0));
   out.push(`<section class="card"><h2>${esc(b.judul)}</h2><div class="scroll"><table><thead><tr><th>Keterangan</th>${b.kolom.map(k => `<th class="n">${esc(k)}</th>`).join('')}</tr></thead><tbody>
     ${b.baris.map(r => `<tr><td>${esc(r[0])}</td>${r.slice(1).map(v => `<td class="n">${rp(v)}</td>`).join('')}</tr>`).join('')}
