@@ -14,6 +14,17 @@ body{display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sa
 nav{flex:none;display:flex;align-items:center;gap:14px;padding:8px 16px;background:#fff;border-bottom:1px solid #dbe8f2;box-shadow:0 4px 16px #102a4310}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--navy);font-weight:800;letter-spacing:-.02em;white-space:nowrap}
 .brand img{width:38px;height:38px;object-fit:contain}
+.topbar{flex:none;display:flex;justify-content:space-between;align-items:stretch;gap:12px;background:var(--navy);color:#d9e6f2;font-size:13px;padding-left:16px}
+.topbar .ct{display:flex;align-items:center;gap:20px;padding:7px 0;min-width:0}
+.topbar .ct a{display:inline-flex;align-items:center;gap:7px;color:#d9e6f2;text-decoration:none;white-space:nowrap}
+.topbar .ct a:hover{color:#fff;text-decoration:underline}
+.topbar svg{width:15px;height:15px;fill:none;stroke:var(--gold,#f5b335);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.topbar .cta{flex:none;display:flex;align-items:center;padding:0 clamp(12px,3vw,26px);background:#f5b335;color:var(--navy);font-weight:800;font-size:13px;letter-spacing:.01em;text-decoration:none;transition:filter .15s}
+.topbar .cta:hover{filter:brightness(1.08)}
+.topbar .cta.on{box-shadow:inset 0 -4px 0 var(--navy)}
+.topbar a:focus-visible{outline:3px solid #ffffffaa;outline-offset:-3px}
+@media(max-width:640px){.topbar .ct .em{display:none}.topbar{font-size:12px}}
+@media(max-width:400px){.topbar .ct{display:none}.topbar .cta{flex:1;justify-content:center;padding:10px}}
 .menu{display:flex;gap:6px;overflow-x:auto;margin-left:auto;scrollbar-width:none}
 .menu::-webkit-scrollbar{display:none}
 .menu a{white-space:nowrap;text-decoration:none;color:var(--navy);font-weight:700;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid transparent}
@@ -81,6 +92,13 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </style>
 </head>
 <body>
+<div class="topbar">
+  <div class="ct">
+    <a href="https://wa.me/6281220706200" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5h3l1.4 4-2 1.3a11 11 0 0 0 5.2 5.2l1.3-2 4 1.4v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></svg>+62-812-2070-6200</a>
+    <a class="em" href="mailto:info@attaqwa.sch.id"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m4 8 8 5.5L20 8"/></svg>info@attaqwa.sch.id</a>
+  </div>
+  <a class="cta" id="cta" href="#spmb">Mau jadi siswa At-Taqwa?</a>
+</div>
 <nav>
   <a class="brand" href="#beranda"><img src="logo-at-taqwa.png" alt=""><span>SDS Islam At-Taqwa</span></a>
   <div class="menu">
@@ -157,6 +175,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
           <div class="pills">
             <a href="#beranda">Beranda</a>
             <a href="#profil">Profil Sekolah</a>
+            <a href="#spmb">SPMB</a>
             <a href="#info">Info Terbaru</a>
             <a href="#buku-tamu">Buku Tamu Sekolah</a>
             <a href="#kelas">Administrasi Kelas</a>
@@ -170,6 +189,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
       <div class="copy">© <span id="thn"></span> SDS Islam At-Taqwa Rawamangun. Seluruh layanan digital ini disiapkan untuk mendukung orang tua, guru, dan tamu sekolah.</div>
     </footer>
   </section>
+  <iframe id="f-spmb" title="SPMB" hidden></iframe>
   <iframe id="f-profil" title="Profil Sekolah" hidden></iframe>
   <iframe id="f-info" title="Info Terbaru" hidden></iframe>
   <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
@@ -180,8 +200,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </main>
 
 <script>
-const PAGES = { profil: 'profil.html', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', profil: 'Profil Sekolah', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+const PAGES = { spmb: 'spmb.html', profil: 'profil.html', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Kelas', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
@@ -212,6 +232,7 @@ function route() {
   document.querySelectorAll('.menu a, .ddp a').forEach(a => a.classList.toggle('on', a.dataset.r === (r === 'info-admin' ? 'info' : r)));
   document.getElementById('ddBtn').classList.toggle('on', ['buku-tamu', 'kelas', 'kegiatan'].includes(r));
   ddClose();
+  document.getElementById('cta').classList.toggle('on', r === 'spmb');
   document.getElementById('beranda').hidden = r !== 'beranda';
   for (const k in PAGES) {
     const f = document.getElementById('f-' + k);

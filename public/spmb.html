@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPMB — Mau jadi siswa At-Taqwa?</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--gold:#f5b335;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(960px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+.hero{border-radius:26px;padding:clamp(26px,5vw,52px);color:#fff;background:linear-gradient(135deg,#102a43,#1d4f86);box-shadow:0 18px 45px #102a4330}
+.hero .eyebrow{display:inline-block;background:var(--gold);color:var(--navy);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:99px}
+.hero h1{margin:14px 0 8px;font-size:clamp(28px,6vw,46px);letter-spacing:-.04em;line-height:1.08}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p{margin:0;max-width:60ch;line-height:1.65;color:#dbe8f5;font-size:clamp(15px,2.2vw,18px)}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.btn{display:inline-block;text-decoration:none;font-weight:800;font-size:15px;padding:13px 22px;border-radius:12px;border:1.5px solid #ffffff80;color:#fff}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.btn:hover{filter:brightness(1.08)}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:clamp(16px,3.5vw,26px);box-shadow:0 12px 30px #102a4310;margin-top:16px}
+h2{margin:0 0 14px;color:var(--navy);font-size:clamp(19px,3vw,23px);letter-spacing:-.02em}
+h3{margin:0 0 4px;color:var(--navy);font-size:16px}
+.card p{line-height:1.7;margin:0 0 10px;overflow-wrap:anywhere}.card p:last-child{margin-bottom:0}
+.mut{color:var(--mute);font-size:14px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start}
+.steps li::before{content:counter(s);flex:none;width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;display:grid;place-items:center}
+.steps li div{padding-top:5px;line-height:1.6}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checks li{display:flex;gap:10px;line-height:1.6}
+.checks li::before{content:"✓";flex:none;color:#19724d;font-weight:800}
+.tl{display:grid;gap:10px}
+.tl>div{display:grid;grid-template-columns:minmax(130px,200px) 1fr;gap:14px;padding:12px 14px;border-radius:14px;background:var(--soft)}
+.tl .d{font-weight:800;color:var(--navy)}
+.tl .t{font-weight:700;color:var(--navy)}.tl .s{font-size:14px;color:var(--mute);margin-top:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid>div{border:1px solid #dbe8f2;border-radius:14px;padding:14px 16px}
+.grid p{font-size:14px;color:var(--mute);margin:0}
+details{border:1px solid #dbe8f2;border-radius:14px;padding:12px 16px;margin-top:8px;background:#fff}
+details:first-of-type{margin-top:0}
+summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details p{margin:10px 0 0}
+.empty{text-align:center}
+.emb .wrap{padding-top:12px}
+@media(max-width:560px){.tl>div{grid-template-columns:1fr;gap:4px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <span class="eyebrow" id="eyebrow">Penerimaan Murid Baru</span>
+    <h1>Mau jadi siswa <em>At-Taqwa?</em></h1>
+    <p id="pengantar"></p>
+    <div class="btns" id="btns"></div>
+  </section>
+  <div id="isi"></div>
+</div>
+
+<script>
+/* ============================================================
+   ISI HALAMAN SPMB — edit data di bawah ini saja.
+   Bagian yang dibiarkan kosong ("" atau []) otomatis tidak ditampilkan.
+   Teks biasa saja (tanpa HTML).
+   ============================================================ */
+const SPMB = {
+  tahunAjaran: '',                 // contoh: '2027/2028'
+  pengantar: 'Selamat datang calon orang tua dan siswa baru SDS Islam At-Taqwa Rawamangun. Hubungi kami untuk informasi pendaftaran.',
+
+  daftarUrl: '',                   // tautan formulir pendaftaran (Google Form / lainnya), contoh: 'https://forms.gle/xxxx'
+  brosurUrl: '',                   // tautan brosur (PDF / Google Drive), boleh kosong
+
+  jadwal: [                        // contoh: { tanggal: '1 Nov – 30 Des 2026', judul: 'Pendaftaran Gelombang 1', isi: '' },
+  ],
+
+  syarat: [                        // contoh: 'Fotokopi akta kelahiran', 'Fotokopi Kartu Keluarga',
+  ],
+
+  alur: [                          // contoh: 'Mengisi formulir pendaftaran', 'Observasi / tes calon siswa',
+                                   // atau { judul: 'Observasi', isi: 'Calon siswa ...' }
+  ],
+
+  biaya: [                         // contoh: { judul: 'Uang Pangkal', isi: 'Rp ...' },
+  ],
+
+  faq: [                           // contoh: { tanya: 'Usia minimal masuk kelas 1?', jawab: '...' },
+  ]
+};
+
+/* ---------------- Kode tampilan (tidak perlu diubah) ---------------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const https = u => /^https?:\/\//i.test(u || '') ? u : '';
+const S = SPMB, out = [];
+if (self !== top) document.body.classList.add('emb');
+
+document.getElementById('eyebrow').textContent = 'SPMB' + (S.tahunAjaran ? ' ' + S.tahunAjaran : '') + ' · Penerimaan Murid Baru';
+document.getElementById('pengantar').textContent = S.pengantar;
+
+const wa = 'https://wa.me/6281220706200?text=' + encodeURIComponent("Assalamu'alaikum, saya ingin menanyakan informasi SPMB SDS Islam At-Taqwa" + (S.tahunAjaran ? ' tahun ajaran ' + S.tahunAjaran : '') + '.');
+document.getElementById('btns').innerHTML =
+  (https(S.daftarUrl) ? `<a class="btn gold" href="${esc(https(S.daftarUrl))}" target="_blank" rel="noopener">Daftar sekarang →</a>` : '') +
+  `<a class="btn ${https(S.daftarUrl) ? '' : 'gold'}" href="${wa}" target="_blank" rel="noopener">Tanya via WhatsApp</a>` +
+  (https(S.brosurUrl) ? `<a class="btn" href="${esc(https(S.brosurUrl))}" target="_blank" rel="noopener">Unduh brosur</a>` : '');
+
+if (S.jadwal.length) out.push(`<section class="card"><h2>Jadwal Pendaftaran</h2><div class="tl">${S.jadwal.map(x =>
+  `<div><div class="d">${esc(x.tanggal)}</div><div><div class="t">${esc(x.judul)}</div>${x.isi ? `<div class="s">${esc(x.isi)}</div>` : ''}</div></div>`).join('')}</div></section>`);
+if (S.alur.length) out.push(`<section class="card"><h2>Alur Pendaftaran</h2><ol class="steps">${S.alur.map(x =>
+  `<li><div>${typeof x === 'string' ? esc(x) : `<h3>${esc(x.judul)}</h3><span class="mut">${esc(x.isi)}</span>`}</div></li>`).join('')}</ol></section>`);
+if (S.syarat.length) out.push(`<section class="card"><h2>Persyaratan</h2><ul class="checks">${S.syarat.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>`);
+if (S.biaya.length) out.push(`<section class="card"><h2>Biaya Pendidikan</h2><div class="grid">${S.biaya.map(x => `<div><h3>${esc(x.judul)}</h3><p>${esc(x.isi)}</p></div>`).join('')}</div></section>`);
+if (S.faq.length) out.push(`<section class="card"><h2>Pertanyaan Umum</h2>${S.faq.map(x => `<details><summary>${esc(x.tanya)}</summary><p>${esc(x.jawab)}</p></details>`).join('')}</section>`);
+if (!out.length) out.push(`<section class="card empty"><h2>Informasi pendaftaran sedang disiapkan</h2><p class="mut">Untuk informasi jadwal, persyaratan, dan biaya, silakan hubungi sekolah melalui WhatsApp +62-812-2070-6200 atau email info@attaqwa.sch.id. Pada jam layanan Senin – Jumat, 07:00 – 16:00.</p></section>`);
+document.getElementById('isi').innerHTML = out.join('');
+</script>
+</body>
+</html>
