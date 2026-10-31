@@ -41,6 +41,16 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
 .tabsA button{background:#fff;color:var(--navy);border:1px solid var(--line);border-radius:99px;padding:8px 16px;font-size:14px}
 .tabsA button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .pill.bad{background:#fbeae8;color:var(--danger)}
+.menus{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;align-items:flex-end}
+.mg{display:flex;flex-direction:column;gap:5px}
+.mg>span{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.mg .row{display:flex;gap:6px;flex-wrap:wrap;padding:5px;border-radius:99px;background:#e3edf6}
+.mg .row button{background:transparent;color:var(--navy);border:0;border-radius:99px;padding:8px 15px;font-size:14px}
+.mg .row button:hover{background:#ffffffa0}
+.mg .row button.on{background:var(--navy);color:#fff}
+.mg .row button small{opacity:.7;font-weight:600;margin-left:3px}
+.tinfo{margin-top:12px;padding:10px 14px;border-radius:12px;background:#fff;border:1px solid #dbe8f2;font-size:13px;color:var(--mute)}
+.tinfo b{color:var(--navy)}
 .jr{display:flex;gap:14px;align-items:flex-start}
 .jr img{flex:none;width:130px;height:96px;object-fit:cover;border-radius:10px;cursor:zoom-in}
 .jr .isi{margin-top:8px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
@@ -66,12 +76,20 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
 
 <div id="app" class="hidden">
   <div class="top">
-    <div><h1>Kelola Info Terbaru</h1><div class="mut">Pengumuman, agenda, surat, kegiatan sekolah, dan verifikasi jurnal murid</div></div>
+    <div><h1>Kelola Info Terbaru</h1><div class="mut">Info Terbaru, Jurnal Murid, Ekstrakurikuler, Club, dan Kegiatan Unggulan — masing-masing dikelola di tab-nya sendiri</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="tambah">+ Tambah info</button><button class="sec" id="muat">Muat ulang</button><button class="sec" id="keluar">Keluar</button></div>
   </div>
-  <div class="tabsA"><button class="on" data-t="info">Info &amp; kegiatan</button><button data-t="jurnal">Jurnal murid <span id="nMenunggu"></span></button></div>
+  <div class="menus" id="menus">
+    <div class="mg"><span>Info</span><div class="row"><button class="on" data-t="info">Info Terbaru <small id="n-info"></small></button></div></div>
+    <div class="mg"><span>Menu Kegiatan</span><div class="row">
+      <button data-t="jurnal">Jurnal Murid <small id="nMenunggu"></small></button>
+      <button data-t="ekskul">Ekstrakurikuler <small id="n-ekskul"></small></button>
+      <button data-t="club">Club <small id="n-club"></small></button>
+      <button data-t="unggulan">Kegiatan Unggulan <small id="n-unggulan"></small></button>
+    </div></div>
+  </div>
 
-  <section id="pInfo"><div id="list" class="list"></div></section>
+  <section id="pInfo"><div class="tinfo" id="tinfo"></div><div id="list" class="list"></div></section>
 
   <section id="pJurnal" class="hidden">
     <div class="tabsA" id="fJ" style="margin-top:12px">
@@ -89,9 +107,9 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
     <div class="full"><label for="f-judul">Judul</label><input id="f-judul" maxlength="150"></div>
     <div><label for="f-kat">Kategori</label>
       <select id="f-kat"><option value="pengumuman">Pengumuman</option><option value="agenda">Agenda</option><option value="surat">Surat Edaran</option><option value="kegiatan">Berita Kegiatan</option><option value="prestasi">Prestasi</option><option value="lainnya">Lainnya</option></select></div>
-    <div class="full"><label for="f-jenis">Jenis kegiatan <span class="mut">(opsional)</span></label>
-      <select id="f-jenis"><option value="">— Bukan kegiatan khusus —</option><option value="ekskul">Ekstrakurikuler</option><option value="club">Club</option><option value="unggulan">Kegiatan Unggulan</option></select>
-      <div class="hint">Jika dipilih, info ini juga tampil di menu Kegiatan (Ekstrakurikuler / Club / Kegiatan Unggulan). Disarankan kategori “Berita Kegiatan”.</div></div>
+    <div class="full"><label for="f-jenis">Tampil di menu</label>
+      <select id="f-jenis"><option value="">Info Terbaru</option><option value="ekskul">Kegiatan › Ekstrakurikuler</option><option value="club">Kegiatan › Club</option><option value="unggulan">Kegiatan › Kegiatan Unggulan</option></select>
+      <div class="hint">Satu info tampil di satu menu saja. Info Terbaru = halaman Info Terbaru dan beranda; tiga pilihan lainnya hanya tampil di halaman menu masing-masing.</div></div>
     <div><label for="f-terbit">Tanggal terbit</label><input id="f-terbit" type="date"></div>
     <div><label for="f-agenda">Tanggal acara / tenggat <span class="mut">(opsional)</span></label><input id="f-agenda" type="date"><div class="hint">Jika diisi, muncul di “Agenda mendatang”.</div></div>
     <div><label for="f-lokasi">Jam / tempat <span class="mut">(opsional)</span></label><input id="f-lokasi" maxlength="150" placeholder="mis. 08.00 WIB, Aula sekolah"></div>
@@ -117,6 +135,15 @@ const KAT = { pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran',
 const JK = { ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan' };
 if (self !== top) document.body.classList.add('emb');
 let D = { info: [], today: '' }, editId = null;
+// Tab admin = menu publik. jenis = nilai kolom jenis_kegiatan ('' = Info Terbaru).
+const TAB = {
+  info: { jenis: '', nama: 'Info Terbaru', tampil: 'halaman <b>Info Terbaru</b> dan bagian info di beranda' },
+  ekskul: { jenis: 'ekskul', nama: 'Ekstrakurikuler', tampil: 'menu <b>Kegiatan › Ekstrakurikuler</b>' },
+  club: { jenis: 'club', nama: 'Club', tampil: 'menu <b>Kegiatan › Club</b>' },
+  unggulan: { jenis: 'unggulan', nama: 'Kegiatan Unggulan', tampil: 'menu <b>Kegiatan › Kegiatan Unggulan</b>' }
+};
+let tabA = 'info';
+const jenisInfo = x => x.jenis_kegiatan || '';
 
 async function api(body) {
   const h = { Authorization: 'Bearer ' + sessionStorage.getItem(TOKEN_KEY) };
@@ -144,15 +171,19 @@ async function mulai() {
 }
 
 function render() {
-  $('#list').innerHTML = D.info.length ? D.info.map(x => `<div class="it ${x.terbit ? '' : 'off'}" data-id="${x.id}">
-    <span class="pill blue">${esc(KAT[x.kategori] || x.kategori)}</span>${x.jenis_kegiatan ? ` <span class="pill ok">${esc(JK[x.jenis_kegiatan] || x.jenis_kegiatan)}</span>` : ''}
+  Object.keys(TAB).forEach(k => { const n = D.info.filter(x => jenisInfo(x) === TAB[k].jenis).length; const el = $('#n-' + k); if (el) el.textContent = n ? `(${n})` : ''; });
+  const T = TAB[tabA]; if (!T) return;
+  const rows = D.info.filter(x => jenisInfo(x) === T.jenis);
+  $('#tinfo').innerHTML = `Daftar di bawah tampil di ${T.tampil}. Klik <b>+ Tambah info</b> untuk menambah ke menu ini.`;
+  $('#list').innerHTML = rows.length ? rows.map(x => `<div class="it ${x.terbit ? '' : 'off'}" data-id="${x.id}">
+    <span class="pill blue">${esc(KAT[x.kategori] || x.kategori)}</span>
     <span class="pill ${x.terbit ? 'ok' : 'warn'}">${x.terbit ? 'Tampil' : 'Disembunyikan'}</span>${x.sematkan ? ' <span class="pill warn">📌 Disematkan</span>' : ''}
     <h3>${esc(x.judul)}</h3>
     <div class="mut">Terbit ${tgl(x.tanggal_terbit)}${x.tanggal_agenda ? ' · Acara ' + tgl(x.tanggal_agenda) : ''}${x.lampiran_url ? ' · 📎 ' + esc(x.lampiran_nama || 'Lampiran') : ''}</div>
     <div class="acts"><button class="sec sm" data-a="edit">Ubah</button>
       <button class="sec sm" data-a="terbit">${x.terbit ? 'Sembunyikan' : 'Tampilkan'}</button>
       <button class="sec sm" data-a="pin">${x.sematkan ? 'Lepas sematan' : 'Sematkan'}</button>
-      <button class="bad sm" data-a="hapus">Hapus</button></div></div>`).join('') : '<div class="card mut" style="text-align:center">Belum ada info. Klik “+ Tambah info”.</div>';
+      <button class="bad sm" data-a="hapus">Hapus</button></div></div>`).join('') : `<div class="card mut" style="text-align:center">Belum ada info di ${esc(T.nama)}. Klik “+ Tambah info”.</div>`;
 }
 $('#list').onclick = async e => {
   const b = e.target.closest('button[data-a]'); if (!b) return;
@@ -169,12 +200,12 @@ $('#list').onclick = async e => {
 function buka(x) {
   editId = x ? x.id : null;
   $('#dlgTitle').textContent = x ? 'Ubah info' : 'Tambah info';
-  $('#f-judul').value = x ? x.judul : ''; $('#f-kat').value = x ? x.kategori : 'pengumuman';
+  $('#f-judul').value = x ? x.judul : ''; $('#f-kat').value = x ? x.kategori : (TAB[tabA] && TAB[tabA].jenis ? 'kegiatan' : 'pengumuman');
   $('#f-terbit').value = x ? x.tanggal_terbit : D.today; $('#f-agenda').value = x && x.tanggal_agenda || '';
   $('#f-lokasi').value = x && x.lokasi || ''; $('#f-isi').value = x && x.isi || '';
   $('#f-url').value = x && x.lampiran_url || ''; $('#f-nama').value = x && x.lampiran_nama || ''; $('#f-file').value = '';
   $('#f-cur').textContent = x && x.lampiran_url ? 'Lampiran saat ini terpasang. Pilih file baru atau kosongkan tautan untuk menghapusnya.' : '';
-  $('#f-jenis').value = x && x.jenis_kegiatan || '';
+  $('#f-jenis').value = x ? (x.jenis_kegiatan || '') : (TAB[tabA] ? TAB[tabA].jenis : '');
   $('#f-pin').checked = x ? x.sematkan : false; $('#f-pub').checked = x ? x.terbit : true;
   $('#dlgErr').textContent = ''; $('#dlg').showModal();
 }
@@ -270,11 +301,14 @@ $('#listJ').onclick = async e => {
     await muatJ();
   } catch (err) { alert(err.message); }
 };
-document.querySelectorAll('.tabsA[class="tabsA"] button[data-t]').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.tabsA button[data-t]').forEach(x => x.classList.toggle('on', x === b));
-  $('#pInfo').classList.toggle('hidden', b.dataset.t !== 'info'); $('#pJurnal').classList.toggle('hidden', b.dataset.t !== 'jurnal');
-  if (b.dataset.t === 'jurnal') muatJ();
-});
+$('#menus').onclick = e => {
+  const b = e.target.closest('button[data-t]'); if (!b) return;
+  tabA = b.dataset.t;
+  document.querySelectorAll('#menus button[data-t]').forEach(x => x.classList.toggle('on', x === b));
+  const jr = tabA === 'jurnal';
+  $('#pInfo').classList.toggle('hidden', jr); $('#pJurnal').classList.toggle('hidden', !jr); $('#tambah').classList.toggle('hidden', jr);
+  if (jr) muatJ(); else render();
+};
 mulai();
 </script>
 </body>

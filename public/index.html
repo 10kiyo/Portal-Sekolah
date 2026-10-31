@@ -318,7 +318,7 @@ function route() {
   document.title = TITLES[r];
 }
 // Cuplikan info terbaru (daftar ke bawah, maksimal 3, dengan gambar lampiran bila ada) di beranda (diam-diam dilewati jika belum ada data / belum disiapkan)
-fetch('/api/info?limit=3').then(r => r.json()).then(d => {
+fetch('/api/info?utama=1&limit=3').then(r => r.json()).then(d => {
   if (!d.info || !d.info.length) return;
   d.info = d.info.slice(0, 3);
   const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

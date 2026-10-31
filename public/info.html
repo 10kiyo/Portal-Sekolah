@@ -230,9 +230,11 @@ function renderAgenda() {
 }
 
 $('#q').oninput = () => { renderPeriode(); renderChips(); render(); };
-fetch('/api/info?limit=1000').then(r => r.json()).then(d => {
+// Daftar Info Terbaru hanya memuat info menu Info Terbaru (utama=1). Tautan ke satu info tertentu (?id=…) tetap memuat semua
+// supaya info Ekskul/Club/Unggulan yang dibagikan lewat WhatsApp tetap bisa dibuka.
+fetch(FOKUS ? '/api/info?limit=1000' : '/api/info?utama=1&limit=1000').then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
-  DATA = d.info; TODAY = d.today; renderPendaftaran(d.pendaftaran || []);
+  DATA = d.info.filter(x => !x.jenis_kegiatan || x.id === FOKUS); TODAY = d.today; renderPendaftaran(d.pendaftaran || []);
   const f = FOKUS && DATA.find(x => x.id === FOKUS);
   if (f) kat = 'semua';
   if (SOLO && f) {                          // dibuka dari tautan bagikan: hanya info ini

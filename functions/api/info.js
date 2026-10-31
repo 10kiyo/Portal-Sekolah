@@ -1,5 +1,6 @@
 // Cloudflare Worker route: GET /api/info  (publik, hanya info yang berstatus terbit)
 // Query opsional: ?limit=3&kategori=prestasi&jenis=ekskul   (jenis: ekskul | club | unggulan)
+//                 &utama=1  -> hanya info Info Terbaru (yang TIDAK ditandai menu Ekskul/Club/Unggulan)
 // Cache 60 detik: di browser (Cache-Control) DAN bersama di Cloudflare (Cache API), sehingga ramai pengunjung hanya memicu
 // ~1 permintaan ke Supabase per menit per variasi query. Info baru yang diterbitkan admin muncul paling lambat 60 detik kemudian.
 import { json, cfg, dbGet, hariIni, fase, terpakaiMap } from '../_lib/util.js';
@@ -10,7 +11,7 @@ const ok = body => new Response(JSON.stringify(body), { status: 200, headers: { 
 export async function onRequestGet({ request, env, ctx }) {
   // Kunci cache hanya memakai parameter yang dikenal (parameter acak tidak bisa menembus cache).
   const u = new URL(request.url), kunci = new URL(u.origin + u.pathname);
-  ['limit', 'kategori', 'jenis'].forEach(k => { if (u.searchParams.get(k)) kunci.searchParams.set(k, u.searchParams.get(k)); });
+  ['limit', 'kategori', 'jenis', 'utama'].forEach(k => { if (u.searchParams.get(k)) kunci.searchParams.set(k, u.searchParams.get(k)); });
   const cache = typeof caches !== 'undefined' ? caches.default : null, key = new Request(kunci.toString(), { method: 'GET' });
   if (cache) { try { const hit = await cache.match(key); if (hit) return hit; } catch (e) { /* lanjut tanpa cache */ } }
   const res = await ambil(request, env);
@@ -26,6 +27,7 @@ async function ambil(request, env) {
   const fk = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'].includes(kat) ? `&kategori=eq.${kat}` : '';
   const jn = new URL(request.url).searchParams.get('jenis') || '';
   const fj = ['ekskul', 'club', 'unggulan'].includes(jn) ? `&jenis_kegiatan=eq.${jn}` : '';
+  const utama = new URL(request.url).searchParams.get('utama') === '1' && !fj;
   const base = `/info_sekolah?terbit=eq.true${fk}`, urut = `&order=sematkan.desc,tanggal_terbit.desc,created_at.desc&limit=${lim}`;
   const kol = 'id,judul,kategori,isi,tanggal_terbit,tanggal_agenda,lokasi,sematkan,lampiran_url,lampiran_nama';
   // Pendaftaran kegiatan yang dibuka untuk umum (tampil di bagian atas halaman Info). Gagal membaca tidak boleh mengganggu info biasa.
@@ -41,7 +43,7 @@ async function ambil(request, env) {
   };
   try {
     let rows;
-    try { rows = await dbGet(c)(`${base}${fj}${urut}&select=${kol},jenis_kegiatan`); }
+    try { rows = await dbGet(c)(`${base}${fj}${utama ? '&jenis_kegiatan=is.null' : ''}${urut}&select=${kol},jenis_kegiatan`); }
     catch (e) {                                   // kolom jenis_kegiatan belum ada (supabase-jurnal.sql belum dijalankan)
       if (fj) return ok({ today, info: [], pendaftaran: [] });
       rows = await dbGet(c)(`${base}${urut}&select=${kol}`);
