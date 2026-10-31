@@ -45,9 +45,24 @@ h2{margin:28px 0 0;color:var(--navy);font-size:20px}
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 if (self !== top) document.body.classList.add('emb');
-const DATA = (window.GURU_STAF || []), KEL = { pimpinan: 'Pimpinan', guru: 'Guru', staf: 'Staf & Tenaga Kependidikan' };
+const KEL = { pimpinan: 'Pimpinan', guru: 'Guru', staf: 'Staf & Tenaga Kependidikan' };
 const inisial = n => n.replace(/,.*$/, '').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
-let kel = 'semua';
+const kunci = n => String(n || '').replace(/,.*$/, '').toLowerCase().replace(/[^a-z]/g, '');   // "Nurbaiti, S.Pd" -> "nurbaiti"
+let DATA = [], kel = 'semua';
+
+// Gabungkan data Supabase (/api/guru) dengan penyesuaian manual di data-guru.js (foto, jabatan, mapel, wali kelas)
+function gabung(db) {
+  const man = (window.GURU_STAF || []).map(m => ({ ...m, k: kunci(m.nama), dipakai: false }));
+  const out = db.map(x => {
+    const k = kunci(x.nama), m = man.find(y => y.k && (y.k === k || k.startsWith(y.k) || y.k.startsWith(k)));
+    if (m) m.dipakai = true;
+    return { nama: m ? m.nama : x.nama, jabatan: (m && m.jabatan) || x.keterangan || x.jenis || '',
+      kelompok: (m && m.kelompok) || x.kelompok, mapel: (m && m.mapel) || [], walikelas: (m && m.walikelas) || '', foto: (m && m.foto) || '' };
+  });
+  man.filter(m => !m.dipakai).forEach(m => out.push({ nama: m.nama, jabatan: m.jabatan || '', kelompok: m.kelompok || 'guru', mapel: m.mapel || [], walikelas: m.walikelas || '', foto: m.foto || '' }));
+  const rank = x => /kepala sekolah/i.test(x.jabatan) ? 0 : x.kelompok === 'pimpinan' ? 1 : 2;
+  return out.sort((a, b) => rank(a) - rank(b) || a.nama.localeCompare(b.nama, 'id'));
+}
 
 function renderChips() {
   const ada = Object.keys(KEL).filter(k => DATA.some(x => x.kelompok === k));
@@ -62,14 +77,17 @@ function kartu(x) {
 function render() {
   const q = $('#q').value.trim().toLowerCase();
   const rows = DATA.filter(x => (kel === 'semua' || x.kelompok === kel) && (!q || [x.nama, x.jabatan, (x.mapel || []).join(' '), x.walikelas].join(' ').toLowerCase().includes(q)));
-  if (!rows.length) { $('#list').innerHTML = `<div class="empty">${DATA.length ? 'Tidak ada yang cocok.' : 'Data guru dan staf belum diisi.'}</div>`; return; }
+  if (!rows.length) { $('#list').innerHTML = `<div class="empty">${DATA.length ? 'Tidak ada yang cocok.' : 'Data guru dan staf belum tersedia.'}</div>`; return; }
   $('#list').innerHTML = Object.keys(KEL).map(k => {
     const g = rows.filter(x => x.kelompok === k);
     return g.length ? `<h2>${KEL[k]}</h2><div class="grid">${g.map(kartu).join('')}</div>` : '';
   }).join('');
 }
 $('#q').oninput = render;
-renderChips(); render();
+$('#list').innerHTML = '<div class="empty">Memuat…</div>';
+fetch('/api/guru').then(r => r.json()).then(d => { if (d.error) throw new Error(d.error); return d.guru || []; })
+  .catch(() => [])                                   // bila Supabase belum terbaca, tampilkan data manual saja
+  .then(db => { DATA = gabung(db); renderChips(); render(); });
 </script>
 <script src="footer-sekolah.js"></script>
 </body>
