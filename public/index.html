@@ -37,7 +37,7 @@ nav{flex:none;display:flex;align-items:center;gap:14px;padding:8px 16px;backgrou
 .ddp a{display:block;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;color:var(--navy)}
 .ddp a:hover{background:var(--soft)}.ddp a.on{background:var(--navy);color:#fff}
 .menu a.on{background:var(--navy);color:#fff}
-.menu a:focus-visible,.brand:focus-visible,a.tile:focus-visible{outline:3px solid #1677c850}
+.menu a:focus-visible,.brand:focus-visible{outline:3px solid #1677c850}
 @media(max-width:760px){.brand span{display:none}}
 main{flex:1;position:relative;min-height:0}
 #beranda{height:100%;overflow:auto;padding:clamp(24px,6vw,64px) 16px}
@@ -45,22 +45,25 @@ main{flex:1;position:relative;min-height:0}
 .hero img{width:92px;height:92px;background:#fff;border-radius:24px;padding:9px;box-shadow:0 10px 26px #102a4325}
 h1{margin:18px 0 10px;color:var(--navy);font-size:clamp(28px,5.5vw,44px);letter-spacing:-.04em;line-height:1.1}
 .hero p{margin:0;color:var(--mute);font-size:clamp(15px,2.2vw,18px)}
-.herobg{margin:calc(-1*clamp(24px,6vw,64px)) -16px 0;padding:clamp(44px,9vw,96px) 16px clamp(96px,14vw,130px);background:linear-gradient(180deg,#102a43d9 0%,#102a4399 45%,#102a43e6 100%),url(foto-sekolah.jpg) center 62%/cover no-repeat #102a43}
+.herobg{margin:calc(-1*clamp(24px,6vw,64px)) -16px 0;padding:clamp(44px,9vw,96px) 16px clamp(44px,9vw,96px);background:linear-gradient(180deg,#102a43d9 0%,#102a4399 45%,#102a43e6 100%),url(foto-sekolah.jpg) center 62%/cover no-repeat #102a43}
 .herobg h1{color:#fff;text-shadow:0 2px 18px #0006}
 .herobg .hero p{color:#e3eefa;text-shadow:0 1px 10px #0006}
 .herobg .hero img{box-shadow:0 10px 30px #0006}
-.tiles{position:relative;z-index:1;max-width:900px;margin:clamp(-76px,-9vw,-56px) auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-a.tile{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:24px;box-shadow:0 14px 36px #102a4310;transition:border-color .18s,transform .18s}
-a.tile:hover{border-color:var(--blue);transform:translateY(-2px)}
-a.tile h2{margin:0 0 8px;color:var(--navy);font-size:20px}
-a.tile span{color:var(--mute);font-size:15px}
-.latest{max-width:900px;margin:30px auto 0}
+.latest{max-width:1000px;margin:clamp(28px,5vw,48px) auto 0}
 .latest .lh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .latest h2{margin:0;color:var(--navy);font-size:20px}
 .latest .lh a{color:var(--blue);font-weight:700;text-decoration:none;font-size:14px}
-.latest .li{display:block;margin-top:10px;padding:14px 18px;background:#fff;border:1px solid #dbe8f2;border-radius:16px;text-decoration:none;color:inherit;box-shadow:0 8px 24px #102a430d}
-.latest .li:hover{border-color:var(--blue)}
-.latest .li b{display:block;color:var(--navy)}.latest .li span{font-size:13px;color:var(--mute)}
+.latest .row{display:flex;gap:16px;overflow-x:auto;margin-top:14px;padding:4px 2px 14px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.latest .li{flex:0 0 clamp(230px,calc((100% - 32px)/3),340px);scroll-snap-align:start;display:flex;flex-direction:column;background:#fff;border:1px solid #dbe8f2;border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;box-shadow:0 8px 24px #102a430d;transition:border-color .18s,transform .18s}
+.latest .li:hover{border-color:var(--blue);transform:translateY(-2px)}
+.latest .li .ph{aspect-ratio:16/10;background:#e6f1fb;overflow:hidden}
+.latest .li .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.latest .li .ph.no{display:grid;place-items:center;background:linear-gradient(135deg,#102a43,#1677c8)}
+.latest .li .ph.no img{width:56px;height:56px;object-fit:contain;background:#fff;border-radius:14px;padding:6px}
+.latest .li .bd2{padding:12px 16px 16px;display:flex;flex-direction:column;gap:4px}
+.latest .li .kt{align-self:flex-start;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--blue);background:#e3f0fb;border-radius:99px;padding:2px 9px}
+.latest .li b{color:var(--navy);line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.latest .li .tg{font-size:13px;color:var(--mute)}
 /* ===== Footer Beranda ===== */
 footer.site{max-width:none;width:auto;margin:56px -16px calc(-1*clamp(24px,6vw,64px));background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(28px,4vw,48px) clamp(20px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
 footer.site .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
@@ -120,20 +123,11 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
     <div class="herobg"><div class="hero">
       <img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa">
       <h1>Selamat datang di SDS Islam At-Taqwa Rawamangun</h1>
-      <p>Pilih layanan di menu atas atau di bawah ini.</p>
+      <p>Pilih layanan di menu bagian atas.</p>
     </div></div>
-    <div class="tiles">
-      <a class="tile" href="#profil"><h2>Profil Sekolah</h2><span>Kenali SDS Islam At-Taqwa: identitas, akreditasi, dan informasi sekolah.</span></a>
-      <a class="tile" href="#info"><h2>Info Terbaru</h2><span>Pengumuman, agenda kegiatan, dan surat untuk orang tua dari sekolah.</span></a>
-      <a class="tile" href="#buku-tamu"><h2>Buku Tamu Sekolah</h2><span>Konfirmasi kehadiran tamu kegiatan. Panel admin tersedia di dalam halaman ini.</span></a>
-      <a class="tile" href="#kelas"><h2>Administrasi Kelas</h2><span>Untuk guru: presensi, jurnal, jadwal, tugas, dan nilai. Perlu login.</span></a>
-      <a class="tile" href="#kegiatan"><h2>Kegiatan (Panitia)</h2><span>Kelola pendaftaran kegiatan dan cek bukti transfer orang tua. Perlu PIN admin.</span></a>
-      <a class="tile" href="#ortu"><h2>Pantau Belajar Anak</h2><span>Untuk orang tua: lihat kehadiran, tugas, dan nilai anak dengan kode akses.</span></a>
-    </div>
-
     <div class="latest" id="latest" hidden>
       <div class="lh"><h2>Info terbaru dari sekolah</h2><a href="#info">Lihat semua →</a></div>
-      <div id="latestList"></div>
+      <div class="row" id="latestList"></div>
     </div>
 
     <!-- ===== FOOTER BERANDA =====
@@ -242,11 +236,16 @@ function route() {
   }
   document.title = TITLES[r];
 }
-// Cuplikan 3 info terbaru di beranda (diam-diam dilewati jika belum ada data / belum disiapkan)
-fetch('/api/info?limit=3').then(r => r.json()).then(d => {
+// Cuplikan info terbaru (kartu menyamping, dengan gambar lampiran bila ada) di beranda (diam-diam dilewati jika belum ada data / belum disiapkan)
+fetch('/api/info?limit=6').then(r => r.json()).then(d => {
   if (!d.info || !d.info.length) return;
   const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  document.getElementById('latestList').innerHTML = d.info.map(x => `<a class="li" href="#info"><b>${esc(x.judul)}</b><span>${new Date(x.tanggal_terbit + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></a>`).join('');
+  const KAT = { pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', prestasi: 'Prestasi', lainnya: 'Lainnya' };
+  document.getElementById('latestList').innerHTML = d.info.map(x => {
+    const u = /^https?:\/\//i.test(x.lampiran_url || '') && /\.(jpe?g|png|webp)(\?|$)/i.test(x.lampiran_url) ? x.lampiran_url : '';
+    const ph = u ? `<div class="ph"><img src="${esc(u)}" alt="" loading="lazy"></div>` : `<div class="ph no"><img src="logo-at-taqwa.png" alt=""></div>`;
+    return `<a class="li" href="#info">${ph}<div class="bd2"><span class="kt">${esc(KAT[x.kategori] || 'Info')}</span><b>${esc(x.judul)}</b><span class="tg">${new Date(x.tanggal_terbit + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div></a>`;
+  }).join('');
   document.getElementById('latest').hidden = false;
 }).catch(() => {});
 addEventListener('hashchange', route);
