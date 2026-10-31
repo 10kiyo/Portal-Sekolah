@@ -133,6 +133,7 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
 
 </div>
 <script src="modul-staf.js"></script>
+<script src="modul-bk.js"></script>
 <script>
 const sb = supabase.createClient("https://ejiivtioxouaeipmgsuq.supabase.co", "sb_publishable_6PtodVi8dU7Dd6JtH0g8uw_ppYbNmVl");
 const $ = s => document.querySelector(s);
@@ -146,6 +147,7 @@ const GRUP = {
   keuangan: ['Keuangan', [['transaksi', 'Kas masuk & keluar'], ['laporan', 'Laporan keuangan'], ['proposal', 'Proposal'], ['lpj', 'LPJ']]],
   persuratan: ['Persuratan', [['masuk', 'Surat masuk'], ['keluar', 'Surat keluar'], ['agenda', 'Agenda surat']]],
   sarpras: ['Sarana & prasarana', [['fasilitas', 'Kelola fasilitas']]],
+  bk: ['Bimbingan Konseling', [['bkberanda', 'Ringkasan'], ['bkcatat', 'Catat kedisiplinan'], ['bkrekap', 'Rekap & poin siswa'], ['bktindak', 'Tindak lanjut & SP'], ['bkkonsel', 'Konseling (rahasia)'], ['bkortu', 'Orang tua & surat'], ['bkkelas', 'Kelas saya'], ['bkatur', 'Pengaturan']]],
   operator: ['Operator sekolah', [['tugasop', 'Daftar pekerjaan'], ['akun', 'Akun guru & staf'], ['data', 'Data murid']]]
 };
 // Peran -> kelompok menu. "admin" melihat semuanya; "staf" (satpam, kebersihan, dll) hanya Profil.
@@ -214,7 +216,9 @@ async function loadPeran() {
       // Bila "sarpras" terlanjur jadi peran utama pada guru/pimpinan, kembalikan ke guru (wali kelas) dan jadikan tambahan.
       const sarpras = /sarpras|sarana|prasarana/i.test(data.jabatan || '');
       if (S.peran === 'sarpras' && ['guru', 'pimpinan'].includes(data.kelompok)) { S.peran = 'guru'; S.peranTambahan = [...S.peranTambahan, 'sarpras']; }
-      if (sarpras && S.peran !== 'admin' && S.peran !== 'sarpras' && !S.peranTambahan.includes('sarpras')) S.peranTambahan = [...S.peranTambahan, 'sarpras']; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; S.fotoGuru = /^https:\/\//.test(data.foto || '') ? data.foto : ''; }
+      if (sarpras && S.peran !== 'admin' && S.peran !== 'sarpras' && !S.peranTambahan.includes('sarpras')) S.peranTambahan = [...S.peranTambahan, 'sarpras'];
+      // Jabatan BK / Bimbingan / Konseling SELALU membawa menu Bimbingan Konseling (peran tambahan bk), supaya guru BK yang juga mengajar tetap punya menu Kelas.
+      if (/(^|[^a-z])bk([^a-z]|$)|bimbingan|konseling/i.test(data.jabatan || '') && S.peran !== 'admin' && S.peran !== 'bk' && !S.peranTambahan.includes('bk')) S.peranTambahan = [...S.peranTambahan, 'bk']; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; S.fotoGuru = /^https:\/\//.test(data.foto || '') ? data.foto : ''; }
   } catch (e) {}
   $('#sideNama').textContent = S.dnama || (S.prof && S.prof.nama) || 'Pengguna';
   $('#sideJab').textContent = S.jabatan || ({ guru: 'Guru', admin: 'Admin' }[S.peran] || 'Staf');

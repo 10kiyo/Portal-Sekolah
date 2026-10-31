@@ -6,7 +6,7 @@ const json = (status, body) => new Response(JSON.stringify(body), { status, head
 // Pembatas percobaan (best-effort: tersimpan di memori instance, bisa reset kapan saja).
 const tries = new Map();
 const MAX = 5, WINDOW = 10 * 60 * 1000, MAX_ALL = 60;
-const COLS = 'id,nama,kelas_id,guru_id,kelas_kelas(nama)';
+const COLS = 'id,nama,kelas_id,guru_id,guest_id,kelas_kelas(nama)';
 
 export async function onRequestPost({ request, env }) {
   const KEY = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -73,11 +73,37 @@ export async function onRequestPost({ request, env }) {
       }))).filter(Boolean);
     } catch (e) {}
 
+    // Ringkasan kedisiplinan dari modul BK (supabase-bk.sql). Hanya terlambat/atribut/pelanggaran/prestasi + tindak lanjut;
+    // catatan konseling dan catatan orang tua TIDAK pernah dikirim. Dimatikan lewat BK > Pengaturan. Gagal/tabel belum ada = dilewati.
+    let disiplin = null;
+    try {
+      const gid = (rows.find(r => r.guest_id) || {}).guest_id;
+      const peng = gid ? await get('/bk_pengaturan?kunci=eq.ortu&select=nilai') : [];
+      if (gid && (!peng[0] || !peng[0].nilai || peng[0].nilai.tampil !== false)) {
+        const hari = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10), y = +hari.slice(0, 4), m = +hari.slice(5, 7);
+        const ganjil = m >= 7, sem = ganjil ? `${y}/${y + 1} Ganjil` : `${y - 1}/${y} Genap`;
+        const a = ganjil ? `${y}-07-01` : `${y}-01-01`, b = ganjil ? `${y}-12-31` : `${y}-06-30`, g = encodeURIComponent(gid);
+        const [cs, ts] = await Promise.all([
+          get(`/bk_catatan?guest_id=eq.${g}&tanggal=gte.${a}&tanggal=lte.${b}&select=tanggal,kategori,jenis_nama,poin&order=tanggal.desc&limit=200`),
+          get(`/bk_tindak?guest_id=eq.${g}&semester=eq.${encodeURIComponent(sem)}&select=tanggal,tingkat&order=tanggal.desc`)
+        ]);
+        const LBL = { teguran: 'Teguran lisan', sp1: 'Surat Peringatan 1', sp2: 'Surat Peringatan 2', sp3: 'Surat Peringatan 3', panggil_ortu: 'Panggilan orang tua', skorsing: 'Skorsing', lainnya: 'Tindak lanjut' };
+        disiplin = {
+          semester: sem,
+          poin: cs.filter(c => c.kategori !== 'prestasi').reduce((t, c) => t + c.poin, 0),
+          prestasi: cs.filter(c => c.kategori === 'prestasi').reduce((t, c) => t + c.poin, 0),
+          riwayat: cs.map(c => ({ tanggal: c.tanggal, kategori: c.kategori, jenis: c.jenis_nama, poin: c.poin })),
+          tindak: ts.map(t => ({ tanggal: t.tanggal, tingkat: LBL[t.tingkat] || 'Tindak lanjut' }))
+        };
+      }
+    } catch (e) {}
+
     return json(200, {
       nama: rows[0].nama,
       kelas: [...new Set(rows.map(r => r.kelas_kelas && r.kelas_kelas.nama).filter(Boolean))].join(', '),
       kehadiran: presensi.filter(p => p.kelas_pertemuan).map(p => ({ tanggal: p.kelas_pertemuan.tanggal, status: p.status }))
         .sort((a, b) => b.tanggal.localeCompare(a.tanggal)),
+      disiplin,
       adaWalas: wali.length > 0, walas: wali.length ? gn[wali[0].guru_id] || '' : '',
       karya,
       tugas: tugas.map(x => ({

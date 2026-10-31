@@ -170,6 +170,17 @@ async function cari() {
   finally { b.disabled = false; }
 }
 
+const KATD = { terlambat: ['Terlambat', 'warn'], atribut: ['Atribut', 'warn'], pelanggaran: ['Pelanggaran', 'bad'], prestasi: ['Prestasi', 'ok'] };
+function disiplinKartu(x) {
+  const n = k => x.riwayat.filter(r => r.kategori === k).length;
+  if (!x.riwayat.length && !x.tindak.length) return `<div class="card"><h3>Kedisiplinan <span class="mut" style="font-weight:600">· semester ${esc(x.semester)}</span></h3><div class="mut">Belum ada catatan kedisiplinan semester ini.</div></div>`;
+  return `<div class="card"><h3>Kedisiplinan <span class="mut" style="font-weight:600">· semester ${esc(x.semester)}</span></h3>
+    <div class="stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">${[['terlambat', 'Terlambat'], ['atribut', 'Atribut'], ['pelanggaran', 'Pelanggaran'], ['prestasi', 'Prestasi']].map(([k, l]) => `<div><b>${n(k)}</b><span>${l}</span></div>`).join('')}</div>
+    <div class="mut" style="margin-bottom:8px">Poin pelanggaran semester ini: <b>${x.poin}</b>${x.prestasi ? ' · poin prestasi: <b>+' + x.prestasi + '</b>' : ''}</div>
+    ${x.tindak.length ? `<div style="margin-bottom:8px">${x.tindak.map(t => `<span class="pill bad">${esc(t.tingkat)} · ${tgl(t.tanggal)}</span>`).join(' ')}</div>` : ''}
+    <details><summary>Lihat rincian (${x.riwayat.length})</summary><table style="margin-top:6px"><tr><th>Tanggal</th><th>Jenis</th><th>Poin</th></tr>${x.riwayat.map(r => `<tr><td>${tgl(r.tanggal)}</td><td><span class="pill ${KATD[r.kategori][1]}">${KATD[r.kategori][0]}</span> ${esc(r.jenis)}</td><td>${r.kategori === 'prestasi' ? '+' : ''}${r.poin}</td></tr>`).join('')}</table></details>
+    <div class="mut" style="margin-top:8px">Untuk pertanyaan atau konsultasi, silakan hubungi guru BK.</div></div>`;
+}
 function tampil(d) {
   const c = { H: 0, I: 0, S: 0, A: 0 }; d.kehadiran.forEach(k => c[k.status]++);
   const total = d.kehadiran.length, kelas = /^kelas/i.test(d.kelas || '') ? d.kelas : 'Kelas ' + (d.kelas || '-');
@@ -190,6 +201,7 @@ function tampil(d) {
     <div class="mut">${total ? 'Hadir ' + Math.round(c.H / total * 100) + '% dari ' + total + ' pertemuan. Ketuk angka untuk melihat tanggalnya.' : (d.adaWalas ? 'Belum ada data kehadiran.' : 'Rekap kehadiran dari wali kelas belum tersedia.')}</div>
     <div id="tglbox" class="hidden" style="margin-top:10px"></div>
   </div>
+  ${d.disiplin ? disiplinKartu(d.disiplin) : ''}
   ${d.karya && d.karya.length ? `<div class="card"><h3>Karya anak</h3><div class="gal">${d.karya.map(k => `<a href="${esc(k.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(k.url)}" alt="Karya: ${esc(k.judul)}"><span>${esc(k.judul)}</span></a>`).join('')}</div></div>` : ''}
   ${d.tugas.length ? grup(d.tugas) : '<div class="card"><h3>Tugas dan nilai</h3><div class="mut">Belum ada tugas.</div></div>'}`;
   document.querySelectorAll('.stats button').forEach(b => b.onclick = () => {

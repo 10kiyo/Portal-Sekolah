@@ -128,3 +128,25 @@ FASILITAS SEKOLAH (halaman publik, dikelola Waka SarPras / Pak Mahidin)
 3. Pengelolaan: Pak Mahidin login di Administrasi Guru dan Staf > menu "Sarana & prasarana > Kelola fasilitas": tambah/edit, foto banyak (foto pertama = sampul),
    urutan naik/turun, sembunyikan/tampilkan, hapus. Kondisi (baik/perlu perbaikan/sedang diperbaiki) hanya catatan internal, tidak tampil ke publik.
 4. Halaman publik: menu Profil > Fasilitas (#fasilitas), ada pencarian dan filter kategori, klik kartu untuk galeri foto. Perubahan tampil maks. ~1 menit.
+
+BIMBINGAN KONSELING (BK): kedisiplinan + poin + SP, konseling rahasia, orang tua, kelas per guru BK
+1. Supabase > SQL Editor: jalankan supabase-bk.sql (SETELAH supabase-fasilitas.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah peran 'bk', tabel bk_kelas, bk_jenis, bk_catatan, bk_tindak, bk_konseling, bk_ortu, bk_pengaturan (semua RLS: hanya peran bk/admin),
+   data awal jenis pelanggaran + poin (contoh SD) dan ambang poin. Jangan jalankan ulang supabase-fasilitas.sql / supabase-peran.sql sesudahnya.
+2. File baru/diganti (struktur sama):
+   BARU    : supabase-bk.sql, public/modul-bk.js
+   DIGANTI : public/kelas.html (memuat modul-bk.js, menu BK, jabatan BK -> menu otomatis), public/modul-staf.js (daftar peran memuat 'bk'),
+             public/ortu.html + functions/api/ortu-lookup.js (kartu Kedisiplinan di Pantau Belajar Anak). src/worker.js TIDAK berubah.
+3. Dua guru BK: keduanya mengajar di kelas, jadi peran utama tetap 'guru' dan peran TAMBAHAN 'bk'. Otomatis bila jabatannya memuat "BK",
+   "Bimbingan", atau "Konseling". Bila tidak: Administrasi Guru dan Staf > Akun guru & staf > centang "bk" pada Peran tambahan guru tsb.
+   Mereka membuka ulang halaman agar menu "Bimbingan Konseling" muncul di samping menu Kelas.
+4. Tiap guru BK: menu BK > Kelas saya > centang kelas yang ditangani > Simpan. Satu kelas boleh dipegang dua guru (diberi tanda).
+   Menu lain menampilkan murid dari kelas itu; kotak "Tampilkan semua kelas" menampilkan semuanya (saling menggantikan saat berhalangan).
+5. Alur: Catat kedisiplinan (pilih kategori, kelas, jenis, centang banyak murid sekaligus) > poin terkumpul per semester (Jul-Des Ganjil, Jan-Jun Genap)
+   > bila mencapai ambang muncul di Tindak lanjut & SP > klik Catat, cetak Surat Peringatan (PDF lewat dialog cetak browser).
+   Konseling: catatan rahasia, hanya akun BK. Orang tua & surat: catatan panggilan/home visit, cetak surat panggilan & surat kesepakatan.
+6. BK > Pengaturan (dipakai bersama): ambang poin (awal: teguran 5, SP1 10, SP2 20, SP3 30), nama/NIP kepala sekolah untuk surat,
+   daftar jenis + bobot poin (SESUAIKAN dengan tata tertib sekolah), dan saklar menampilkan ringkasan kedisiplinan ke orang tua.
+7. Orang tua melihat kartu "Kedisiplinan" (jumlah, poin, tindak lanjut, rincian) di Pantau Belajar Anak. Konseling & catatan orang tua tidak pernah dikirim.
+   Matikan lewat BK > Pengaturan bila belum ingin ditampilkan.
+8. Belum termasuk: pengajuan konseling oleh murid, integrasi presensi guru kelas (data alpa milik tiap guru), notifikasi WhatsApp, audit log.

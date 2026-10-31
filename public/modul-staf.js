@@ -633,7 +633,7 @@ MODUL.agenda = async function (bln) {
 };
 
 /* ================= OPERATOR ================= */
-const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'staf'];
+const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'bk', 'staf'];
 MODUL.akun = async function () {
   const rows = await run(sb.from('guru_staf').select('id,nama,jabatan,kelompok,peran,peran_tambahan,username,pin,aktif,auth_user_id').order('nama'));
   let lihat = false;
