@@ -9,6 +9,7 @@ import * as ortuKegiatan from '../functions/api/ortu-kegiatan.js';
 import * as adminKegiatan from '../functions/api/admin-kegiatan.js';
 import * as info from '../functions/api/info.js';
 import * as adminInfo from '../functions/api/admin-info.js';
+import * as youtube from '../functions/api/youtube.js';
 
 const routes = {
   '/api/admin-auth': adminAuth,
@@ -19,7 +20,8 @@ const routes = {
   '/api/ortu-kegiatan': ortuKegiatan,
   '/api/admin-kegiatan': adminKegiatan,
   '/api/info': info,
-  '/api/admin-info': adminInfo
+  '/api/admin-info': adminInfo,
+  '/api/youtube': youtube
 };
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 

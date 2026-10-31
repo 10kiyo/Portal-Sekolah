@@ -37,7 +37,7 @@ nav{flex:none;display:flex;align-items:center;gap:14px;padding:8px 16px;backgrou
 .ddp a{display:block;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;color:var(--navy)}
 .ddp a:hover{background:var(--soft)}.ddp a.on{background:var(--navy);color:#fff}
 .menu a.on{background:var(--navy);color:#fff}
-.menu a:focus-visible,.brand:focus-visible{outline:3px solid #1677c850}
+.menu a:focus-visible,.brand:focus-visible,.pr a:focus-visible,.latest .li:focus-visible{outline:3px solid #1677c850}
 @media(max-width:760px){.brand span{display:none}}
 main{flex:1;position:relative;min-height:0}
 #beranda{height:100%;overflow:auto;padding:clamp(24px,6vw,64px) 16px}
@@ -64,6 +64,27 @@ h1{margin:18px 0 10px;color:var(--navy);font-size:clamp(28px,5.5vw,44px);letter-
 .latest .li .kt{align-self:flex-start;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--blue);background:#e3f0fb;border-radius:99px;padding:2px 9px}
 .latest .li b{color:var(--navy);line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .latest .li .tg{font-size:13px;color:var(--mute)}
+.sb{max-width:1000px;margin:clamp(28px,5vw,48px) auto 0;display:grid;grid-template-columns:auto 1fr;gap:clamp(16px,3vw,32px);align-items:center;background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:clamp(18px,3.5vw,30px);box-shadow:0 12px 30px #102a4310}
+.sb.nofoto{grid-template-columns:1fr}
+.sb img{width:clamp(120px,18vw,172px);aspect-ratio:3/4;object-fit:cover;border-radius:16px;background:var(--soft)}
+.sb h2{margin:0 0 10px;color:var(--navy);font-size:clamp(20px,3vw,24px);letter-spacing:-.02em}
+.sb p{margin:0 0 10px;line-height:1.7;font-size:clamp(15px,2vw,17px)}
+.sb .by{margin-top:14px;font-weight:800;color:var(--navy)}.sb .by span{display:block;font-weight:400;color:var(--mute);font-size:14px}
+@media(max-width:560px){.sb{grid-template-columns:1fr;text-align:center}.sb img{margin:0 auto}}
+.sec{max-width:1000px;margin:clamp(30px,5vw,52px) auto 0}
+.sec .lh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec h2{margin:0;color:var(--navy);font-size:20px}
+.sec .lh a{color:var(--blue);font-weight:700;text-decoration:none;font-size:14px}
+.yt{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:14px}
+.yt .v{background:#fff;border:1px solid #dbe8f2;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px #102a430d}
+.yt .fr{position:relative;aspect-ratio:16/9;background:#102a43}
+.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.yt .t{padding:10px 14px 14px;font-weight:700;font-size:14px;line-height:1.35;color:var(--navy);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pr{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;margin-top:14px}
+.pr a{position:relative;display:block;aspect-ratio:4/5;border-radius:18px;overflow:hidden;background:var(--soft);border:1px solid #dbe8f2;box-shadow:0 8px 24px #102a430d;transition:transform .18s,border-color .18s}
+.pr a:hover{transform:translateY(-3px);border-color:var(--blue)}
+.pr img{width:100%;height:100%;object-fit:cover;display:block}
+.pr span{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 11px;color:#fff;font-weight:700;font-size:13px;line-height:1.3;background:linear-gradient(to top,#102a43e6,#102a4300);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 /* ===== Footer Beranda ===== */
 footer.site{max-width:none;width:auto;margin:56px -16px calc(-1*clamp(24px,6vw,64px));background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(28px,4vw,48px) clamp(20px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
 footer.site .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
@@ -123,12 +144,28 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
     <div class="herobg"><div class="hero">
       <img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa">
       <h1>Selamat datang di SDS Islam At-Taqwa Rawamangun</h1>
-      <p>Pilih layanan di menu bagian atas.</p>
     </div></div>
+    <!-- ===== SAMBUTAN KEPALA SEKOLAH =====
+         Ubah teks di blok SAMBUTAN (script di bawah). Foto: simpan sebagai public/foto-kepala-sekolah.jpg (jika tidak ada, tampil tanpa foto). -->
+    <section class="sb" id="sambutan" hidden>
+      <img src="foto-kepala-sekolah.jpg" alt="" onerror="this.parentNode.classList.add('nofoto');this.remove()">
+      <div><h2 id="sbJudul"></h2><div id="sbIsi"></div><div class="by" id="sbBy"></div></div>
+    </section>
+
     <div class="latest" id="latest" hidden>
       <div class="lh"><h2>Info terbaru dari sekolah</h2><a href="#info">Lihat semua →</a></div>
       <div class="row" id="latestList"></div>
     </div>
+
+    <section class="sec" id="video" hidden>
+      <div class="lh"><h2>Video terbaru</h2><a href="https://www.youtube.com/@sdiattaqwa2688" target="_blank" rel="noopener">Kanal YouTube →</a></div>
+      <div class="yt" id="ytList"></div>
+    </section>
+
+    <section class="sec" id="prestasi" hidden>
+      <div class="lh"><h2>Prestasi siswa</h2><a href="#info/prestasi">Lihat semua →</a></div>
+      <div class="pr" id="prList"></div>
+    </section>
 
     <!-- ===== FOOTER BERANDA =====
          Edit teks/tautan di bawah sesuai kebutuhan. Bagian bertanda (isi ...) adalah contoh yang perlu diganti. -->
@@ -217,8 +254,12 @@ addEventListener('resize', ddClose);
 addEventListener('blur', ddClose);                       // klik ke dalam iframe
 document.querySelector('.menu').addEventListener('scroll', ddClose);
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, KATS = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'];
 function route() {
-  let r = location.hash.slice(1) || 'beranda';
+  const [r0, seg = ''] = (location.hash.slice(1) || 'beranda').split('/');
+  let r = r0;
+  // #info/<id> membuka info tertentu, #info/prestasi membuka daftar berkategori prestasi
+  const q = r === 'info' ? (UUID.test(seg) ? '?id=' + seg : KATS.includes(seg) ? '?kat=' + seg : '') : '';
   const admin = r === 'admin';            // tautan lama /#admin tetap dikenali
   if (admin) r = 'buku-tamu';
   if (r !== 'beranda' && !PAGES[r]) r = 'beranda';
@@ -232,7 +273,8 @@ function route() {
     const f = document.getElementById('f-' + k);
     f.hidden = k !== r;
     // halaman dimuat sekali saat pertama dibuka, lalu dipertahankan (login dan isian tidak hilang)
-    if (k === r && (!f.getAttribute('src') || admin)) f.src = PAGES[k] + (admin ? '?t=' + Date.now() + '#admin' : '');
+    const qk = k === 'info' ? q : '';
+    if (k === r && (!f.getAttribute('src') || admin || f.dataset.q !== qk)) { f.dataset.q = qk; f.src = PAGES[k] + qk + (admin ? '?t=' + Date.now() + '#admin' : ''); }
   }
   document.title = TITLES[r];
 }
@@ -244,9 +286,38 @@ fetch('/api/info?limit=6').then(r => r.json()).then(d => {
   document.getElementById('latestList').innerHTML = d.info.map(x => {
     const u = /^https?:\/\//i.test(x.lampiran_url || '') && /\.(jpe?g|png|webp)(\?|$)/i.test(x.lampiran_url) ? x.lampiran_url : '';
     const ph = u ? `<div class="ph"><img src="${esc(u)}" alt="" loading="lazy"></div>` : `<div class="ph no"><img src="logo-at-taqwa.png" alt=""></div>`;
-    return `<a class="li" href="#info">${ph}<div class="bd2"><span class="kt">${esc(KAT[x.kategori] || 'Info')}</span><b>${esc(x.judul)}</b><span class="tg">${new Date(x.tanggal_terbit + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div></a>`;
+    return `<a class="li" href="#info${UUID.test(x.id) ? '/' + x.id : ''}">${ph}<div class="bd2"><span class="kt">${esc(KAT[x.kategori] || 'Info')}</span><b>${esc(x.judul)}</b><span class="tg">${new Date(x.tanggal_terbit + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div></a>`;
   }).join('');
   document.getElementById('latest').hidden = false;
+}).catch(() => {});
+
+// ===== Sambutan Kepala Sekolah (samakan dengan sambutan di profil.html bila diubah) =====
+const SAMBUTAN = { judul: 'Sambutan Kepala Sekolah', nama: 'Ibu Nurbaiti, S.Pd.', jabatan: 'Kepala Sekolah',
+  isi: ['Semoga anak At-Taqwa menjadi anak yang cerdas, sehat, sukses bertaqwa'] };
+(() => {
+  const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  document.getElementById('sbJudul').textContent = SAMBUTAN.judul;
+  document.getElementById('sbIsi').innerHTML = SAMBUTAN.isi.map(t => `<p>${esc(t)}</p>`).join('');
+  document.getElementById('sbBy').innerHTML = SAMBUTAN.nama ? `${esc(SAMBUTAN.nama)}<span>${esc(SAMBUTAN.jabatan)}</span>` : '';
+  document.getElementById('sambutan').hidden = !SAMBUTAN.isi.length;
+})();
+
+// ===== Video terbaru YouTube (otomatis dari /api/youtube; disembunyikan bila gagal) =====
+fetch('/api/youtube').then(r => r.json()).then(d => {
+  const v = (d.videos || []).filter(x => /^[\w-]{11}$/.test(x.id));
+  if (!v.length) return;
+  const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  document.getElementById('ytList').innerHTML = v.map(x => `<div class="v"><div class="fr"><iframe src="https://www.youtube-nocookie.com/embed/${x.id}" title="${esc(x.judul)}" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div><div class="t">${esc(x.judul)}</div></div>`).join('');
+  document.getElementById('video').hidden = false;
+}).catch(() => {});
+
+// ===== Foto prestasi: dari lampiran gambar info berkategori Prestasi, tertaut ke info terkait =====
+fetch('/api/info?kategori=prestasi&limit=24').then(r => r.json()).then(d => {
+  const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const rows = (d.info || []).filter(x => UUID.test(x.id) && /^https?:\/\//i.test(x.lampiran_url || '') && /\.(jpe?g|png|webp)(\?|$)/i.test(x.lampiran_url)).slice(0, 8);
+  if (!rows.length) return;
+  document.getElementById('prList').innerHTML = rows.map(x => `<a href="#info/${x.id}" title="${esc(x.judul)}"><img src="${esc(x.lampiran_url)}" alt="${esc(x.judul)}" loading="lazy"><span>${esc(x.judul)}</span></a>`).join('');
+  document.getElementById('prestasi').hidden = false;
 }).catch(() => {});
 addEventListener('hashchange', route);
 route();

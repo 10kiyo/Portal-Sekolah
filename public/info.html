@@ -39,6 +39,7 @@ h2{margin:0;color:var(--navy);font-size:18px}
 .lamp-img{max-width:100%;max-height:420px;display:block;margin-top:12px;border-radius:12px;border:1px solid var(--line)}
 .empty{text-align:center;color:var(--mute);padding:28px 0}
 .foot{margin-top:24px;text-align:center;font-size:13px}.foot a{color:var(--mute)}
+.post.hl{border-color:var(--blue);box-shadow:0 0 0 4px #1677c826,0 12px 30px #102a4310}
 .emb .wrap{padding-top:12px}
 </style>
 </head>
@@ -70,6 +71,8 @@ const KAT = { semua: 'Semua', pengumuman: 'Pengumuman', agenda: 'Agenda', surat:
 if (self !== top) document.body.classList.add('emb');
 
 let DATA = [], TODAY = '', kat = 'semua';
+const QS = new URLSearchParams(location.search), FOKUS = QS.get('id') || '';
+if (QS.get('kat') && KAT[QS.get('kat')]) kat = QS.get('kat');
 
 function render() {
   const q = $('#q').value.trim().toLowerCase();
@@ -78,7 +81,7 @@ function render() {
     const lamp = x.lampiran_url && /^https?:\/\//.test(x.lampiran_url) ? x.lampiran_url : '';
     const isImg = /\.(jpe?g|png|webp)(\?|$)/i.test(lamp);
     const long = (x.isi || '').length > 280 || (x.isi || '').split('\n').length > 5;
-    return `<article class="card post">
+    return `<article class="card post" data-id="${esc(x.id)}">
       <div class="meta"><span class="pill ${esc(x.kategori)}">${esc(KAT[x.kategori] || 'Info')}</span>${x.sematkan ? '<span class="pin">📌 Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div>
       <h3>${esc(x.judul)}</h3>
       ${x.tanggal_agenda ? `<div class="meta">🗓 ${tgl(x.tanggal_agenda)}${x.lokasi ? ' · ' + esc(x.lokasi) : ''}</div>` : (x.lokasi ? `<div class="meta">📍 ${esc(x.lokasi)}</div>` : '')}
@@ -110,9 +113,16 @@ function renderAgenda() {
 }
 
 $('#q').oninput = render;
-fetch('/api/info').then(r => r.json()).then(d => {
+fetch('/api/info?limit=200').then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
-  DATA = d.info; TODAY = d.today; renderAgenda(); renderChips(); render();
+  DATA = d.info; TODAY = d.today;
+  const f = FOKUS && DATA.find(x => x.id === FOKUS);
+  if (f) kat = 'semua';
+  renderAgenda(); renderChips(); render();
+  if (f) {                                  // dibuka dari beranda: tampilkan info yang dituju, isi lengkap
+    const el = document.querySelector(`article[data-id="${CSS.escape(f.id)}"]`);
+    if (el) { el.classList.add('hl'); const t = el.querySelector('.isi'); if (t) t.classList.remove('cut'); const b = el.querySelector('.more'); if (b) b.textContent = 'Tutup'; el.scrollIntoView({ block: 'start' }); }
+  }
 }).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat info.')}</div>`; });
 </script>
 </body>
