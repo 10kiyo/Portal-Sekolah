@@ -18,9 +18,10 @@ const akhirBulan = b => { const [y, m] = b.split('-').map(Number); return new Da
 const BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const namaBulan = b => { const [y, m] = b.split('-').map(Number); return BLN[m - 1] + ' ' + y; };
 
+// Murid = baris daftar tamu berjenis "Orang Tua/Wali Siswa" (nama = nama murid, instansi_kelas = kelas), sama seperti impor murid di menu Guru.
 let _siswa = null;
 async function dataSiswa() {
-  if (!_siswa) _siswa = (await allGuests()).filter(x => x.guest_name && /siswa|murid|anak/i.test(x.jenis_undangan || '') && !/orang ?tua|wali/i.test(x.jenis_undangan || ''));
+  if (!_siswa) _siswa = (await allGuests()).filter(x => x.guest_name && /siswa|murid|anak/i.test(x.jenis_undangan || ''));
   return _siswa;
 }
 const kelasDari = g => [...new Set(g.map(x => String(x.instansi_kelas || '').trim()).filter(Boolean))].sort(urut);

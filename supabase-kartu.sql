@@ -29,14 +29,13 @@ drop trigger if exists murid_profil_ubah_trg on murid_profil;
 create trigger murid_profil_ubah_trg before update on murid_profil
   for each row execute function murid_profil_ubah();
 
--- 2) Isi awal: satu baris kosong untuk setiap murid di database (aturan sama dengan menu Kartu pelajar).
+-- 2) Isi awal: satu baris kosong untuk setiap murid di database (aturan sama dengan menu Kartu pelajar; aman dijalankan ulang).
 insert into murid_profil (guest_id, nama_ref)
 select distinct on (guest_id::text) guest_id::text, btrim(guest_name)
 from daftar_tamu_gabungan
 where guest_id is not null
   and btrim(coalesce(guest_name, '')) <> ''
-  and jenis_undangan ~* 'siswa|murid|anak'
-  and jenis_undangan !~* 'orang ?tua|wali'
+  and jenis_undangan ~* 'siswa|murid|anak'      -- termasuk "Orang Tua/Wali Siswa" (nama di baris itu = nama murid)
 order by guest_id::text
 on conflict (guest_id) do nothing;
 
