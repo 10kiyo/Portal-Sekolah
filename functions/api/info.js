@@ -1,8 +1,24 @@
 // Cloudflare Worker route: GET /api/info  (publik, hanya info yang berstatus terbit)
 // Query opsional: ?limit=3&kategori=prestasi&jenis=ekskul   (jenis: ekskul | club | unggulan)
+// Cache 60 detik: di browser (Cache-Control) DAN bersama di Cloudflare (Cache API), sehingga ramai pengunjung hanya memicu
+// ~1 permintaan ke Supabase per menit per variasi query. Info baru yang diterbitkan admin muncul paling lambat 60 detik kemudian.
 import { json, cfg, dbGet, hariIni, fase, terpakaiMap } from '../_lib/util.js';
 
-export async function onRequestGet({ request, env }) {
+const TTL = 60;
+const ok = body => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${TTL}` } });
+
+export async function onRequestGet({ request, env, ctx }) {
+  // Kunci cache hanya memakai parameter yang dikenal (parameter acak tidak bisa menembus cache).
+  const u = new URL(request.url), kunci = new URL(u.origin + u.pathname);
+  ['limit', 'kategori', 'jenis'].forEach(k => { if (u.searchParams.get(k)) kunci.searchParams.set(k, u.searchParams.get(k)); });
+  const cache = typeof caches !== 'undefined' ? caches.default : null, key = new Request(kunci.toString(), { method: 'GET' });
+  if (cache) { try { const hit = await cache.match(key); if (hit) return hit; } catch (e) { /* lanjut tanpa cache */ } }
+  const res = await ambil(request, env);
+  if (cache && res.status === 200) { try { const p = cache.put(key, res.clone()); ctx && ctx.waitUntil ? ctx.waitUntil(p) : await p; } catch (e) { /* abaikan */ } }
+  return res;
+}
+
+async function ambil(request, env) {
   const c = cfg(env);
   if (!c) return json(500, { error: 'SUPABASE_SERVICE_ROLE_KEY belum diatur.' });
   const lim = Math.min(Math.max(parseInt(new URL(request.url).searchParams.get('limit')) || 100, 1), 1000);
@@ -27,10 +43,10 @@ export async function onRequestGet({ request, env }) {
     let rows;
     try { rows = await dbGet(c)(`${base}${fj}${urut}&select=${kol},jenis_kegiatan`); }
     catch (e) {                                   // kolom jenis_kegiatan belum ada (supabase-jurnal.sql belum dijalankan)
-      if (fj) return json(200, { today, info: [], pendaftaran: [] });
+      if (fj) return ok({ today, info: [], pendaftaran: [] });
       rows = await dbGet(c)(`${base}${urut}&select=${kol}`);
     }
-    return json(200, { today, info: rows, pendaftaran: fj ? [] : await pendaftaran() });
+    return ok({ today, info: rows, pendaftaran: fj ? [] : await pendaftaran() });
   } catch (e) {
     return json(500, { error: 'Data info belum bisa dibaca. Pastikan supabase-info.sql sudah dijalankan.' });
   }
