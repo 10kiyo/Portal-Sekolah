@@ -186,3 +186,8 @@ VERIFIKASI JURNAL MURID UNTUK PERAN ADMIN INFO + GALERI BERANDA BERJALAN
    Kelola Info & Galeri dan bisa menyetujui / minta revisi / menolak / menghapus jurnal tanpa PIN admin. Jalur PIN di /#info-admin tetap berfungsi.
 4. Beranda: bagian "Prestasi siswa" kini berjalan otomatis (marquee). Berhenti saat kursor di atasnya / layar disentuh; klik foto membuka lightbox
    seperti sebelumnya. Pengguna dengan pengaturan "kurangi gerakan" mendapat baris yang bisa digeser manual.
+
+HAPUS LOGIN EMAIL + AKUN GURU LAMA BERBASIS EMAIL
+1. public/kelas.html (DIGANTI): tombol/form "Masuk dengan email" dihapus; hanya username + PIN.
+2. Pembersihan data di Supabase: buka supabase-hapus-akun-email.sql di SQL Editor. BACKUP dulu. Jalankan Bagian 1 (pratinjau akun & jumlah baris),
+   isi daftar "pertahankan" bila perlu (mis. email admin utama), lalu jalankan Bagian 2. Akun username+PIN (@guru.at-taqwa.sch.id) dan tabel guru_staf tidak dihapus.

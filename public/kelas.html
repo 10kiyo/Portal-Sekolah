@@ -96,11 +96,7 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
     <label for="un">Username</label><input id="un" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="contoh: eki.yogawanto">
     <label for="pinIn" style="margin-top:10px">PIN</label><input id="pinIn" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="6 angka">
   </div>
-  <div id="fMail" class="hidden">
-    <label for="em">Email</label><input id="em" type="email" autocomplete="username">
-    <label for="pw" style="margin-top:10px">Kata sandi</label><input id="pw" type="password" autocomplete="current-password">
-  </div>
-  <p><button class="p" id="btnLogin">Masuk</button> <button id="btnMode" type="button">Masuk dengan email</button></p>
+  <p><button class="p" id="btnLogin">Masuk</button></p>
   <div id="loginMsg" class="msg err"></div>
 </div>
 
@@ -172,19 +168,12 @@ async function boot() {
   const { data } = await sb.auth.getSession();
   data.session ? start() : ($('#login').classList.remove('hidden'), $('#app').classList.add('hidden'));
 }
-let modeMail = false;
-$('#btnMode').onclick = () => {
-  modeMail = !modeMail; $('#loginMsg').textContent = '';
-  $('#fUser').classList.toggle('hidden', modeMail); $('#fMail').classList.toggle('hidden', !modeMail);
-  $('#btnMode').textContent = modeMail ? 'Masuk dengan username' : 'Masuk dengan email';
-};
 $('#btnLogin').onclick = async () => {
   const bad = t => { $('#loginMsg').textContent = t; };
   bad(''); $('#btnLogin').disabled = true;
   try {
     let email, password;
-    if (modeMail) { email = $('#em').value.trim(); password = $('#pw').value; }
-    else {
+    {
       const username = $('#un').value.trim(), pin = $('#pinIn').value.trim();
       if (!username || !pin) return bad('Isi username dan PIN.');
       let r, d = {};
@@ -194,11 +183,11 @@ $('#btnLogin').onclick = async () => {
       email = d.email; password = pin;
     }
     const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) return bad(modeMail ? 'Email atau kata sandi salah.' : 'Username atau PIN salah.');
-    $('#pw').value = ''; $('#pinIn').value = ''; $('#login').classList.add('hidden'); start();
+    if (error) return bad('Username atau PIN salah.');
+    $('#pinIn').value = ''; $('#login').classList.add('hidden'); start();
   } finally { $('#btnLogin').disabled = false; }
 };
-$('#pw').onkeydown = e => { if (e.key === 'Enter') $('#btnLogin').click(); };
+$('#un').onkeydown = e => { if (e.key === 'Enter') $('#btnLogin').click(); };
 $('#pinIn').onkeydown = e => { if (e.key === 'Enter') $('#btnLogin').click(); };
 $('#btnOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
