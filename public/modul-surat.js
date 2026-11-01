@@ -39,8 +39,7 @@ function suratBaru(jenis) {
   return { id: null, jenis, tanggal: tgl, nomor: nomorSurat(c, _sr.rows, tgl), nomorManual: false, kota: c.kota, lampiran: '-',
     hal: J.hal, kepada: J.kepada, pengantar: J.pengantar,
     butir: JSON.parse(JSON.stringify(J.butir)), rincian: JSON.parse(JSON.stringify(J.rincian)),
-    ukuran: 'auto', ttdJabatan: c.ttd.jabatan, ttdNama: c.ttd.nama, ttdNip: c.ttd.nip,
-    ttdImg: '', stempelImg: '', tembusanOn: J.bukaTembusan, tembusan: c.tembusan };
+    ukuran: 'auto', tembusanOn: J.bukaTembusan, tembusan: c.tembusan };
 }
 
 // HTML surat siap cetak (dipakai pratinjau & cetak). Ukuran A4, margin diatur di @page.
@@ -53,7 +52,7 @@ function htmlSurat(D, cfg) {
   }).join('');
   const rinci = D.rincian.filter(r => (r.k || '').trim() || (r.v || '').trim()).map(r => `<tr><td>${esc(r.k)}</td><td>:</td><td>${tebalMiring(r.v)}</td></tr>`).join('');
   const tem = baris(D.tembusan), tgl = tglPanjang(D.tanggal);
-  const kepsek = /^kepala sekolah/i.test((D.ttdJabatan || '').trim()) && !D.ttdImg && !D.stempelImg;   // otomatis: tanda tangan + stempel Kepala Sekolah
+  const kepsek = true;   // penandatangan selalu Kepala Sekolah: tanda tangan + stempel terpasang otomatis
   const auto = !D.ukuran || D.ukuran === 'auto', pt = auto ? 12 : (Number(D.ukuran) || 12);
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc((D.nomor || 'Surat').replace(/\//g, '-'))}</title><style>
 @page{size:A4;margin:14mm 20mm 16mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}@media screen{body{padding:14mm 20mm 16mm;min-height:297mm}}
@@ -77,38 +76,35 @@ ${rinci ? `<table class="rin">${rinci}</table>` : ''}
 ${butir ? `<ol>${butir}</ol>` : ''}
 <p class="ind">${tebalMiring(cfg.penutup)}</p>
 <p class="salam">${esc(cfg.salamTutup)}</p>
-<div class="ttd"><div>${esc(D.ttdJabatan)},</div><div class="ruang">${kepsek ? `<img class="kp" src="${location.origin}/ttd-kepsek.png" alt="">` : ''}${D.stempelImg ? `<img class="st" src="${D.stempelImg}" alt="">` : ''}${D.ttdImg ? `<img class="tt" src="${D.ttdImg}" alt="">` : ''}</div>
-<div><b>${esc(D.ttdNama)}</b></div>${D.ttdNip ? `<div>NIP/NIY. ${esc(D.ttdNip)}</div>` : ''}</div>
+<div class="ttd"><div>${esc(cfg.ttd.jabatan)},</div><div class="ruang">${kepsek ? `<img class="kp" src="${location.origin}/ttd-kepsek.png" alt="">` : ''}</div>
+<div><b>${esc(cfg.ttd.nama)}</b></div>${cfg.ttd.nip ? `<div>NIP/NIY. ${esc(cfg.ttd.nip)}</div>` : ''}</div>
 ${D.tembusanOn && tem.length ? `<div class="tem"><i>Tembusan :</i><ol>${tem.map(t => `<li><i>${esc(t)}</i></li>`).join('')}</ol></div>` : ''}
 ${auto ? `<script>(function(){var f=12;function h(){document.body.style.fontSize=f+'pt';return document.body.offsetHeight}while(f>10&&h()>1124){f-=.25}h()})()</script>` : ''}
 </body></html>`;
 }
 
-// Gambar tanda tangan / stempel: dikecilkan lalu disimpan sebagai PNG (latar transparan tetap).
-function gambarKecil(file, max = 420) {
-  return new Promise((ok, gagal) => {
-    const url = URL.createObjectURL(file), im = new Image();
-    im.onload = () => {
-      const s = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas');
-      c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
-      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); ok(c.toDataURL('image/png'));
-    };
-    im.onerror = () => { URL.revokeObjectURL(url); gagal(new Error('Gambar tidak bisa dibaca.')); };
-    im.src = url;
-  });
-}
-
 function cssSurat() {
   if (document.getElementById('suratCss')) return;
   const st = document.createElement('style'); st.id = 'suratCss';
-  st.textContent = `.sr-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
-  .sr-form h3{color:var(--navy);margin:18px 0 8px;font-size:15px}.sr-form h3:first-child{margin-top:0}.sr-form textarea{width:100%;min-height:64px;resize:vertical;font:inherit}
-  .sr-b{background:var(--soft);border-radius:14px;padding:10px 12px;margin:0 0 10px}.sr-b .bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px;font-weight:700;color:var(--navy);font-size:13px}
-  .sr-b button{padding:4px 10px;font-size:12px}.sr-r{display:grid;grid-template-columns:150px 1fr auto;gap:8px;margin-bottom:6px}
+  st.textContent = `.sr-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 16px}.sr-bar label{margin:0}.sr-bar select{width:auto;min-width:280px}
+  .sr-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  .sr-form{display:flex;flex-direction:column;gap:14px}.sr-form textarea{min-height:72px;resize:vertical}
+  .sr-sec{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+  .sr-sec>header{display:flex;gap:12px;align-items:center;padding:12px 16px;background:var(--soft);border-bottom:1px solid var(--line)}
+  .sr-sec .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
+  .sr-sec header h3{margin:0;font-size:16px;color:var(--navy)}.sr-sec header p{margin:2px 0 0;font-size:13px;color:var(--mute)}
+  .sr-body{padding:16px;display:flex;flex-direction:column;gap:14px}
+  .sr-row{display:grid;gap:12px}.sr-row.c2{grid-template-columns:repeat(2,minmax(0,1fr))}.sr-row.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sr-f label,.sr-h>b{display:block;margin:0 0 6px;font-weight:700;color:var(--navy);font-size:14px}.sr-f .mut{margin:6px 0 0}
+  .sr-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.sr-h>b{margin:0}.sr-h button{padding:5px 12px;font-size:13px}
+  .sr-b{background:var(--soft);border-radius:12px;padding:10px 12px;margin:0 0 10px}.sr-b .bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px;font-weight:700;color:var(--navy);font-size:13px}
+  .sr-b button{padding:4px 10px;font-size:12px}.sr-b label{margin-top:8px;font-size:13px}.sr-r{display:grid;grid-template-columns:150px 1fr auto;gap:8px;margin-bottom:8px}
+  .sr-foot{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-top:12px;border-top:1px dashed var(--line)}.sr-foot .mut{margin:0;flex:1;min-width:200px}.sr-foot button{flex:none}
   .sr-pv{position:sticky;top:10px}.sr-box{border:1px solid #d7e2ec;border-radius:14px;background:#e9eef3;padding:10px;overflow:auto;max-height:calc(100vh - 150px)}
   .sr-box iframe{display:block;width:794px;border:0;background:#fff;box-shadow:0 2px 10px #0002;transform-origin:top left}#pvw{margin:0 auto;overflow:hidden}.sr-act{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
-  .sr-sw{display:flex;gap:8px;align-items:center;font-weight:600;margin:6px 0}.sr-sw input{width:auto}
-  @media(max-width:1000px){.sr-grid{grid-template-columns:1fr}.sr-pv{position:static}.sr-box{max-height:none}.sr-r{grid-template-columns:1fr auto}.sr-r input:first-child{grid-column:1/-1}}
+  .sr-sw{display:flex;gap:8px;align-items:center;font-weight:600;margin:0;color:var(--navy)}.sr-sw input{width:auto}
+  @media(max-width:1000px){.sr-grid{grid-template-columns:1fr}.sr-pv{position:static}.sr-box{max-height:none}}
+  @media(max-width:560px){.sr-row.c2,.sr-row.c3{grid-template-columns:1fr}.sr-r{grid-template-columns:1fr auto}.sr-r input:first-child{grid-column:1/-1}.sr-bar select{min-width:0;width:100%}}
   @media print{.sr-form,.sr-act,.sr-hist{display:none!important}}`;
   document.head.appendChild(st);
 }
@@ -134,40 +130,39 @@ MODUL.buatsurat = async function (jenisBaru) {
     <label>Sub-butir (a, b, c; satu baris satu butir, boleh kosong)</label><textarea data-b="${i}" data-s="sub">${esc(b.sub)}</textarea></div>`).join('');
   const rinciHtml = () => D.rincian.map((r, i) => `<div class="sr-r"><input data-r="${i}" data-rk="k" value="${esc(r.k)}" placeholder="Label (mis. Waktu)"><input data-r="${i}" data-rk="v" value="${esc(r.v)}" placeholder="Isi"><button type="button" data-hapusr="${i}">×</button></div>`).join('');
 
+  const ukuranOpsi = [['auto', 'Otomatis (muat satu halaman)'], ['12', '12 pt'], ['11.5', '11,5 pt'], ['11', '11 pt'], ['10.5', '10,5 pt'], ['10', '10 pt']];
+  const sec = (n, judul, ket, isi) => `<section class="sr-sec"><header><span class="n">${n}</span><div><h3>${judul}</h3>${ket ? `<p>${ket}</p>` : ''}</div></header><div class="sr-body">${isi}</div></section>`;
+
   $('#view').innerHTML = `<h2>Buat surat</h2>
   <p class="mut">Isi data di kiri, hasil surat langsung tampil di kanan. Cetak atau simpan sebagai PDF, lalu surat tercatat di Surat keluar dan Agenda surat.</p>
-  <div class="sr-act"><label style="margin:0">Jenis surat</label><select id="sjenis" style="width:auto;min-width:260px">${Object.entries(SURAT_JENIS).map(([k, v]) => `<option value="${k}" ${k === D.jenis ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
+  <div class="sr-bar"><label for="sjenis">Jenis surat</label><select id="sjenis">${Object.entries(SURAT_JENIS).map(([k, v]) => `<option value="${k}" ${k === D.jenis ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
     <button type="button" id="sbaru">Surat baru</button></div>
   <div id="msg" class="msg"></div>
   <div class="sr-grid"><div class="sr-form">
-    <h3>1. Identitas surat</h3>
-    <div class="grid"><div><label for="f-nomor">Nomor surat</label><input id="f-nomor" data-f="nomor" value="${esc(D.nomor)}"></div>
-      <div><label for="f-tanggal">Tanggal surat</label><input id="f-tanggal" type="date" data-f="tanggal" value="${esc(D.tanggal)}"></div>
-      <div><label for="f-kota">Kota</label><input id="f-kota" data-f="kota" value="${esc(D.kota)}"></div>
-      <div><label for="f-lampiran">Lampiran</label><input id="f-lampiran" data-f="lampiran" value="${esc(D.lampiran)}" placeholder="- atau 1 berkas"></div>
-      <div><label for="f-kode">Kode nomor surat</label><input id="f-kode" value="${esc(c.kodeNomor)}" placeholder="YMAKR/SD"></div>
-      <div style="align-self:end"><button type="button" id="simpanCfg" style="width:100%">Simpan sebagai bawaan</button></div></div>
-    <p class="mut" style="margin:6px 0 0">Format nomor: urutan/<b id="kodeLihat">${esc(c.kodeNomor)}</b>/bulan/tahun. Bulan (angka romawi) dan tahun otomatis mengikuti tanggal surat, urutan dihitung dari surat keluar tahun itu. Tombol "Simpan sebagai bawaan" menyimpan kode nomor, kota, penandatangan, dan tembusan.</p>
-    <label for="f-hal">Hal / perihal</label><input id="f-hal" data-f="hal" value="${esc(D.hal)}">
-    <h3>2. Tujuan surat</h3>
-    <label for="f-kepada">Kepada Yth. (satu baris satu bagian; baris pertama dicetak tebal)</label><textarea id="f-kepada" data-f="kepada">${esc(D.kepada)}</textarea>
-    <h3>3. Isi surat</h3>
-    <p class="mut" style="margin:0 0 8px">Salam pembuka, paragraf pembuka, paragraf penutup, dan salam penutup sudah otomatis tercetak di surat.</p>
-    <label for="f-ukuran">Ukuran huruf isi surat</label><select id="f-ukuran" data-f="ukuran">${[['auto', 'Otomatis (muat satu halaman)'], ['12', '12 pt'], ['11.5', '11,5 pt'], ['11', '11 pt'], ['10.5', '10,5 pt'], ['10', '10 pt']].map(([v, t]) => `<option value="${v}" ${String(D.ukuran || 'auto') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
-    <label for="f-pengantar" style="margin-top:8px">Kalimat pengantar isi</label><textarea id="f-pengantar" data-f="pengantar">${esc(D.pengantar)}</textarea>
-    <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--navy)">Rincian (hari, waktu, tempat)</b><button type="button" id="addR">+ Baris</button></div><div id="rincian">${rinciHtml()}</div></div>
-    <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--navy)">Butir bernomor</b><button type="button" id="addB">+ Butir</button></div><div id="butir" style="margin-top:6px">${butirHtml()}</div></div>
-    <h3>4. Penandatangan</h3>
-    <p class="mut" style="margin:0 0 8px">Bila jabatan penandatangan <b>Kepala Sekolah</b>, tanda tangan dan stempel terpasang otomatis.</p>
-    <div class="grid"><div><label for="f-tj">Jabatan</label><input id="f-tj" data-f="ttdJabatan" value="${esc(D.ttdJabatan)}"></div><div><label for="f-tn">Nama (beserta gelar)</label><input id="f-tn" data-f="ttdNama" value="${esc(D.ttdNama)}"></div>
-      <div><label for="f-tp">NIP/NIY (opsional)</label><input id="f-tp" data-f="ttdNip" value="${esc(D.ttdNip)}"></div></div>
-    <div class="grid" style="margin-top:8px"><div><label for="f-img">Tanda tangan penandatangan lain (PNG, opsional)</label><input id="f-img" type="file" accept="image/*" data-img="ttdImg"></div>
-      <div><label for="f-stp">Stempel penandatangan lain (PNG, opsional)</label><input id="f-stp" type="file" accept="image/*" data-img="stempelImg"></div></div>
-    <p class="mut" style="margin:4px 0 0">${D.ttdImg || D.stempelImg ? 'Gambar terpasang. ' : ''}<a href="#" id="hapusImg">Hapus gambar</a></p>
-    <h3>5. Tembusan</h3>
-    <label class="sr-sw"><input type="checkbox" data-f="tembusanOn" ${D.tembusanOn ? 'checked' : ''}> Cantumkan tembusan</label>
-    <textarea data-f="tembusan" style="min-height:96px" aria-label="Daftar tembusan">${esc(D.tembusan)}</textarea>
-
+    ${sec(1, 'Identitas surat', 'Nomor, tanggal, dan perihal surat.', `
+      <div class="sr-row c3">
+        <div class="sr-f"><label for="f-nomor">Nomor surat</label><input id="f-nomor" data-f="nomor" value="${esc(D.nomor)}"></div>
+        <div class="sr-f"><label for="f-tanggal">Tanggal surat</label><input id="f-tanggal" type="date" data-f="tanggal" value="${esc(D.tanggal)}"></div>
+        <div class="sr-f"><label for="f-kota">Kota</label><input id="f-kota" data-f="kota" value="${esc(D.kota)}"></div>
+      </div>
+      <div class="sr-row c2">
+        <div class="sr-f"><label for="f-kode">Kode nomor surat</label><input id="f-kode" value="${esc(c.kodeNomor)}" placeholder="YMAKR/SD"></div>
+        <div class="sr-f"><label for="f-lampiran">Lampiran</label><input id="f-lampiran" data-f="lampiran" value="${esc(D.lampiran)}" placeholder="- atau 1 berkas"></div>
+      </div>
+      <div class="sr-f"><label for="f-hal">Hal / perihal</label><input id="f-hal" data-f="hal" value="${esc(D.hal)}"></div>
+      <div class="sr-foot"><p class="mut">Format nomor: urutan/<b id="kodeLihat">${esc(c.kodeNomor)}</b>/bulan/tahun. Bulan (romawi) dan tahun otomatis mengikuti tanggal surat; urutan dihitung dari surat keluar tahun itu.</p>
+        <button type="button" id="simpanCfg" title="Menyimpan kode nomor, kota, dan tembusan sebagai isian awal">Simpan sebagai bawaan</button></div>`)}
+    ${sec(2, 'Tujuan surat', 'Penerima surat.', `
+      <div class="sr-f"><label for="f-kepada">Kepada Yth.</label><textarea id="f-kepada" data-f="kepada">${esc(D.kepada)}</textarea>
+        <p class="mut">Satu baris satu bagian. Baris pertama dicetak tebal.</p></div>`)}
+    ${sec(3, 'Isi surat', 'Salam pembuka, paragraf pembuka, paragraf penutup, dan salam penutup sudah otomatis tercetak.', `
+      <div class="sr-f"><label for="f-pengantar">Kalimat pengantar isi</label><textarea id="f-pengantar" data-f="pengantar">${esc(D.pengantar)}</textarea></div>
+      <div><div class="sr-h"><b>Rincian (hari, waktu, tempat)</b><button type="button" id="addR">+ Baris</button></div><div id="rincian">${rinciHtml()}</div></div>
+      <div><div class="sr-h"><b>Butir bernomor</b><button type="button" id="addB">+ Butir</button></div><div id="butir">${butirHtml()}</div></div>
+      <div class="sr-f"><label for="f-ukuran">Ukuran huruf isi surat</label><select id="f-ukuran" data-f="ukuran">${ukuranOpsi.map(([v, t]) => `<option value="${v}" ${String(D.ukuran || 'auto') === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>`)}
+    ${sec(4, 'Tembusan', 'Surat ditandatangani Kepala Sekolah (tanda tangan dan stempel otomatis).', `
+      <label class="sr-sw"><input type="checkbox" data-f="tembusanOn" ${D.tembusanOn ? 'checked' : ''}> Cantumkan tembusan</label>
+      <div class="sr-f"><textarea data-f="tembusan" style="min-height:110px" aria-label="Daftar tembusan">${esc(D.tembusan)}</textarea><p class="mut">Satu baris satu tembusan.</p></div>`)}
   </div>
   <div class="sr-pv"><div class="sr-act"><button class="p" type="button" id="cetak">Cetak / simpan PDF</button><button type="button" id="simpan">Simpan & catat di Surat keluar</button></div>
     <div class="sr-box" id="box"><div id="pvw"><iframe id="pv" title="Pratinjau surat"></iframe></div></div></div></div>
@@ -200,14 +195,10 @@ MODUL.buatsurat = async function (jenisBaru) {
     }
     if (t.dataset.b != null) { D.butir[+t.dataset.b][t.dataset.s] = t.value; return tunda(); }
     if (t.dataset.r != null) { D.rincian[+t.dataset.r][t.dataset.rk] = t.value; return tunda(); }
-    if (t.dataset.img && e.type === 'change' && t.files && t.files[0]) {
-      try { D[t.dataset.img] = await gambarKecil(t.files[0]); msg('Gambar dipasang. Ingat: simpan surat agar gambar ikut tersimpan.'); gambar(); } catch (er) { msg(er.message, true); }
-    }
   };
   v.onclick = async e => {
     const t = e.target.closest('button,a'); if (!t) return;
     const d = t.dataset;
-    if (t.id === 'hapusImg') { e.preventDefault(); D.ttdImg = D.stempelImg = ''; return gambar(); }
     if (t.id === 'sbaru') return MODUL.buatsurat(D.jenis);
     if (t.id === 'addB') { D.butir.push({ teks: '', sub: '' }); $('#butir').innerHTML = butirHtml(); return tunda(); }
     if (t.id === 'addR') { D.rincian.push({ k: '', v: '' }); $('#rincian').innerHTML = rinciHtml(); return tunda(); }
@@ -221,7 +212,7 @@ MODUL.buatsurat = async function (jenisBaru) {
       return MODUL.buatsurat();
     }
     if (t.id === 'simpanCfg') {
-      const cfg = { kodeNomor: c.kodeNomor, kota: D.kota, ttd: { jabatan: D.ttdJabatan, nama: D.ttdNama, nip: D.ttdNip }, tembusan: D.tembusan };
+      const cfg = { kodeNomor: c.kodeNomor, kota: D.kota, ttd: R.cfg.ttd, tembusan: D.tembusan };
       const { error } = await sb.from('surat_pengaturan').upsert({ id: 'utama', config: cfg, updated_at: new Date().toISOString() });
       if (error) return msg(error.message, true);
       Object.assign(R.cfg, cfg); return msg('Pengaturan bawaan disimpan.');
