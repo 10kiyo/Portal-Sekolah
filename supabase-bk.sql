@@ -12,10 +12,10 @@
 -- menu Kelas (mengajar) dan menu Bimbingan Konseling tampil bersamaan, sama seperti Waka Sarpras.
 alter table guru_staf drop constraint if exists guru_staf_peran_chk;
 alter table guru_staf add constraint guru_staf_peran_chk
-  check (peran is null or peran in ('guru','pustakawan','keuangan','persuratan','operator','sarpras','bk','staf','admin'));
+  check (peran is null or peran in ('guru','pustakawan','keuangan','persuratan','operator','sarpras','bk','info','staf','admin'));
 alter table guru_staf drop constraint if exists guru_staf_peran_tambahan_chk;
 alter table guru_staf add constraint guru_staf_peran_tambahan_chk
-  check (peran_tambahan <@ array['guru','pustakawan','keuangan','persuratan','operator','sarpras','bk']::text[]);
+  check (peran_tambahan <@ array['guru','pustakawan','keuangan','persuratan','operator','sarpras','bk','info']::text[]);
 
 -- Jabatan memuat "BK" / "bimbingan" / "konseling" otomatis mendapat peran tambahan bk
 -- (hanya saat baris baru atau jabatan diubah, supaya operator tetap bisa mencabutnya).

@@ -147,11 +147,18 @@ const GRUP = {
   keuangan: ['Keuangan', [['transaksi', 'Kas masuk & keluar'], ['laporan', 'Laporan keuangan'], ['proposal', 'Proposal'], ['lpj', 'LPJ']]],
   persuratan: ['Persuratan', [['masuk', 'Surat masuk'], ['keluar', 'Surat keluar'], ['agenda', 'Agenda surat']]],
   sarpras: ['Sarana & prasarana', [['fasilitas', 'Kelola fasilitas']]],
+  info: ['Info & Galeri', [['infoadmin', 'Kelola Info & Galeri']]],
   bk: ['Bimbingan Konseling', [['bkberanda', 'Ringkasan'], ['bkcatat', 'Catat kedisiplinan'], ['bkrekap', 'Rekap & poin siswa'], ['bktindak', 'Tindak lanjut & SP'], ['bkkonsel', 'Konseling (rahasia)'], ['bkortu', 'Orang tua & surat'], ['bkkelas', 'Kelas saya'], ['bkatur', 'Pengaturan']]],
   operator: ['Operator sekolah', [['tugasop', 'Daftar pekerjaan'], ['akun', 'Akun guru & staf'], ['data', 'Data murid']]]
 };
 // Peran -> kelompok menu. "admin" melihat semuanya; "staf" (satpam, kebersihan, dll) hanya Profil.
 // Peran utama + peran tambahan digabung (mis. guru wali kelas yang juga Waka SarPras melihat menu Kelas dan Sarana & prasarana).
+// Panel Kelola Info & Galeri (iframe info-admin.html?staf=1) meminta token akun guru yang sedang login lewat pesan ini.
+addEventListener('message', async e => {
+  if (e.origin !== location.origin || !e.data || !e.data.infoMinta || !e.source) return;
+  const { data } = await sb.auth.getSession();
+  e.source.postMessage({ infoToken: data && data.session ? data.session.access_token : '' }, location.origin);
+});
 const menuPeran = (p, tam = []) => p === 'admin' ? Object.values(GRUP) : [...new Set([p, ...tam])].map(x => GRUP[x]).filter(Boolean);
 let S = { peran: 'guru', peranTambahan: [], jabatan: '', dnama: '', username: '', kelas: [], kid: null, tab: 'murid', tugas: null, mid: '', mapel: [], ajar: [], prof: null, fotoUrl: '', rid: 0 };
 const mn = () => (S.mapel.find(m => m.id === S.mid) || {}).nama || '';

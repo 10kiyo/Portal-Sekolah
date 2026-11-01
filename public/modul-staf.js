@@ -633,8 +633,8 @@ MODUL.agenda = async function (bln) {
 };
 
 /* ================= OPERATOR ================= */
-const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'bk', 'staf'];
-const PERAN_LABEL = { guru: 'Guru', pustakawan: 'Pustakawan', keuangan: 'Keuangan', persuratan: 'Persuratan', operator: 'Operator', sarpras: 'Sarpras', bk: 'Guru BK', staf: 'Staf', admin: 'Admin' };
+const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'bk', 'info', 'staf'];
+const PERAN_LABEL = { guru: 'Guru', pustakawan: 'Pustakawan', keuangan: 'Keuangan', persuratan: 'Persuratan', operator: 'Operator', sarpras: 'Sarpras', bk: 'Guru BK', info: 'Admin Info', staf: 'Staf', admin: 'Admin' };
 const opsiPeran = (list, sel) => list.map(v => `<option value="${v}" ${v === sel ? 'selected' : ''}>${PERAN_LABEL[v] || v}</option>`).join('');
 function cssAkun() {
   if (document.getElementById('akunCss')) return;
@@ -656,6 +656,11 @@ function cssAkun() {
   @media(max-width:720px){.ak-wrap{border:0;overflow:visible}.ak-tbl{min-width:0}.ak-tbl thead{display:none}.ak-tbl,.ak-tbl tbody{display:block}.ak-tbl tr{display:block;border:1px solid #e6eef5;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ak-tbl td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:6px 0;min-width:0!important}.ak-tbl td:first-child{display:block;padding-bottom:8px;border-bottom:1px solid #eef3f8;margin-bottom:4px}.ak-tbl td[data-l]:before{content:attr(data-l);font-size:12px;font-weight:700;color:var(--mute);flex:none}.ak-tbl td.ak-ac{text-align:right}.ak-tbl td[data-l="Peran tambahan"]{align-items:flex-start}.ak-tbl td[data-l="Peran tambahan"]>span{text-align:right}.ak-off td{opacity:.55}}.ak-sw2{display:inline-flex;gap:8px;align-items:center;font-weight:600;margin:0}.ak-cnt{font-size:13px;color:var(--mute);margin:0 0 8px}`;
   document.head.appendChild(st);
 }
+// Kelola Info Terbaru + Galeri Prestasi (peran info). Memuat info-admin.html dalam mode staf: tanpa PIN, memakai login akun guru.
+MODUL.infoadmin = async function () {
+  $('#view').innerHTML = `<h2>Kelola Info & Galeri</h2><p class="mut">Info Terbaru, Galeri Prestasi, Ekstrakurikuler, Club, dan Kegiatan Unggulan.</p>
+  <iframe src="info-admin.html?staf=1" title="Kelola Info dan Galeri" style="display:block;width:100%;height:calc(100vh - 230px);min-height:680px;border:0;border-radius:14px;background:transparent"></iframe>`;
+};
 MODUL.akun = async function () {
   cssAkun();
   const rows = await run(sb.from('guru_staf').select('id,nama,jabatan,kelompok,peran,peran_tambahan,username,pin,aktif,auth_user_id').order('nama'));

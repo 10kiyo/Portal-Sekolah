@@ -166,3 +166,15 @@ GALERI PRESTASI SISWA (beranda): unggah banyak foto sekaligus, digabung dengan I
    Info berkategori Prestasi yang terbit, diurutkan tanggal terbaru dulu (Info yang disematkan di paling depan); foto yang sama tidak dobel.
    Foto dari Info punya tautan "Baca beritanya" di lightbox; foto galeri tidak. Perubahan muncul paling lambat 60 detik (cache).
 6. Sebelum supabase-galeri.sql dijalankan, beranda tetap berfungsi seperti biasa (hanya foto dari Info).
+
+PERAN "ADMIN INFO & GALERI": tombol "Kelola info/galeri (admin)" dipindah ke akun guru/staf
+1. Supabase > SQL Editor: jalankan supabase-peran-info.sql (SETELAH supabase-bk.sql). JALANKAN SEBELUM DEPLOY.
+2. File baru/diganti: BARU supabase-peran-info.sql | DIGANTI functions/_lib/util.js (fungsi infoOk), functions/api/admin-info.js,
+   public/info-admin.html (mode staf), public/kelas.html, public/modul-staf.js, public/info.html & public/galeri.html (tombol admin dihapus),
+   supabase-bk.sql (daftar peran memuat 'info').
+3. Beri peran: Administrasi Guru dan Staf (operator) > Akun guru & staf > pada baris orangnya, menu "+ Tambah" di kolom Peran tambahan > "Admin Info".
+   Orang itu membuka ulang halaman, lalu muncul menu "Info & Galeri > Kelola Info & Galeri" di samping menu Kelas/BK-nya.
+4. Panel memakai login akun guru itu sendiri (tanpa PIN admin). Server memeriksa tokennya ke Supabase pada setiap permintaan dan hanya
+   mengizinkan akun aktif berperan Admin Info (atau admin). Mencabut peran = akses langsung hilang.
+5. Tombol admin di halaman Info Terbaru dan Galeri Prestasi sudah dihapus. Alamat lama /#info-admin (dengan PIN admin) tetap berfungsi sebagai cadangan.
+6. Verifikasi Jurnal Murid tidak termasuk peran ini (tab itu disembunyikan di mode staf); tetap lewat /#info-admin dengan PIN admin.

@@ -1,5 +1,5 @@
 // Cloudflare Worker route: GET/POST /api/admin-info  (khusus admin, token dari /api/admin-auth)
-import { json, cfg, dbGet, hariIni, adminOk } from '../_lib/util.js';
+import { json, cfg, dbGet, hariIni, infoOk } from '../_lib/util.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TGL = /^\d{4}-\d{2}-\d{2}$/;
@@ -8,7 +8,7 @@ const MAXFILE = 4 * 1024 * 1024;
 const TIPE = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
 export async function onRequest({ request, env }) {
-  if (!(await adminOk(request, env))) return json(401, { error: 'Sesi admin tidak valid. Silakan login ulang.' });
+  if (!(await infoOk(request, env))) return json(401, { error: 'Sesi tidak valid atau akun tidak punya akses Info & Galeri. Silakan login ulang.' });
   const c = cfg(env);
   if (!c) return json(500, { error: 'SUPABASE_SERVICE_ROLE_KEY belum diatur.' });
   const get = dbGet(c);

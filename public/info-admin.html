@@ -159,6 +159,14 @@ const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day
 const KAT = { pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', prestasi: 'Prestasi', lainnya: 'Lainnya' };
 const JK = { ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan' };
 if (self !== top) document.body.classList.add('emb');
+// Mode staf: dibuka dari menu "Kelola Info & Galeri" di akun guru/staf (kelas.html). Tanpa PIN; token akun guru diminta ke halaman induk.
+const STAF = self !== top && new URLSearchParams(location.search).get('staf') === '1';
+const mintaToken = () => new Promise((ok, no) => {
+  const t = setTimeout(() => no(new Error('Sesi guru tidak ditemukan. Muat ulang halaman Administrasi Guru dan Staf.')), 6000);
+  const h = e => { if (e.origin !== location.origin || !e.data || e.data.infoToken === undefined) return; removeEventListener('message', h); clearTimeout(t); e.data.infoToken ? ok(e.data.infoToken) : no(new Error('Sesi guru berakhir. Silakan login ulang.')); };
+  addEventListener('message', h); parent.postMessage({ infoMinta: 1 }, location.origin);
+});
+const tokenAdmin = async () => STAF ? await mintaToken() : sessionStorage.getItem(TOKEN_KEY);
 let D = { info: [], today: '' }, editId = null;
 // Tab admin = menu publik. jenis = nilai kolom jenis_kegiatan ('' = Info Terbaru).
 const TAB = {
@@ -171,11 +179,11 @@ let tabA = 'info';
 const jenisInfo = x => x.jenis_kegiatan || '';
 
 async function api(body) {
-  const h = { Authorization: 'Bearer ' + sessionStorage.getItem(TOKEN_KEY) };
+  const h = { Authorization: 'Bearer ' + await tokenAdmin() };
   if (body) h['Content-Type'] = 'application/json';
   const r = await fetch('/api/admin-info', body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
   const d = await r.json().catch(() => ({}));
-  if (r.status === 401) { sessionStorage.removeItem(TOKEN_KEY); showLogin(); throw new Error(d.error || 'Sesi berakhir.'); }
+  if (r.status === 401) { if (!STAF) { sessionStorage.removeItem(TOKEN_KEY); showLogin(); } throw new Error(d.error || 'Sesi berakhir.'); }
   if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.');
   return d;
 }
@@ -190,6 +198,12 @@ $('#masuk').onclick = async () => {
 };
 $('#pin').onkeydown = e => { if (e.key === 'Enter') $('#masuk').click(); };
 async function mulai() {
+  if (STAF) {
+    document.querySelector('[data-t="jurnal"]').classList.add('hidden'); $('#keluar').classList.add('hidden'); $('#login').classList.add('hidden');   // verifikasi jurnal tetap lewat PIN admin
+    try { D = await api(); $('#app').classList.remove('hidden'); render(); }
+    catch (e) { $('#login').classList.remove('hidden'); $('#login').innerHTML = `<h1>Tidak bisa dibuka</h1><p class="err">${esc(e.message)}</p><p class="mut">Pastikan akunmu punya peran Admin Info & Galeri.</p>`; }
+    return;
+  }
   if (!sessionStorage.getItem(TOKEN_KEY)) return showLogin();
   try { D = await api(); $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); render(); muatJ(); }
   catch (e) { if (sessionStorage.getItem(TOKEN_KEY)) $('#loginErr').textContent = 'PIN benar, tetapi data gagal dimuat: ' + e.message; }

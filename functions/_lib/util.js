@@ -54,6 +54,22 @@ export async function adminOk(request, env) {
 const tries = new Map();
 const MAX = 5, WINDOW = 10 * 60 * 1000, MAX_ALL = 60;
 // Mengembalikan { anak: {key, nama, kelas} } atau { err: Response }.
+// Boleh mengelola Info & Galeri: (1) PIN admin (token lama) ATAU (2) akun guru/staf yang sedang login (token Supabase)
+// dengan peran 'info' / peran tambahan 'info' / admin. Token guru diperiksa ke Supabase Auth setiap permintaan.
+export async function infoOk(request, env) {
+  if (await adminOk(request, env)) return true;
+  const tok = String(request.headers.get('authorization') || '').replace(/^Bearer /, '');
+  const c = cfg(env);
+  if (!c || tok.split('.').length !== 3) return false;
+  try {
+    const u = await fetch(`${c.URL}/auth/v1/user`, { headers: { apikey: c.h.apikey, Authorization: 'Bearer ' + tok } });
+    if (!u.ok) return false;
+    const uid = String((await u.json()).id || '');
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid)) return false;
+    const r = (await dbGet(c)(`/guru_staf?auth_user_id=eq.${uid}&aktif=eq.true&select=peran,peran_tambahan&limit=1`))[0];
+    return !!r && (r.peran === 'admin' || r.peran === 'info' || (r.peran_tambahan || []).includes('info'));
+  } catch (e) { return false; }
+}
 export async function cariAnak(request, kode, c) {
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown', now = Date.now();
   let t = tries.get(ip); if (!t || now - t.start > WINDOW) t = { n: 0, start: now };
