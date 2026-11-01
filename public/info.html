@@ -76,6 +76,17 @@ h2{margin:0;color:var(--navy);font-size:18px}
 .bn p{margin:6px 0 0;color:#dbe7f2;font-family:inherit;font-size:clamp(12px,2vw,18px);font-weight:400;line-height:1.35;transition:color .35s}
 @media(hover:hover){.bn:hover{background:linear-gradient(145deg,#0e2336,#08141f)}.bn:hover .lg{transform:scale(1.1);filter:brightness(1.5) saturate(.45)}.bn:hover .tx{transform:scale(1.04)}.bn:hover h1,.bn:hover p{color:#aab4be}}
 @media(prefers-reduced-motion:reduce){.bn,.bn .lg,.bn .tx,.bn h1,.bn p{transition:none}.bn:hover .lg,.bn:hover .tx{transform:none}}
+/* Pop-up foto (sama seperti di Fasilitas Sekolah) */
+.lamp-img{cursor:zoom-in}
+dialog.pv{border:0;border-radius:18px;padding:0;width:min(760px,calc(100% - 24px));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;box-shadow:0 20px 60px #102a4350;color:var(--ink)}
+dialog.pv::backdrop{background:#102a4380}
+.pv .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:18px 20px 0}
+.pv .dh h3{margin:0;color:var(--navy);font-size:21px;line-height:1.25;letter-spacing:-.02em}
+.pv .x{border:0;background:var(--soft);color:var(--navy);font-size:22px;line-height:1;width:36px;height:36px;border-radius:50%;cursor:pointer;flex:none}
+.pv .x:hover{filter:brightness(.95)}.pv .x:focus-visible{outline:3px solid #1677c850}
+.pv .big{margin:14px 20px 0;border-radius:14px;overflow:hidden;background:#e6eef6;text-align:center}
+.pv .big img{display:block;margin:0 auto;max-width:100%;max-height:calc(100vh - 170px);max-height:calc(100dvh - 170px);width:auto;height:auto}
+.pv .ft2{padding:12px 20px 18px;font-size:13px}.pv .ft2 a{color:var(--blue);font-weight:700}
 </style>
 <link rel="stylesheet" href="si-tema.css">
 </head>
@@ -107,9 +118,26 @@ h2{margin:0;color:var(--navy);font-size:18px}
 
 </div>
 
+<dialog class="pv" id="pvDlg" aria-labelledby="pvT">
+  <div class="dh"><h3 id="pvT"></h3><button class="x" id="pvX" type="button" aria-label="Tutup">×</button></div>
+  <div class="big"><img id="pvImg" alt=""></div>
+  <div class="ft2"><a id="pvOpen" href="#" target="_blank" rel="noopener">Buka ukuran penuh di tab baru</a></div>
+</dialog>
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Foto lampiran dibuka sebagai pop-up (bukan halaman baru). Klik tengah / Ctrl / Cmd tetap membuka tab baru.
+document.addEventListener('click', e => {
+  const a = e.target.closest('a.pvl'); if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  const im = a.querySelector('img');
+  document.getElementById('pvT').textContent = a.dataset.judul || '';
+  const big = document.getElementById('pvImg'); big.src = a.href; big.alt = im ? im.alt : '';
+  document.getElementById('pvOpen').href = a.href;
+  document.getElementById('pvDlg').showModal();
+});
+document.getElementById('pvX').onclick = () => document.getElementById('pvDlg').close();
+document.getElementById('pvDlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 const linkify = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
 const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
 const tglS = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -170,7 +198,7 @@ function render() {
       <h3>${esc(x.judul)}</h3>
       ${x.tanggal_agenda ? `<div class="meta">🗓 ${tgl(x.tanggal_agenda)}${x.lokasi ? ' · ' + esc(x.lokasi) : ''}</div>` : (x.lokasi ? `<div class="meta">📍 ${esc(x.lokasi)}</div>` : '')}
       ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
-      ${isImg ? `<a href="${esc(lamp)}" target="_blank" rel="noopener"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
+      ${isImg ? `<a class="pvl" href="${esc(lamp)}" target="_blank" rel="noopener" data-judul="${esc(x.judul)}"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
       ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener">📎 ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
       ${bagiHtml(x)}
     </article>`;
