@@ -640,16 +640,19 @@ function cssAkun() {
   if (document.getElementById('akunCss')) return;
   const st = document.createElement('style'); st.id = 'akunCss';
   st.textContent = `
-  .ak-add{background:var(--soft);border-radius:14px;padding:14px 14px 4px;margin:12px 0 4px}.ak-add .grid{margin-bottom:10px;align-items:end}
+  .ak-add{background:var(--soft);border-radius:14px;padding:14px;margin:12px 0 4px}.ak-add .grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1.1fr) auto;gap:12px;margin:0;align-items:end}.ak-add .grid>div{min-width:0}.ak-add label{white-space:nowrap}
+  .ak-add input,.ak-add select,.ak-add button,.ak-bar input,.ak-bar select,.ak-bar button{box-sizing:border-box;height:42px;margin:0}.ak-add button.p{width:auto!important;padding:0 20px;white-space:nowrap}
+  .ak-add select,.ak-bar select,.ak-tbl select{-webkit-appearance:none;appearance:none;padding-right:32px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 11px center}
+  @media(max-width:900px){.ak-add .grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ak-add .grid>div:last-child{grid-column:1/-1}.ak-add button.p{width:100%!important}}
   .ak-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 10px}.ak-bar .cari{flex:1 1 260px;max-width:360px}.ak-bar select{width:auto;min-width:150px}
-  .ak-bar .sp{flex:1 1 0}.ak-bar button{padding:9px 14px}.ak-wrap{overflow-x:auto;border:1px solid #e6eef5;border-radius:14px}
+  .ak-bar .sp{flex:1 1 0}.ak-bar button{padding:0 16px}.ak-bar .ak-sw2{height:42px}.ak-wrap{overflow-x:auto;border:1px solid #e6eef5;border-radius:14px}
   .ak-tbl{width:100%;border-collapse:collapse;min-width:900px}.ak-tbl td:first-child{min-width:210px}.ak-tbl th{background:#f6fafd;padding:10px 12px;font-size:12px;color:var(--mute);white-space:nowrap}
   .ak-tbl td{padding:11px 12px;vertical-align:middle;border-bottom:1px solid #eef3f8}.ak-tbl tr:last-child td{border-bottom:0}.ak-tbl tbody tr:hover{background:#fafcfe}
   .ak-nm b{display:block;color:var(--navy);line-height:1.3}.ak-nm span,.ak-ac span{display:block;font-size:13px;color:var(--mute)}.ak-ac b{display:block;color:var(--navy)}
-  .ak-tbl select{width:auto;min-width:122px;padding:8px 10px;font-size:14px}.ak-off td{opacity:.5}.ak-off td.ak-keep{opacity:1}
+  .ak-tbl select{width:auto;min-width:122px;height:36px;box-sizing:border-box;padding-top:0;padding-bottom:0;padding-left:10px;font-size:14px;margin:0}.ak-off td{opacity:.5}.ak-off td.ak-keep{opacity:1}
   .ak-chip{position:relative;display:inline-block;margin:0 5px 5px 0;font-weight:400}.ak-chip input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer}
   .ak-chip span{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;color:var(--mute);background:#fff;border:1px solid var(--line)}
-  .ak-chip.on span{background:var(--soft);border-color:#b9d8f2;color:var(--blue)}.ak-chip.on:hover span{border-color:var(--danger);color:var(--danger);background:#fbeceb}.ak-tbl select.ak-add1{min-width:0;width:auto;padding:3px 8px;font-size:12px;font-weight:700;color:var(--mute);border-radius:99px;margin:0 5px 5px 0;vertical-align:top}.ak-chip input:focus-visible+span{outline:3px solid #1677c850}
+  .ak-chip.on span{background:var(--soft);border-color:#b9d8f2;color:var(--blue)}.ak-chip.on:hover span{border-color:var(--danger);color:var(--danger);background:#fbeceb}.ak-tbl select.ak-add1{min-width:0;width:auto;height:26px;padding:0 26px 0 10px;font-size:12px;font-weight:700;color:var(--mute);border-radius:99px;margin:0 5px 5px 0;vertical-align:top;background-position:right 9px center}.ak-chip input:focus-visible+span{outline:3px solid #1677c850}
   .ak-sw{position:relative;display:inline-block;width:40px;height:23px;margin:0;vertical-align:middle}.ak-sw input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer}
   .ak-sw i{position:absolute;inset:0;border-radius:99px;background:#cbd8e6;transition:.15s}.ak-sw i:after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.15s}
   .ak-sw input:checked+i{background:var(--ok)}.ak-sw input:checked+i:after{left:20px}.ak-sw input:focus-visible+i{outline:3px solid #1677c850}
