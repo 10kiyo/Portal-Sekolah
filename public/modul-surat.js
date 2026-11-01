@@ -5,10 +5,6 @@
    Tabel & aturan akses: supabase-surat-generator.sql.
    ============================================================ */
 const SURAT_BAWAAN = {
-  kop: {
-    l1: 'YAYASAN MASJID AT-TAQWA KAMPUS RAWAMANGUN', l2: 'BIDANG PENDIDIKAN', l3: 'SEKOLAH DASAR ISLAM AT-TAQWA',
-    alamat: 'Jl. Daksinapati Raya No. 2 Rawamangun Jakarta Timur, 13220\nTelp. (021) 47864568 Fax. (021) 47864568 website : www.sdi-attaqwa.sch.id'
-  },
   kodeNomor: 'YMAKR/SD', kota: 'Jakarta',
   salamBuka: 'Assalamualaikum Wr.Wb', salamTutup: 'Wassalamualaikum Wr.Wb',
   pembuka: 'Puji syukur kita panjatkan kehadirat Allah SWT. atas segala rahmat, nikmat, dan karunia-Nya. Shalawat serta salam selalu tercurah kepada Nabi Muhammad SAW. para keluarga, sahabat serta pengikutnya yang setia. Semoga kita selalu diberikan kesehatan, kesuksesan, dan ketaatan dalam menjalankan aktifitas sehari-hari. Amin Yra.',
@@ -21,8 +17,8 @@ const SURAT_JENIS = {
     pengantar: 'Berikutnya kami sampaikan untuk kegiatan sekolah di bulan ... sebagai berikut:', butir: [{ teks: '', sub: '' }], rincian: [], bukaTembusan: true },
   undangan: { label: 'Undangan (hari, waktu, tempat)', hal: 'Undangan ', kepada: 'Bapak/Ibu ...\ndi Tempat',
     pengantar: 'Dengan hormat, kami mengundang Bapak/Ibu untuk hadir pada acara ... yang akan dilaksanakan pada:',
-    butir: [], rincian: [{ k: 'Hari/Tanggal', v: '' }, { k: 'Waktu', v: '' }, { k: 'Tempat', v: '' }, { k: 'Acara', v: '' }], bukaTembusan: false,
-    penutup: 'Demikian undangan ini kami sampaikan. Atas kehadiran dan kerjasamanya kami haturkan banyak terima kasih.' },
+    butir: [], rincian: [{ k: 'Hari/Tanggal', v: '' }, { k: 'Waktu', v: '' }, { k: 'Tempat', v: '' }, { k: 'Acara', v: '' }], bukaTembusan: false
+  },
   biasa: { label: 'Surat biasa (paragraf bebas)', hal: '', kepada: 'Yth. ...\ndi Tempat',
     pengantar: 'Isi surat ...', butir: [], rincian: [], bukaTembusan: false }
 };
@@ -41,50 +37,49 @@ function nomorSurat(cfg, rows, tgl) {
 function suratBaru(jenis) {
   const J = SURAT_JENIS[jenis], c = _sr.cfg, tgl = today();
   return { id: null, jenis, tanggal: tgl, nomor: nomorSurat(c, _sr.rows, tgl), nomorManual: false, kota: c.kota, lampiran: '-',
-    hal: J.hal, kepada: J.kepada, salamBuka: true, pembuka: jenis === 'biasa' ? '' : c.pembuka, pengantar: J.pengantar,
+    hal: J.hal, kepada: J.kepada, pengantar: J.pengantar,
     butir: JSON.parse(JSON.stringify(J.butir)), rincian: JSON.parse(JSON.stringify(J.rincian)),
-    penutup: J.penutup || c.penutup, salamTutup: true, ttdJabatan: c.ttd.jabatan, ttdNama: c.ttd.nama, ttdNip: c.ttd.nip,
+    ukuran: 'auto', ttdJabatan: c.ttd.jabatan, ttdNama: c.ttd.nama, ttdNip: c.ttd.nip,
     ttdImg: '', stempelImg: '', tembusanOn: J.bukaTembusan, tembusan: c.tembusan };
 }
 
 // HTML surat siap cetak (dipakai pratinjau & cetak). Ukuran A4, margin diatur di @page.
+// Kop = gambar tetap (kop-surat.png). Salam & paragraf pembuka/penutup = template tetap (SURAT_BAWAAN).
 function htmlSurat(D, cfg) {
-  const k = cfg.kop, logo = location.origin + '/logo-kop.png';
+  const kop = location.origin + '/kop-surat.png';
   const butir = D.butir.filter(b => (b.teks || '').trim()).map(b => {
     const sub = baris(b.sub);
     return `<li>${tebalMiring(b.teks)}${sub.length ? `<ol type="a">${sub.map(s => `<li>${tebalMiring(s)}</li>`).join('')}</ol>` : ''}</li>`;
   }).join('');
   const rinci = D.rincian.filter(r => (r.k || '').trim() || (r.v || '').trim()).map(r => `<tr><td>${esc(r.k)}</td><td>:</td><td>${tebalMiring(r.v)}</td></tr>`).join('');
-  const tem = baris(D.tembusan);
-  const tgl = tglPanjang(D.tanggal);
+  const tem = baris(D.tembusan), tgl = tglPanjang(D.tanggal);
+  const auto = !D.ukuran || D.ukuran === 'auto', pt = auto ? 12 : (Number(D.ukuran) || 12);
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc((D.nomor || 'Surat').replace(/\//g, '-'))}</title><style>
 @page{size:A4;margin:14mm 20mm 16mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}@media screen{body{padding:14mm 20mm 16mm;min-height:297mm}}
-body{margin:0;background:#fff;color:#000;font:12pt/1.35 "Times New Roman",Times,serif}
-.kop{display:flex;align-items:center;color:#1b6b34}
-.kop img{width:47mm;flex:none;display:block}.kt{flex:1;text-align:center;line-height:1.32;padding-left:2mm}
-.k1{font-weight:700;font-size:10.82pt;white-space:nowrap}.k2{font-weight:700;font-size:10.61pt;white-space:nowrap}.k3{font-weight:400;font-size:11.27pt;white-space:nowrap}.ka{font-size:10.15pt;white-space:nowrap;margin-top:1mm}
-.gr{margin:1mm 0 4mm}.gr i{display:block;border-top:1px solid #1b6b34}.gr i:nth-child(2){border-top-width:3px;margin:1.5px 0}
-.hd{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hd table{border-collapse:collapse}.hd>div{white-space:nowrap}.hd td{padding:0 4px 0 0;vertical-align:top}
+body{margin:0;background:#fff;color:#000;font:${pt}pt/1.35 "Times New Roman",Times,serif}
+.kop{display:block;width:100%;height:auto;margin:0 0 4mm}
+.hd{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hd table{border-collapse:collapse}.hd td{padding:0 4px 0 0;vertical-align:top}.hd>.dt{width:6.6cm;flex:none;white-space:nowrap}
 p{margin:0 0 8px;text-align:justify}.ind{text-indent:1.1cm}.salam{font-style:italic;font-weight:700;margin:0 0 6px}
 ol{margin:2px 0 6px;padding-left:1.1cm;text-align:justify}ol li{margin-bottom:4px;padding-left:4px}ol ol{margin:2px 0 2px;padding-left:.9cm}
 .rin{border-collapse:collapse;margin:0 0 8px 1.1cm}.rin td{padding:1px 6px 1px 0;vertical-align:top}.rin td:first-child{white-space:nowrap}
-.ttd{margin:14px 0 0 auto;width:7.2cm;text-align:left;page-break-inside:avoid}.ttd .ruang{position:relative;height:2.4cm}
+.ttd{margin:14px 0 0 auto;width:6.6cm;text-align:left;page-break-inside:avoid}.ttd .ruang{position:relative;height:2.4cm}
 .ttd .ruang img{position:absolute;max-height:2.4cm;max-width:6.4cm}.ttd .ruang .st{left:0;top:0;opacity:.85}.ttd .ruang .tt{left:1.6cm;top:.1cm}
 .tem{margin-top:6px;font-size:10pt;page-break-inside:avoid}.tem ol{padding-left:.7cm;margin:0}.tem li{margin:0;padding-left:2px}
 </style></head><body>
-<div class="kop"><img src="${logo}" alt=""><div class="kt"><div class="k1">${esc(k.l1)}</div><div class="k2">${esc(k.l2)}</div><div class="k3">${esc(k.l3)}</div><div class="ka">${baris(k.alamat).map(esc).join('<br>')}</div></div></div><div class="gr"><i></i><i></i><i></i></div>
-<div class="hd"><table><tr><td>Nomor</td><td>:</td><td>${esc(D.nomor)}</td></tr><tr><td>Lamp</td><td>:</td><td>${esc(D.lampiran || '-')}</td></tr><tr><td>Hal</td><td>:</td><td>${esc(D.hal)}</td></tr></table><div>${esc(D.kota)}, ${esc(tgl)}</div></div>
+<img class="kop" src="${kop}" alt="Kop surat SDS Islam At-Taqwa">
+<div class="hd"><table><tr><td>Nomor</td><td>:</td><td>${esc(D.nomor)}</td></tr><tr><td>Lamp</td><td>:</td><td>${esc(D.lampiran || '-')}</td></tr><tr><td>Hal</td><td>:</td><td>${esc(D.hal)}</td></tr></table><div class="dt">${esc(D.kota)}, ${esc(tgl)}</div></div>
 <p>Kepada Yth.<br>${baris(D.kepada).map((x, i) => i === 0 ? `<b>${tebalMiring(x)}</b>` : tebalMiring(x)).join('<br>')}</p>
-${D.salamBuka ? `<p class="salam">${esc(cfg.salamBuka)}</p>` : ''}
-${(D.pembuka || '').trim() ? `<p class="ind">${tebalMiring(D.pembuka)}</p>` : ''}
+<p class="salam">${esc(cfg.salamBuka)}</p>
+<p class="ind">${tebalMiring(cfg.pembuka)}</p>
 ${(D.pengantar || '').trim() ? `<p class="ind">${tebalMiring(D.pengantar)}</p>` : ''}
 ${rinci ? `<table class="rin">${rinci}</table>` : ''}
 ${butir ? `<ol>${butir}</ol>` : ''}
-${(D.penutup || '').trim() ? `<p class="ind">${tebalMiring(D.penutup)}</p>` : ''}
-${D.salamTutup ? `<p class="salam">${esc(cfg.salamTutup)}</p>` : ''}
+<p class="ind">${tebalMiring(cfg.penutup)}</p>
+<p class="salam">${esc(cfg.salamTutup)}</p>
 <div class="ttd"><div>${esc(D.ttdJabatan)},</div><div class="ruang">${D.stempelImg ? `<img class="st" src="${D.stempelImg}" alt="">` : ''}${D.ttdImg ? `<img class="tt" src="${D.ttdImg}" alt="">` : ''}</div>
 <div><b>${esc(D.ttdNama)}</b></div>${D.ttdNip ? `<div>NIP/NIY. ${esc(D.ttdNip)}</div>` : ''}</div>
 ${D.tembusanOn && tem.length ? `<div class="tem"><i>Tembusan :</i><ol>${tem.map(t => `<li><i>${esc(t)}</i></li>`).join('')}</ol></div>` : ''}
+${auto ? `<script>(function(){var f=12;function h(){document.body.style.fontSize=f+'pt';return document.body.offsetHeight}while(f>10&&h()>1124){f-=.25}h()})()</script>` : ''}
 </body></html>`;
 }
 
@@ -121,7 +116,7 @@ async function suratMuat() {
   if (_sr) return;
   let cfg = JSON.parse(JSON.stringify(SURAT_BAWAAN)), rows = [];
   const { data } = await sb.from('surat_pengaturan').select('config').eq('id', 'utama').maybeSingle();
-  if (data && data.config) { const c = data.config; cfg = { ...cfg, ...c, kop: { ...cfg.kop, ...(c.kop || {}) }, ttd: { ...cfg.ttd, ...(c.ttd || {}) } }; }
+  if (data && data.config) { const c = data.config; cfg = { ...cfg, ...c, salamBuka: cfg.salamBuka, salamTutup: cfg.salamTutup, pembuka: cfg.pembuka, penutup: cfg.penutup, ttd: { ...cfg.ttd, ...(c.ttd || {}) } }; }
   rows = await run(sb.from('surat').select('id,jenis,nomor,tanggal,pihak,perihal,status,isi,created_at').eq('jenis', 'keluar').order('tanggal', { ascending: false }).order('created_at', { ascending: false }).limit(2000));
   _sr = { cfg, rows, D: null };
 }
@@ -148,18 +143,19 @@ MODUL.buatsurat = async function (jenisBaru) {
     <div class="grid"><div><label for="f-nomor">Nomor surat</label><input id="f-nomor" data-f="nomor" value="${esc(D.nomor)}"></div>
       <div><label for="f-tanggal">Tanggal surat</label><input id="f-tanggal" type="date" data-f="tanggal" value="${esc(D.tanggal)}"></div>
       <div><label for="f-kota">Kota</label><input id="f-kota" data-f="kota" value="${esc(D.kota)}"></div>
-      <div><label for="f-lampiran">Lampiran</label><input id="f-lampiran" data-f="lampiran" value="${esc(D.lampiran)}" placeholder="- atau 1 berkas"></div></div>
+      <div><label for="f-lampiran">Lampiran</label><input id="f-lampiran" data-f="lampiran" value="${esc(D.lampiran)}" placeholder="- atau 1 berkas"></div>
+      <div><label for="f-kode">Kode nomor surat</label><input id="f-kode" value="${esc(c.kodeNomor)}" placeholder="YMAKR/SD"></div>
+      <div style="align-self:end"><button type="button" id="simpanCfg" style="width:100%">Simpan sebagai bawaan</button></div></div>
+    <p class="mut" style="margin:6px 0 0">Format nomor: urutan/<b id="kodeLihat">${esc(c.kodeNomor)}</b>/bulan/tahun. Bulan (angka romawi) dan tahun otomatis mengikuti tanggal surat, urutan dihitung dari surat keluar tahun itu. Tombol "Simpan sebagai bawaan" menyimpan kode nomor, kota, penandatangan, dan tembusan.</p>
     <label for="f-hal">Hal / perihal</label><input id="f-hal" data-f="hal" value="${esc(D.hal)}">
     <h3>2. Tujuan surat</h3>
     <label for="f-kepada">Kepada Yth. (satu baris satu bagian; baris pertama dicetak tebal)</label><textarea id="f-kepada" data-f="kepada">${esc(D.kepada)}</textarea>
     <h3>3. Isi surat</h3>
-    <label class="sr-sw"><input type="checkbox" data-f="salamBuka" ${D.salamBuka ? 'checked' : ''}> Salam pembuka (${esc(c.salamBuka)})</label>
-    <label for="f-pembuka">Paragraf pembuka (kosongkan bila tidak perlu)</label><textarea id="f-pembuka" data-f="pembuka" style="min-height:96px">${esc(D.pembuka)}</textarea>
+    <p class="mut" style="margin:0 0 8px">Salam pembuka, paragraf pembuka, paragraf penutup, dan salam penutup sudah otomatis tercetak di surat.</p>
+    <label for="f-ukuran">Ukuran huruf isi surat</label><select id="f-ukuran" data-f="ukuran">${[['auto', 'Otomatis (muat satu halaman)'], ['12', '12 pt'], ['11.5', '11,5 pt'], ['11', '11 pt'], ['10.5', '10,5 pt'], ['10', '10 pt']].map(([v, t]) => `<option value="${v}" ${String(D.ukuran || 'auto') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
     <label for="f-pengantar" style="margin-top:8px">Kalimat pengantar isi</label><textarea id="f-pengantar" data-f="pengantar">${esc(D.pengantar)}</textarea>
     <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--navy)">Rincian (hari, waktu, tempat)</b><button type="button" id="addR">+ Baris</button></div><div id="rincian">${rinciHtml()}</div></div>
     <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--navy)">Butir bernomor</b><button type="button" id="addB">+ Butir</button></div><div id="butir" style="margin-top:6px">${butirHtml()}</div></div>
-    <label for="f-penutup" style="margin-top:8px">Paragraf penutup</label><textarea id="f-penutup" data-f="penutup">${esc(D.penutup)}</textarea>
-    <label class="sr-sw"><input type="checkbox" data-f="salamTutup" ${D.salamTutup ? 'checked' : ''}> Salam penutup (${esc(c.salamTutup)})</label>
     <h3>4. Penandatangan</h3>
     <div class="grid"><div><label for="f-tj">Jabatan</label><input id="f-tj" data-f="ttdJabatan" value="${esc(D.ttdJabatan)}"></div><div><label for="f-tn">Nama (beserta gelar)</label><input id="f-tn" data-f="ttdNama" value="${esc(D.ttdNama)}"></div>
       <div><label for="f-tp">NIP/NIY (opsional)</label><input id="f-tp" data-f="ttdNip" value="${esc(D.ttdNip)}"></div></div>
@@ -169,12 +165,7 @@ MODUL.buatsurat = async function (jenisBaru) {
     <h3>5. Tembusan</h3>
     <label class="sr-sw"><input type="checkbox" data-f="tembusanOn" ${D.tembusanOn ? 'checked' : ''}> Cantumkan tembusan</label>
     <textarea data-f="tembusan" style="min-height:96px" aria-label="Daftar tembusan">${esc(D.tembusan)}</textarea>
-    <details style="margin-top:16px"><summary style="cursor:pointer;font-weight:700;color:var(--navy)">Pengaturan kop surat & bawaan</summary>
-      <div class="grid" style="margin-top:8px"><div><label for="k1">Baris kop 1</label><input id="k1" value="${esc(c.kop.l1)}"></div><div><label for="k2">Baris kop 2</label><input id="k2" value="${esc(c.kop.l2)}"></div>
-        <div><label for="k3">Baris kop 3</label><input id="k3" value="${esc(c.kop.l3)}"></div><div><label for="kk">Kode nomor surat</label><input id="kk" value="${esc(c.kodeNomor)}" placeholder="YMAKR/SD"></div></div>
-      <label for="ka" style="margin-top:8px">Alamat & kontak kop</label><textarea id="ka">${esc(c.kop.alamat)}</textarea>
-      <p class="mut">Format nomor: urutan/${esc(c.kodeNomor)}/bulan romawi/tahun. Urutan dihitung dari surat keluar tahun itu.</p>
-      <p><button type="button" id="simpanCfg">Simpan sebagai bawaan (kop, kode, penandatangan, tembusan)</button></p></details>
+
   </div>
   <div class="sr-pv"><div class="sr-act"><button class="p" type="button" id="cetak">Cetak / simpan PDF</button><button type="button" id="simpan">Simpan & catat di Surat keluar</button></div>
     <div class="sr-box" id="box"><div id="pvw"><iframe id="pv" title="Pratinjau surat"></iframe></div></div></div></div>
@@ -198,6 +189,7 @@ MODUL.buatsurat = async function (jenisBaru) {
   v.oninput = v.onchange = async e => {
     const t = e.target;
     if (t.id === 'sjenis') return e.type === 'change' ? MODUL.buatsurat(t.value) : undefined;
+    if (t.id === 'f-kode') { c.kodeNomor = t.value.trim() || c.kodeNomor; $('#kodeLihat').textContent = c.kodeNomor; if (!D.id) segarNomor(); return tunda(); }
     if (t.dataset.f) {
       const k = t.dataset.f; D[k] = t.type === 'checkbox' ? t.checked : t.value;
       if (k === 'nomor') D.nomorManual = true;
@@ -227,11 +219,10 @@ MODUL.buatsurat = async function (jenisBaru) {
       return MODUL.buatsurat();
     }
     if (t.id === 'simpanCfg') {
-      const cfg = { ...c, kop: { l1: $('#k1').value.trim(), l2: $('#k2').value.trim(), l3: $('#k3').value.trim(), alamat: $('#ka').value }, kodeNomor: $('#kk').value.trim() || c.kodeNomor,
-        kota: D.kota, ttd: { jabatan: D.ttdJabatan, nama: D.ttdNama, nip: D.ttdNip }, tembusan: D.tembusan };
+      const cfg = { kodeNomor: c.kodeNomor, kota: D.kota, ttd: { jabatan: D.ttdJabatan, nama: D.ttdNama, nip: D.ttdNip }, tembusan: D.tembusan };
       const { error } = await sb.from('surat_pengaturan').upsert({ id: 'utama', config: cfg, updated_at: new Date().toISOString() });
       if (error) return msg(error.message, true);
-      R.cfg = cfg; msg('Pengaturan bawaan disimpan.'); return gambar();
+      Object.assign(R.cfg, cfg); return msg('Pengaturan bawaan disimpan.');
     }
     if (t.id === 'simpan') {
       if (!D.hal.trim()) return msg('Isi hal / perihal surat.', true);
