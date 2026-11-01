@@ -49,7 +49,7 @@ function suratBaru(jenis) {
 
 // HTML surat siap cetak (dipakai pratinjau & cetak). Ukuran A4, margin diatur di @page.
 function htmlSurat(D, cfg) {
-  const k = cfg.kop, logo = location.origin + '/logo-at-taqwa.png';
+  const k = cfg.kop, logo = location.origin + '/logo-kop.png';
   const butir = D.butir.filter(b => (b.teks || '').trim()).map(b => {
     const sub = baris(b.sub);
     return `<li>${tebalMiring(b.teks)}${sub.length ? `<ol type="a">${sub.map(s => `<li>${tebalMiring(s)}</li>`).join('')}</ol>` : ''}</li>`;
@@ -60,10 +60,11 @@ function htmlSurat(D, cfg) {
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc((D.nomor || 'Surat').replace(/\//g, '-'))}</title><style>
 @page{size:A4;margin:14mm 20mm 16mm}*{box-sizing:border-box}@media screen{body{padding:14mm 20mm 16mm;min-height:297mm}}
 body{margin:0;background:#fff;color:#000;font:12pt/1.35 "Times New Roman",Times,serif}
-.kop{display:flex;align-items:center;gap:10px;padding-bottom:4px;border-bottom:4px double #222;margin-bottom:12px}
-.kop img{width:78px;height:78px;object-fit:contain;flex:none}.kt{flex:1;text-align:center;line-height:1.2}
-.k1{font-weight:700;font-size:15pt;color:#7a1f1f;letter-spacing:.2px}.k2,.k3{font-weight:700;font-size:13pt}.k3{color:#1f3d7a}.ka{font-size:9.5pt;margin-top:2px}
-.hd{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hd table{border-collapse:collapse}.hd td{padding:0 4px 0 0;vertical-align:top}
+.kop{display:flex;align-items:center;color:#1b6b34}
+.kop img{width:47mm;flex:none;display:block}.kt{flex:1;text-align:center;line-height:1.32;padding-left:2mm}
+.k1{font-weight:700;font-size:10.82pt;white-space:nowrap}.k2{font-weight:700;font-size:10.61pt;white-space:nowrap}.k3{font-weight:400;font-size:11.27pt;white-space:nowrap}.ka{font-size:10.15pt;white-space:nowrap;margin-top:1mm}
+.gr{margin:1mm 0 4mm}.gr i{display:block;background:#1b6b34}.gr i:nth-child(1){height:1px}.gr i:nth-child(2){height:3px;margin:1.2px 0}.gr i:nth-child(3){height:1px}
+.hd{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hd table{border-collapse:collapse}.hd>div{white-space:nowrap}.hd td{padding:0 4px 0 0;vertical-align:top}
 p{margin:0 0 8px;text-align:justify}.ind{text-indent:1.1cm}.salam{font-style:italic;font-weight:700;margin:0 0 6px}
 ol{margin:2px 0 6px;padding-left:1.1cm;text-align:justify}ol li{margin-bottom:4px;padding-left:4px}ol ol{margin:2px 0 2px;padding-left:.9cm}
 .rin{border-collapse:collapse;margin:0 0 8px 1.1cm}.rin td{padding:1px 6px 1px 0;vertical-align:top}.rin td:first-child{white-space:nowrap}
@@ -71,7 +72,7 @@ ol{margin:2px 0 6px;padding-left:1.1cm;text-align:justify}ol li{margin-bottom:4p
 .ttd .ruang img{position:absolute;max-height:2.4cm;max-width:6.4cm}.ttd .ruang .st{left:0;top:0;opacity:.85}.ttd .ruang .tt{left:1.6cm;top:.1cm}
 .tem{margin-top:6px;font-size:10pt;page-break-inside:avoid}.tem ol{padding-left:.7cm;margin:0}.tem li{margin:0;padding-left:2px}
 </style></head><body>
-<div class="kop"><img src="${logo}" alt=""><div class="kt"><div class="k1">${esc(k.l1)}</div><div class="k2">${esc(k.l2)}</div><div class="k3">${esc(k.l3)}</div><div class="ka">${baris(k.alamat).map(esc).join('<br>')}</div></div></div>
+<div class="kop"><img src="${logo}" alt=""><div class="kt"><div class="k1">${esc(k.l1)}</div><div class="k2">${esc(k.l2)}</div><div class="k3">${esc(k.l3)}</div><div class="ka">${baris(k.alamat).map(esc).join('<br>')}</div></div></div><div class="gr"><i></i><i></i><i></i></div>
 <div class="hd"><table><tr><td>Nomor</td><td>:</td><td>${esc(D.nomor)}</td></tr><tr><td>Lamp</td><td>:</td><td>${esc(D.lampiran || '-')}</td></tr><tr><td>Hal</td><td>:</td><td>${esc(D.hal)}</td></tr></table><div>${esc(D.kota)}, ${esc(tgl)}</div></div>
 <p>Kepada Yth.<br>${baris(D.kepada).map((x, i) => i === 0 ? `<b>${tebalMiring(x)}</b>` : tebalMiring(x)).join('<br>')}</p>
 ${D.salamBuka ? `<p class="salam">${esc(cfg.salamBuka)}</p>` : ''}
