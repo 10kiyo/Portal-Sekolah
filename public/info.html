@@ -67,15 +67,25 @@ h2{margin:0;color:var(--navy);font-size:18px}
 .bln button:hover{background:var(--soft)}.bln button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .bln small{display:block;font-weight:400;font-size:12px;opacity:.75}
 .solo .per,.solo #arsip{display:none}
+/* Spanduk judul: logo + judul + subjudul, menggelap & membesar saat disorot mouse */
+.bn{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:clamp(16px,3vw,26px) clamp(14px,4vw,40px);border-radius:clamp(18px,2.8vw,28px);background:linear-gradient(145deg,#1d3d5a,#102a43);color:#fff;overflow:hidden;box-shadow:0 12px 30px #102a4333;transition:background .35s}
+.bn .lg{flex:none;display:grid;place-items:center;width:clamp(78px,14vw,130px);filter:brightness(2) saturate(.6);transition:transform .35s,filter .35s}   /* logo transparan, hijau dicerahkan agar terbaca di latar navy */
+.bn .lg img{width:100%;height:auto;display:block}
+.bn .tx{min-width:0;text-align:center;transition:transform .35s}
+.bn h1{margin:0;color:#fff;font-family:inherit;text-transform:uppercase;font-weight:800;font-size:clamp(26px,5.6vw,52px);letter-spacing:-.03em;line-height:1.05;transition:color .35s}
+.bn p{margin:6px 0 0;color:#dbe7f2;font-family:inherit;font-size:clamp(12px,2vw,18px);font-weight:400;line-height:1.35;transition:color .35s}
+@media(hover:hover){.bn:hover{background:linear-gradient(145deg,#0e2336,#08141f)}.bn:hover .lg{transform:scale(1.1);filter:brightness(1.5) saturate(.45)}.bn:hover .tx{transform:scale(1.04)}.bn:hover h1,.bn:hover p{color:#aab4be}}
+@media(prefers-reduced-motion:reduce){.bn,.bn .lg,.bn .tx,.bn h1,.bn p{transition:none}.bn:hover .lg,.bn:hover .tx{transform:none}}
 </style>
 <link rel="stylesheet" href="si-tema.css">
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <div><h1>Info Terbaru</h1>
-    <div class="mut">Pengumuman, agenda kegiatan, dan surat untuk orang tua</div></div>
-  </div>
+  <header class="bn">
+    <span class="lg"><img src="logo-sitaqwa.png" alt="Logo SDS Islam At-Taqwa"></span>
+    <div class="tx"><h1>Info At-Taqwa</h1>
+    <p>Pengumuman, agenda kegiatan, dan surat untuk orang tua</p></div>
+  </header>
 
   <div class="card" id="pdWrap" hidden>
     <h2>Pendaftaran terbuka untuk umum</h2>
