@@ -272,16 +272,10 @@ const murid = () => run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid)
 async function vMurid() {
   const ms = await murid();
   $('#view').innerHTML = `<h2>Data murid (${ms.length})</h2>
-  <label for="bulk">Tambah murid, satu nama per baris</label>
-  <textarea id="bulk" placeholder="Nama murid 1&#10;Nama murid 2"></textarea>
-  <p><button class="p" id="add">Simpan murid</button></p><div id="msg" class="msg"></div>
+  <p class="mut">Murid baru hanya ditambahkan oleh Operator Sekolah (menu <b>Data murid</b>) supaya data tidak bertabrakan. Setelah operator menambahkan, klik <b>Sinkronkan Murid</b> di atas untuk memuatnya ke kelas ini.</p>
   <p class="mut">Orang tua cukup memasukkan kode akses ini di menu Pantau Belajar Anak. Murid hasil tarik daftar dari database memakai satu kode yang sama di semua guru.</p>
   <table><tr><th>Nama</th><th>Kode akses</th><th></th></tr>
   ${ms.map(m => `<tr><td>${esc(m.nama)}</td><td><b>${esc(m.kode_akses)}</b></td><td><button class="d" data-del="${m.id}">Hapus</button></td></tr>`).join('')}</table>`;
-  $('#add').onclick = async () => {
-    const rows = $('#bulk').value.split('\n').map(s => s.trim()).filter(Boolean).map(nama => ({ nama, kelas_id: S.kid }));
-    if (!rows.length) return; await run(sb.from('kelas_murid').insert(rows)); vMurid();
-  };
   $('#view').onclick = async e => {
     const id = e.target.dataset.del;
     if (id && confirm('Hapus murid ini beserta presensi dan nilainya?')) { await run(sb.from('kelas_murid').delete().eq('id', id)); vMurid(); }
