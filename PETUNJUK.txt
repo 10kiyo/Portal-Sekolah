@@ -198,3 +198,7 @@ TAMPILAN BERANDA BARU (hero gelap + pita nilai berjalan + Visi & Kepala Sekolah)
 3. Ubah teks: cari komentar "HERO" (judul, tagline, angka statistik, lencana) dan "NILAI" (teks pita berjalan) di index.html.
    Teks sambutan tetap di blok SAMBUTAN pada script. Bagian Info terbaru, Video, Prestasi (galeri berjalan), dan footer tidak berubah.
 4. Saat menyalin ke repo: GABUNGKAN/timpa file saja, jangan mengganti seluruh folder public.
+
+FOTO KEPALA SEKOLAH BARU
+   File: public/foto-kepsek.jpg (BARU) dan public/index.html (DIGANTI). Foto lama foto-pimpinan.jpg tidak lagi dipakai di beranda (boleh dihapus).
+   Ganti foto lagi: timpa public/foto-kepsek.jpg dengan nama yang sama. Tinggi foto mengikuti tinggi kolom teks Visi; nama & jabatan di atas foto ada di index.html (class "cp").
