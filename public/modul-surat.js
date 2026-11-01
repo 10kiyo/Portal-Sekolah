@@ -58,12 +58,12 @@ function htmlSurat(D, cfg) {
   const tem = baris(D.tembusan);
   const tgl = tglPanjang(D.tanggal);
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc((D.nomor || 'Surat').replace(/\//g, '-'))}</title><style>
-@page{size:A4;margin:14mm 20mm 16mm}*{box-sizing:border-box}@media screen{body{padding:14mm 20mm 16mm;min-height:297mm}}
+@page{size:A4;margin:14mm 20mm 16mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}@media screen{body{padding:14mm 20mm 16mm;min-height:297mm}}
 body{margin:0;background:#fff;color:#000;font:12pt/1.35 "Times New Roman",Times,serif}
 .kop{display:flex;align-items:center;color:#1b6b34}
 .kop img{width:47mm;flex:none;display:block}.kt{flex:1;text-align:center;line-height:1.32;padding-left:2mm}
 .k1{font-weight:700;font-size:10.82pt;white-space:nowrap}.k2{font-weight:700;font-size:10.61pt;white-space:nowrap}.k3{font-weight:400;font-size:11.27pt;white-space:nowrap}.ka{font-size:10.15pt;white-space:nowrap;margin-top:1mm}
-.gr{margin:1mm 0 4mm}.gr i{display:block;background:#1b6b34}.gr i:nth-child(1){height:1px}.gr i:nth-child(2){height:3px;margin:1.2px 0}.gr i:nth-child(3){height:1px}
+.gr{margin:1mm 0 4mm}.gr i{display:block;border-top:1px solid #1b6b34}.gr i:nth-child(2){border-top-width:3px;margin:1.5px 0}
 .hd{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hd table{border-collapse:collapse}.hd>div{white-space:nowrap}.hd td{padding:0 4px 0 0;vertical-align:top}
 p{margin:0 0 8px;text-align:justify}.ind{text-indent:1.1cm}.salam{font-style:italic;font-weight:700;margin:0 0 6px}
 ol{margin:2px 0 6px;padding-left:1.1cm;text-align:justify}ol li{margin-bottom:4px;padding-left:4px}ol ol{margin:2px 0 2px;padding-left:.9cm}
@@ -110,7 +110,7 @@ function cssSurat() {
   .sr-b{background:var(--soft);border-radius:14px;padding:10px 12px;margin:0 0 10px}.sr-b .bar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px;font-weight:700;color:var(--navy);font-size:13px}
   .sr-b button{padding:4px 10px;font-size:12px}.sr-r{display:grid;grid-template-columns:150px 1fr auto;gap:8px;margin-bottom:6px}
   .sr-pv{position:sticky;top:10px}.sr-box{border:1px solid #d7e2ec;border-radius:14px;background:#e9eef3;padding:10px;overflow:auto;max-height:calc(100vh - 150px)}
-  .sr-box iframe{display:block;width:794px;border:0;background:#fff;margin:0 auto;box-shadow:0 2px 10px #0002}.sr-act{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  .sr-box iframe{display:block;width:794px;border:0;background:#fff;box-shadow:0 2px 10px #0002;transform-origin:top left}#pvw{margin:0 auto;overflow:hidden}.sr-act{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
   .sr-sw{display:flex;gap:8px;align-items:center;font-weight:600;margin:6px 0}.sr-sw input{width:auto}
   @media(max-width:1000px){.sr-grid{grid-template-columns:1fr}.sr-pv{position:static}.sr-box{max-height:none}.sr-r{grid-template-columns:1fr auto}.sr-r input:first-child{grid-column:1/-1}}
   @media print{.sr-form,.sr-act,.sr-hist{display:none!important}}`;
@@ -177,7 +177,7 @@ MODUL.buatsurat = async function (jenisBaru) {
       <p><button type="button" id="simpanCfg">Simpan sebagai bawaan (kop, kode, penandatangan, tembusan)</button></p></details>
   </div>
   <div class="sr-pv"><div class="sr-act"><button class="p" type="button" id="cetak">Cetak / simpan PDF</button><button type="button" id="simpan">Simpan & catat di Surat keluar</button></div>
-    <div class="sr-box" id="box"><iframe id="pv" title="Pratinjau surat"></iframe></div></div></div>
+    <div class="sr-box" id="box"><div id="pvw"><iframe id="pv" title="Pratinjau surat"></iframe></div></div></div></div>
   <div class="sr-hist" style="margin-top:22px"><h3 style="color:var(--navy)">Surat yang pernah dibuat (${draf.length})</h3>
   <table><tr><th>Tanggal</th><th>Nomor</th><th>Perihal</th><th></th></tr>${draf.map(r => `<tr><td>${tglID(r.tanggal)}</td><td>${esc(r.nomor)}</td><td>${esc(r.perihal)}</td><td><button type="button" data-buka="${r.id}">Buka</button> <button type="button" data-salin="${r.id}">Salin</button></td></tr>`).join('') || '<tr><td colspan="4" class="mut">Belum ada.</td></tr>'}</table></div>`;
 
@@ -185,7 +185,11 @@ MODUL.buatsurat = async function (jenisBaru) {
   let tm = null;
   const gambar = () => {
     pv.srcdoc = htmlSurat(D, c);
-    pv.onload = () => { const z = Math.min(1, (box.clientWidth - 20) / 794); pv.style.zoom = z; pv.style.height = Math.max(1123, pv.contentDocument.documentElement.scrollHeight) + 'px'; };
+    pv.onload = () => {
+      const z = Math.min(1, (box.clientWidth - 20) / 794), h = Math.max(1123, pv.contentDocument.documentElement.scrollHeight);
+      pv.style.height = h + 'px'; pv.style.transform = `scale(${z})`;
+      $('#pvw').style.width = Math.round(794 * z) + 'px'; $('#pvw').style.height = Math.round(h * z) + 'px';
+    };
   };
   const tunda = () => { clearTimeout(tm); tm = setTimeout(gambar, 200); };
   const segarNomor = () => { if (!D.nomorManual) { D.nomor = nomorSurat(c, R.rows.filter(r => r.id !== D.id), D.tanggal); $('#f-nomor').value = D.nomor; } };
