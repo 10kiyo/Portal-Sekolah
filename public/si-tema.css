@@ -1,0 +1,13 @@
+/* ============================================================
+   Tema bersama: menyamakan tipografi semua halaman dengan Beranda (index.html).
+   Dipasang di akhir <head> setiap halaman selain index.html.
+   Warna dasar sudah sama di semua halaman (--navy #102a43, --blue #1677c8, emas #f5b335).
+   Aturan di sini hanya elemen dasar, jadi gaya khusus per halaman tetap berlaku.
+   ============================================================ */
+:root { --gold: #f5b335; --hero: #0b1f33; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+button, input, select, textarea { font-family: inherit; }          /* sebelumnya sebagian tombol memakai Arial */
+h1, h2, h3 { font-family: inherit; font-weight: 800; }              /* Beranda memakai bobot 800 */
+h1 { letter-spacing: -.04em; }
+h2 { letter-spacing: -.03em; }
+h3 { letter-spacing: -.02em; }

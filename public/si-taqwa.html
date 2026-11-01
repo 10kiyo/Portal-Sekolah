@@ -11,16 +11,16 @@
    Tambah/ubah layanan: edit daftar kartu <a class="kt"> di bawah (satu kartu = satu layanan).
    Atribut data-r = nama rute di index.html (ortu, buku-tamu, kelas, kegiatan).
    ============================================================ */
-:root{--navy:#102a43;--blue:#1677c8;--ink:#243b53;--mute:#5b7086}
+:root{--navy:#102a43;--blue:#1677c8;--ink:#243b53;--mute:#627d98}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.4vw,24px);padding:clamp(18px,4vw,48px) clamp(12px,3vw,24px);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(160deg,#10325acc 0%,#2a3f9acc 55%,#7a4a8acc 100%),url(foto-sekolah.jpg) 60% 55%/cover fixed no-repeat,#16396b}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.4vw,24px);padding:clamp(18px,4vw,48px) clamp(12px,3vw,24px);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(160deg,#0b1f33f2 0%,#0f3150d9 55%,#16406bb3 100%),url(foto-sekolah.jpg) 60% 55%/cover fixed no-repeat,#0b1f33}
 .hd{width:min(1020px,100%);text-align:center;background:#f4f7fd;border-radius:clamp(24px,4vw,40px);padding:clamp(20px,3.2vw,34px) clamp(16px,4vw,40px) clamp(20px,3.2vw,32px);box-shadow:0 18px 50px #0b1f3359}
 .hd img{width:clamp(130px,22vw,190px);height:clamp(64px,10vw,88px);object-fit:contain}
-.hd h1{margin:clamp(8px,1.6vw,14px) 0 0;color:#1e3a8a;font-size:clamp(36px,7.5vw,60px);font-weight:800;letter-spacing:-.05em;line-height:1}
-.hd p{margin:clamp(8px,1.4vw,12px) 0 0;color:#3a4a5d;font-weight:700;font-size:clamp(16px,2.8vw,26px);letter-spacing:-.02em}
+.hd h1{margin:clamp(8px,1.6vw,14px) 0 0;color:var(--navy);font-size:clamp(36px,7.5vw,60px);font-weight:800;letter-spacing:-.04em;line-height:1}
+.hd p{margin:clamp(8px,1.4vw,12px) 0 0;color:var(--ink);font-weight:700;font-size:clamp(16px,2.8vw,26px);letter-spacing:-.02em}
 .hd small{display:block;margin-top:6px;color:var(--mute);font-weight:600;font-size:clamp(13px,1.9vw,16px)}
-.hd i{display:block;width:clamp(56px,9vw,84px);height:5px;margin:clamp(14px,2.2vw,20px) auto 0;border-radius:99px;background:linear-gradient(90deg,#3b3bd0,#f5b335)}
+.hd i{display:block;width:clamp(56px,9vw,84px);height:5px;margin:clamp(14px,2.2vw,20px) auto 0;border-radius:99px;background:linear-gradient(90deg,#1677c8,#f5b335)}
 .gr{width:min(1020px,100%);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr));gap:clamp(12px,2vw,18px)}
 .kt{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:clamp(20px,3vw,28px) clamp(14px,2vw,20px) clamp(22px,3vw,30px);border-radius:clamp(18px,2.6vw,26px);color:#fff;text-decoration:none;box-shadow:0 12px 30px #0b1f3340;transition:transform .18s,box-shadow .18s,filter .18s}
 .kt:hover{transform:translateY(-4px);box-shadow:0 18px 38px #0b1f3355;filter:brightness(1.04)}
@@ -30,13 +30,14 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;just
 .kt h2{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .kt p{margin:0;font-size:clamp(13.5px,1.7vw,15px);line-height:1.55;font-weight:500;opacity:.95}
 .kt b{margin-top:auto;padding-top:12px;font-size:12.5px;font-weight:700;opacity:.9}
-.kt.a{background:linear-gradient(145deg,#2f6fe0,#5a4fd8)}.kt.a .ic svg{stroke:#2f56c8}
-.kt.b{background:linear-gradient(145deg,#12906f,#3fb98c)}.kt.b .ic svg{stroke:#12906f}
-.kt.c{background:linear-gradient(145deg,#3b4fc4,#7b46d6)}.kt.c .ic svg{stroke:#4a3fc0}
-.kt.d{background:linear-gradient(145deg,#f0a92e,#e9788a)}.kt.d .ic svg{stroke:#d8821a}
+.kt.a{background:linear-gradient(145deg,#1677c8,#0f4f8f)}.kt.a .ic svg{stroke:#1677c8}
+.kt.b{background:linear-gradient(145deg,#3d9be0,#1677c8)}.kt.b .ic svg{stroke:#1677c8}
+.kt.c{background:linear-gradient(145deg,#1d3d5a,#0b1f33)}.kt.c .ic svg{stroke:#102a43}
+.kt.d{background:linear-gradient(145deg,#f7c04d,#f5b335);color:var(--navy);text-shadow:none}.kt.d .ic svg{stroke:#c98a10}.kt.d p,.kt.d b{opacity:1}
 .ft{padding:9px clamp(14px,3vw,26px);border-radius:14px;background:#f4f7fde6;color:#3a4a5d;font-size:clamp(12px,1.6vw,14px);text-align:center}
 @media(prefers-reduced-motion:reduce){.kt{transition:none}.kt:hover{transform:none}}
 </style>
+<link rel="stylesheet" href="si-tema.css">
 </head>
 <body>
 <header class="hd">

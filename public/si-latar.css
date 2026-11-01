@@ -9,9 +9,9 @@
 @media screen {
   body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) {
     background:
-      linear-gradient(160deg, #10325acc 0%, #2a3f9acc 55%, #7a4a8acc 100%),
+      linear-gradient(160deg, #0b1f33f2 0%, #0f3150d9 55%, #16406bb3 100%),
       url(foto-sekolah.jpg) 60% 55% / cover fixed no-repeat,
-      #16396b;
+      #0b1f33;
   }
   /* Judul di luar kartu putih dibuat panel putih agar terbaca di atas foto */
   body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) header,
