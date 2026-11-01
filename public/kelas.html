@@ -132,6 +132,7 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
 
 </div>
 <script src="modul-staf.js"></script>
+<script src="modul-surat.js"></script>
 <script src="modul-bk.js"></script>
 <script>
 const sb = supabase.createClient("https://ejiivtioxouaeipmgsuq.supabase.co", "sb_publishable_6PtodVi8dU7Dd6JtH0g8uw_ppYbNmVl");
@@ -144,7 +145,7 @@ const GRUP = {
   guru: ['Kelas', [['murid', 'Murid'], ['pertemuan', 'Pertemuan & presensi'], ['rekap', 'Rekap kehadiran'], ['tugas', 'Tugas & nilai'], ['galeri', 'Galeri karya'], ['jadwal', 'Jadwal mengajar'], ['rubrik', 'Rubrik penilaian']]],
   pustakawan: ['Perpustakaan & kesiswaan', [['kartu', 'Kartu pelajar'], ['ekskul', 'Ekskul & club'], ['pinjam', 'Peminjaman buku']]],
   keuangan: ['Keuangan', [['transaksi', 'Kas masuk & keluar'], ['laporan', 'Laporan keuangan'], ['proposal', 'Proposal'], ['lpj', 'LPJ']]],
-  persuratan: ['Persuratan', [['masuk', 'Surat masuk'], ['keluar', 'Surat keluar'], ['agenda', 'Agenda surat']]],
+  persuratan: ['Persuratan', [['buatsurat', 'Buat surat'], ['masuk', 'Surat masuk'], ['keluar', 'Surat keluar'], ['agenda', 'Agenda surat']]],
   sarpras: ['Sarana & prasarana', [['fasilitas', 'Kelola fasilitas']]],
   info: ['Info & Galeri', [['infoadmin', 'Kelola Info & Galeri']]],
   bk: ['Bimbingan Konseling', [['bkberanda', 'Ringkasan'], ['bkcatat', 'Catat kedisiplinan'], ['bkrekap', 'Rekap & poin siswa'], ['bktindak', 'Tindak lanjut & SP'], ['bkkonsel', 'Konseling (rahasia)'], ['bkortu', 'Orang tua & surat'], ['bkkelas', 'Kelas saya'], ['bkatur', 'Pengaturan']]],

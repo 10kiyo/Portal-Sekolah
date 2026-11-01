@@ -1,0 +1,7 @@
+MODUL BUAT SURAT (menu Persuratan)
+1. Supabase > SQL Editor: jalankan supabase/supabase-surat-generator.sql (SETELAH supabase-peran.sql). Jalankan SEBELUM deploy.
+2. Salin ke repo (struktur sama):
+   public/modul-surat.js  (BARU)
+   public/kelas.html      (DIGANTI - menu "Buat surat" + pemuatan modul-surat.js)
+   supabase/supabase-surat-generator.sql (BARU)
+3. Deploy. Tidak ada variabel baru. Menu: Administrasi Guru dan Staf > Persuratan > Buat surat.
