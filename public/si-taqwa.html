@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SI-TAQWA — Sistem Informasi Terpadu At-Taqwa</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+/* ============================================================
+   SI-TAQWA = halaman induk semua layanan digital sekolah.
+   Tambah/ubah layanan: edit daftar kartu <a class="kt"> di bawah (satu kartu = satu layanan).
+   Atribut data-r = nama rute di index.html (ortu, buku-tamu, kelas, kegiatan).
+   ============================================================ */
+:root{--navy:#102a43;--blue:#1677c8;--ink:#243b53;--mute:#5b7086}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(14px,2.4vw,24px);padding:clamp(18px,4vw,48px) clamp(12px,3vw,24px);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(160deg,#10325acc 0%,#2a3f9acc 55%,#7a4a8acc 100%),url(foto-sekolah.jpg) 60% 55%/cover fixed no-repeat,#16396b}
+.hd{width:min(1020px,100%);text-align:center;background:#f4f7fd;border-radius:clamp(24px,4vw,40px);padding:clamp(20px,3.2vw,34px) clamp(16px,4vw,40px) clamp(20px,3.2vw,32px);box-shadow:0 18px 50px #0b1f3359}
+.hd img{width:clamp(130px,22vw,190px);height:clamp(64px,10vw,88px);object-fit:contain}
+.hd h1{margin:clamp(8px,1.6vw,14px) 0 0;color:#1e3a8a;font-size:clamp(36px,7.5vw,60px);font-weight:800;letter-spacing:-.05em;line-height:1}
+.hd p{margin:clamp(8px,1.4vw,12px) 0 0;color:#3a4a5d;font-weight:700;font-size:clamp(16px,2.8vw,26px);letter-spacing:-.02em}
+.hd small{display:block;margin-top:6px;color:var(--mute);font-weight:600;font-size:clamp(13px,1.9vw,16px)}
+.hd i{display:block;width:clamp(56px,9vw,84px);height:5px;margin:clamp(14px,2.2vw,20px) auto 0;border-radius:99px;background:linear-gradient(90deg,#3b3bd0,#f5b335)}
+.gr{width:min(1020px,100%);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr));gap:clamp(12px,2vw,18px)}
+.kt{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:clamp(20px,3vw,28px) clamp(14px,2vw,20px) clamp(22px,3vw,30px);border-radius:clamp(18px,2.6vw,26px);color:#fff;text-decoration:none;box-shadow:0 12px 30px #0b1f3340;transition:transform .18s,box-shadow .18s,filter .18s}
+.kt:hover{transform:translateY(-4px);box-shadow:0 18px 38px #0b1f3355;filter:brightness(1.04)}
+.kt:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.kt .ic{display:grid;place-items:center;width:clamp(54px,7vw,68px);height:clamp(54px,7vw,68px);margin-bottom:clamp(8px,1.4vw,14px);border-radius:18px;background:#fff;box-shadow:0 6px 16px #0b1f3325}
+.kt .ic svg{width:48%;height:48%;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.kt h2{margin:0;font-size:clamp(18px,2.4vw,22px);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.kt p{margin:0;font-size:clamp(13.5px,1.7vw,15px);line-height:1.55;font-weight:500;opacity:.95}
+.kt b{margin-top:auto;padding-top:12px;font-size:12.5px;font-weight:700;opacity:.9}
+.kt.a{background:linear-gradient(145deg,#2f6fe0,#5a4fd8)}.kt.a .ic svg{stroke:#2f56c8}
+.kt.b{background:linear-gradient(145deg,#12906f,#3fb98c)}.kt.b .ic svg{stroke:#12906f}
+.kt.c{background:linear-gradient(145deg,#3b4fc4,#7b46d6)}.kt.c .ic svg{stroke:#4a3fc0}
+.kt.d{background:linear-gradient(145deg,#f0a92e,#e9788a)}.kt.d .ic svg{stroke:#d8821a}
+.ft{padding:9px clamp(14px,3vw,26px);border-radius:14px;background:#f4f7fde6;color:#3a4a5d;font-size:clamp(12px,1.6vw,14px);text-align:center}
+@media(prefers-reduced-motion:reduce){.kt{transition:none}.kt:hover{transform:none}}
+</style>
+</head>
+<body>
+<header class="hd">
+  <img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa">
+  <h1>SI-TAQWA</h1>
+  <p>Sistem Informasi Terpadu At-Taqwa</p>
+  <small>SDS Islam At-Taqwa Rawamangun</small>
+  <i aria-hidden="true"></i>
+</header>
+
+<nav class="gr" aria-label="Layanan SI-TAQWA">
+  <a class="kt a" href="/#ortu" data-r="ortu">
+    <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.2 19.5c.4-3.4 2.7-5.4 5.8-5.4s5.4 2 5.8 5.4"/><circle cx="17.2" cy="9.4" r="2.4"/><path d="M16.6 14.3c2.5.1 4.1 1.8 4.4 4.4"/></svg></span>
+    <h2>Pantau Belajar Anak</h2>
+    <p>Lihat kehadiran, tugas, dan nilai anak dengan kode akses dari guru.</p>
+    <b>Orang tua &amp; murid</b>
+  </a>
+  <a class="kt b" href="/#buku-tamu" data-r="buku-tamu">
+    <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 4.5h10.2a2 2 0 0 1 2 2v13H7.5a2 2 0 0 1-2-2z"/><path d="M5.5 17.5a2 2 0 0 1 2-2h10.2"/><path d="M9.5 8.5h5"/></svg></span>
+    <h2>Buku Tamu Sekolah</h2>
+    <p>Catat kunjungan tamu dan lihat rekap kehadiran buku tamu.</p>
+    <b>Tamu &amp; petugas</b>
+  </a>
+  <a class="kt c" href="/#kelas" data-r="kelas">
+    <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 4.5 6.4v5.2c0 4.3 3 7.3 7.5 8.9 4.5-1.6 7.5-4.6 7.5-8.9V6.4z"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg></span>
+    <h2>Administrasi Guru dan Staf</h2>
+    <p>Kelas &amp; nilai, perpustakaan, keuangan, persuratan, dan operator.</p>
+    <b>Guru &amp; staf</b>
+  </a>
+  <a class="kt d" href="/#kegiatan" data-r="kegiatan">
+    <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.6"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/><path d="m9.4 14.6 1.8 1.8 3.4-3.6"/></svg></span>
+    <h2>Kegiatan (Panitia)</h2>
+    <p>Pendaftaran kegiatan, cek bukti transfer, dan rekap peserta.</p>
+    <b>Panitia kegiatan</b>
+  </a>
+</nav>
+
+<div class="ft">© <span id="thn"></span> SI-TAQWA · SDS Islam At-Taqwa Rawamangun</div>
+
+<script>
+document.getElementById('thn').textContent = new Date().getFullYear();
+// Dibuka di dalam index.html (iframe): ganti rute induknya agar menu atas ikut menyala.
+document.querySelectorAll('a.kt').forEach(a => a.addEventListener('click', e => {
+  if (window.top !== window.self) {
+    e.preventDefault();
+    try { window.top.location.hash = a.dataset.r; } catch (x) { window.top.location.href = '/#' + a.dataset.r; }
+  }
+}));
+</script>
+</body>
+</html>
