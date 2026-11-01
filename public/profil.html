@@ -19,24 +19,24 @@ h2{margin:0 0 12px;color:var(--navy);font-size:clamp(19px,3vw,23px);letter-spaci
 h3{margin:0 0 4px;color:var(--navy);font-size:16px}
 .card{background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:clamp(16px,3.5vw,26px);box-shadow:0 12px 30px #102a4310;margin-top:16px}
 .card p{line-height:1.7;margin:0 0 10px;overflow-wrap:anywhere}.card p:last-child{margin-bottom:0}
-/* ===== VISI & MISI (mengikuti desain referensi: kartu teal, label kuning) ===== */
+/* ===== VISI & MISI (warna mengikuti Beranda: navy #102a43, biru #1677c8, emas #f5b335) ===== */
 .vm{margin-top:clamp(20px,4vw,40px)}
 .vm .jd{text-align:center}
-.vm .jd h2{margin:0;color:#111;font-size:clamp(30px,6.5vw,52px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.vm .jd h2{margin:0;color:var(--navy);font-size:clamp(27px,4vw,42px);font-weight:800;letter-spacing:-.035em;line-height:1.12}
 .vm .jd h2 .amp{position:relative;display:inline-block;font-weight:500;margin:0 .12em}
-.vm .jd h2 .amp::after{content:"";position:absolute;left:12%;right:12%;bottom:-.14em;height:.09em;border-radius:99px;background:#f5c518}
-.vm .jd p{margin:clamp(10px,2vw,16px) 0 0;color:#7a7f85;font-weight:800;font-size:clamp(15px,2.6vw,24px);letter-spacing:-.01em;text-transform:uppercase}
-.vmc{--tl:#2f6479;--tr:#5a8894;position:relative;display:grid;grid-template-columns:clamp(110px,16vw,190px) 1fr;column-gap:clamp(12px,3vw,40px);align-items:center;margin-top:clamp(18px,3.5vw,30px);padding:clamp(22px,4.5vw,48px) clamp(18px,4vw,52px);color:#fff;border-radius:clamp(22px,3.5vw,36px);overflow:hidden;background:radial-gradient(circle at 18% 6%,#ffffff1a 0 7%,#0000 7.4%),radial-gradient(circle at 62% 10%,#ffffff12 0 9%,#0000 9.4%),radial-gradient(120% 140% at 100% 100%,var(--tr),#0000 62%),var(--tl);box-shadow:0 14px 26px #102a4338}
+.vm .jd h2 .amp::after{content:"";position:absolute;left:12%;right:12%;bottom:-.14em;height:.09em;border-radius:99px;background:#f5b335}
+.vm .jd p{margin:clamp(10px,1.6vw,14px) 0 0;color:var(--blue);font-weight:800;font-size:clamp(14px,2vw,18px);letter-spacing:.02em;text-transform:uppercase}
+.vmc{--tl:#102a43;--tr:#1f5a8c;position:relative;display:grid;grid-template-columns:clamp(110px,16vw,190px) 1fr;column-gap:clamp(12px,3vw,40px);align-items:center;margin-top:clamp(18px,3.5vw,30px);padding:clamp(22px,4.5vw,48px) clamp(18px,4vw,52px);color:#fff;border-radius:clamp(20px,2.8vw,28px);overflow:hidden;background:radial-gradient(circle at 18% 6%,#ffffff1a 0 7%,#0000 7.4%),radial-gradient(circle at 62% 10%,#ffffff12 0 9%,#0000 9.4%),radial-gradient(120% 140% at 100% 100%,var(--tr),#0000 62%),var(--tl);box-shadow:0 14px 26px #102a4338}
 .vmc.visi-c{align-items:center}
 .vmc.misi-c{align-items:start}
 .vmc .lb{align-self:start;padding-top:2px}
-.vmc .lb b{display:block;color:#fde13a;font-size:clamp(26px,4.6vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1;text-align:center}
+.vmc .lb b{display:block;color:#f5b335;font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;line-height:1;text-align:center}
 .vmc .lb i{display:flex;align-items:center;gap:6px;margin-top:clamp(12px,2vw,20px)}
 .vmc .lb i::before{content:"";flex:none;width:18px;height:4px;background:radial-gradient(circle,#fff 0 2px,#0000 2.5px) 0 50%/6px 4px repeat-x}
 .vmc .lb i::after{content:"";flex:1;height:5px;border-radius:99px;background:#fff}
-.vmc .vs{margin:0;text-align:center;font-style:italic;font-weight:500;font-size:clamp(16px,2.9vw,30px);line-height:1.45;letter-spacing:.01em}
+.vmc .vs{margin:0;text-align:center;font-style:italic;font-weight:500;font-size:clamp(16px,2.2vw,23px);line-height:1.55;letter-spacing:.01em}
 .vmc ol{list-style:none;margin:0;padding:0;counter-reset:m}
-.vmc ol li{counter-increment:m;position:relative;padding:clamp(9px,1.6vw,14px) 0 clamp(9px,1.6vw,14px) 2.1em;border-bottom:1.5px solid #0b2a38;font-size:clamp(14.5px,2.4vw,23px);line-height:1.5;overflow-wrap:anywhere}
+.vmc ol li{counter-increment:m;position:relative;padding:clamp(9px,1.6vw,14px) 0 clamp(9px,1.6vw,14px) 2.1em;border-bottom:1.5px solid #ffffff26;font-size:clamp(15px,1.9vw,19px);line-height:1.55;overflow-wrap:anywhere}
 .vmc ol li:last-child{border-bottom:0}
 .vmc ol li::before{content:counter(m) ".";position:absolute;left:0;top:clamp(9px,1.6vw,14px);width:1.8em}
 @media(max-width:560px){.vmc{grid-template-columns:1fr;row-gap:16px}.vmc .lb b{text-align:left}.vmc .lb i{max-width:150px}.vmc .vs{text-align:left}}
