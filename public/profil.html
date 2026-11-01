@@ -58,6 +58,7 @@ ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;
 .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .emb .wrap{padding-top:12px}
 </style>
+<script src="data-sekolah.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -77,6 +78,7 @@ ol.misi{margin:0;padding-left:22px;line-height:1.7}ol.misi li{margin-bottom:6px;
    Teks biasa saja (tanpa HTML). Untuk paragraf baru, pisahkan dengan baris kosong
    pada 'sejarah' (gunakan \n\n).
    ============================================================ */
+const D = window.DATA_SEKOLAH;
 const PROFIL = {
   tagline: 'Belajar Nyaman, Perilaku Islami, Insan Bertaqwa',
 
@@ -84,8 +86,8 @@ const PROFIL = {
     'Nama Sekolah': 'SDS Islam At-Taqwa Rawamangun',
     'NPSN': '20109114',
     'Jenjang / Status': 'Sekolah Dasar (Swasta)',
-    'Akreditasi': 'A (skor 98, BAN)',
-    'Tahun Berdiri': '2002',
+    'Akreditasi': `${D.akreditasiPredikat} (skor ${D.akreditasiNilai}, BAN)`,
+    'Tahun Berdiri': String(D.tahunBerdiri),
     'Kepala Sekolah': 'Ibu Nurbaiti, S.Pd.',
     'Jam Layanan': 'Senin – Jumat, 07:00 – 16:00'
   },
@@ -106,13 +108,13 @@ const PROFIL = {
 
   // Teks panjang memakai tanda ` (backtick) di awal dan akhir agar boleh beberapa baris.
   // Paragraf baru = satu baris kosong.
-  sejarah: `SDS ISLAM AT-TAQWA atau nama lengkapnya Sekolah Dasar Islam At-Taqwa Kampus Rawamangun merupakan salah satu Sekolah Dasar Islam Swasta Unggulan di DKI Jakarta (dengan akreditasi A Unggul nilainya 98). Sekolah ini terletak di Jl. Daksinapati Raya No.2 Komp. UI/UNJ Rawamangun Jakarta, Jakarta Timur, Indonesia.
+  sejarah: `SDS ISLAM AT-TAQWA atau nama lengkapnya Sekolah Dasar Islam At-Taqwa Kampus Rawamangun merupakan salah satu Sekolah Dasar Islam Swasta Unggulan di DKI Jakarta (dengan akreditasi ${D.akreditasiPredikat} Unggul nilainya ${D.akreditasiNilai}). Sekolah ini terletak di Jl. Daksinapati Raya No.2 Komp. UI/UNJ Rawamangun Jakarta, Jakarta Timur, Indonesia.
 
-Didirikan pada tahun 2002, berawal dari 10 murid lulusan TK yang tak mau pindah dari At-Taqwa. Hingga tahun ajaran 2025/2026, sekolah ini telah meluluskan sebanyak 18 angkatan dengan total kelulusan mencapai 745 murid. Alumni SDS Islam At-Taqwa tersebar di berbagai SMPN dan SMP swasta favorit, di antaranya SMPN 115, 216, 255, 99, dan 92. Selain SMPN, alumni juga tersebar di SMP Labschool, Al-Azhar, berbagai Pondok Pesantren, bahkan hingga ke luar negeri.
+Didirikan pada tahun ${D.tahunBerdiri}, berawal dari 10 murid lulusan TK yang tak mau pindah dari At-Taqwa. Hingga tahun ajaran ${D.tahunAjaran}, sekolah ini telah meluluskan sebanyak ${D.angkatan} angkatan dengan total kelulusan mencapai ${D.totalLulusan} murid. Alumni SDS Islam At-Taqwa tersebar di berbagai SMPN dan SMP swasta favorit, di antaranya SMPN 115, 216, 255, 99, dan 92. Selain SMPN, alumni juga tersebar di SMP Labschool, Al-Azhar, berbagai Pondok Pesantren, bahkan hingga ke luar negeri.
 
-Akreditasi pertama memperoleh predikat A dengan nilai 95,58, dan akreditasi kedua (perpanjangan 2010) memperoleh A dengan nilai 97 dari skala 100. Pada tahun 2021, Badan Akreditasi Nasional kembali memberikan akreditasi A dengan nilai 98, alhamdulillah. Kontribusi ini adalah untuk pembangunan anak bangsa dengan biaya terjangkau dan kendali mutu dari waktu ke waktu. SD Islam At-Taqwa Kampus Rawamangun terus konsisten menjaga mutu pendidikan dengan mempertahankan 3 rombel paralel per tingkatnya.
+Akreditasi pertama memperoleh predikat ${D.akreditasiPredikat} dengan nilai ${D.akreditasiNilaiPertama}, dan akreditasi kedua (perpanjangan 2010) memperoleh ${D.akreditasiPredikat} dengan nilai ${D.akreditasiNilaiKedua} dari skala 100. Pada tahun ${D.akreditasiTahunTerbaru}, Badan Akreditasi Nasional kembali memberikan akreditasi ${D.akreditasiPredikat} dengan nilai ${D.akreditasiNilai}, alhamdulillah. Kontribusi ini adalah untuk pembangunan anak bangsa dengan biaya terjangkau dan kendali mutu dari waktu ke waktu. SD Islam At-Taqwa Kampus Rawamangun terus konsisten menjaga mutu pendidikan dengan mempertahankan ${D.rombelPerTingkat} rombel paralel per tingkatnya.
 
-JW/Komite Sekolah selalu berupaya mendukung setiap perkembangan dan rencana yang membawa kebaikan bersama. Saat ini SDM guru dan pegawai lebih dari 45 orang. Rata-rata jumlah peserta didik per kelas adalah 25 orang, dan rata-rata Pendidik serta Tenaga Kependidikan merupakan Sarjana dari Univ. Negeri Jakarta/IKIP, UPI Bandung, IPB, Uhamka, UIN/IAIN, serta PTN/PTS terakreditasi lainnya. Sebagian guru sedang menempuh studi S2 dan beberapa di antaranya sudah bergelar Magister. Mohon doa dan memohon dukungannya.`,
+JW/Komite Sekolah selalu berupaya mendukung setiap perkembangan dan rencana yang membawa kebaikan bersama. Saat ini SDM guru dan pegawai lebih dari ${D.guruPegawaiMin} orang. Rata-rata jumlah peserta didik per kelas adalah ${D.muridPerKelas} orang, dan rata-rata Pendidik serta Tenaga Kependidikan merupakan Sarjana dari Univ. Negeri Jakarta/IKIP, UPI Bandung, IPB, Uhamka, UIN/IAIN, serta PTN/PTS terakreditasi lainnya. Sebagian guru sedang menempuh studi S2 dan beberapa di antaranya sudah bergelar Magister. Mohon doa dan memohon dukungannya.`,
 
   program: [                                   // contoh: { judul: 'Tahfidz Qur\'an', isi: 'Pembiasaan menghafal ...' },
   ],
@@ -120,9 +122,9 @@ JW/Komite Sekolah selalu berupaya mendukung setiap perkembangan dan rencana yang
   fasilitas: [                                 // contoh: { judul: 'Masjid', isi: 'Untuk salat berjamaah ...' },
   ],
 
-  ekskul: ['Iqro', 'KPPC', 'Tari', 'Bahasa Inggris', 'Lukis', 'Sains', 'Coding', 'Robotik', 'Musik', 'Panahan', 'Basket', 'Pencak Silat', 'Renang', 'Taekwondo'],
+  ekskul: D.ekskul,
 
-  club: ['Tahfidz', 'Marawis', 'PMR', 'Paduan Suara', 'MIPAS', 'English Club', 'Pramuka', 'Dokter Kecil']
+  club: D.club
 };
 
 /* ---------------- Kode tampilan (tidak perlu diubah) ---------------- */

@@ -2,6 +2,7 @@
    Pakai di halaman mana pun: <script src="footer-sekolah.js"></script> di akhir <body>.
    Edit isi footer cukup di file ini. */
 (() => {
+  const D = window.DATA_SEKOLAH || {};
   const st = document.createElement('style');
   st.textContent = `.idf{flex:none;background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(26px,4vw,44px) clamp(18px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
 .idf .in{max-width:1100px;margin:0 auto}
@@ -34,7 +35,7 @@
   <div>
     <div class="logo"><img src="logo-at-taqwa.png" alt=""><div><b>SDS Islam At-Taqwa</b><span>Rawamangun, Jakarta Timur</span></div></div>
     <p class="desc">Belajar Nyaman, Perilaku Islami, Insan Bertaqwa</p>
-    <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: 20109114 · Akreditasi: A (skor 98, BAN)<br><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek Akreditasi →</a></div>
+    <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: 20109114 · Akreditasi: ${D.akreditasiPredikat ?? 'A'} (skor ${D.akreditasiNilai ?? 98}, BAN)<br><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek Akreditasi →</a></div>
     <div class="soc">
       <a href="https://www.instagram.com/sdi_attaqwa/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/></svg></a>
       <a href="https://bit.ly/facebook-attaqwa" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M14.5 21v-8h2.7l.5-3.2h-3.2V7.9c0-.9.4-1.6 1.7-1.6h1.6V3.5c-.3 0-1.3-.2-2.4-.2-2.4 0-4 1.4-4 4.1v2.4H8.3V13H11v8z"/></svg></a>
@@ -51,7 +52,7 @@
     <h3>Alamat Sekolah</h3>
     <div class="blk"><b>SDS Islam At-Taqwa Rawamangun</b><p>Jl. Daksinapati Raya No. 2, Komp. UI/UNJ, RT.11/RW.14, Rawamangun, Kec. Pulogadung, Jakarta Timur, 13220</p></div>
     <div class="blk"><span class="lbl">Jenjang / Status</span><p>Sekolah Dasar (Swasta)</p></div>
-    <div class="blk"><span class="lbl">Tahun Berdiri</span><p>2002</p></div>
+    <div class="blk"><span class="lbl">Tahun Berdiri</span><p>${D.tahunBerdiri ?? 2002}</p></div>
     <div class="blk"><span class="lbl">Kepala Sekolah</span><p>Ibu Nurbaiti, S.Pd.</p></div>
   </div>
   <div>

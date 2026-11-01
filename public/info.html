@@ -253,6 +253,7 @@ fetch(FOKUS ? '/api/info?limit=1000' : '/api/info?utama=1&limit=1000').then(r =>
   }
 }).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat info.')}</div>`; });
 </script>
+<script src="data-sekolah.js"></script>
 <script src="footer-sekolah.js"></script>
 </body>
 </html>

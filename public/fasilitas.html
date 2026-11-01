@@ -104,6 +104,7 @@ $('#list').innerHTML = '<div class="empty">Memuat…</div>';
 fetch('/api/fasilitas').then(r => r.json()).then(d => { if (d.error) throw new Error(d.error); DATA = d.fasilitas || []; })
   .catch(() => { DATA = []; }).then(() => { renderChips(); render(); });
 </script>
+<script src="data-sekolah.js"></script>
 <script src="footer-sekolah.js"></script>
 </body>
 </html>

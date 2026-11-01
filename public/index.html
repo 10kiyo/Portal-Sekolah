@@ -178,6 +178,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 #lb button{position:absolute;border:0;cursor:pointer;color:#fff;background:#ffffff26;font-size:26px;line-height:1;width:46px;height:46px;border-radius:50%}#lb button:hover{background:#ffffff45}#lb button:focus-visible{outline:3px solid #8fcbff}
 #lbX{top:14px;right:14px}#lbP{left:14px;top:50%}#lbN{right:14px;top:50%}@media(max-width:560px){#lbP,#lbN{top:auto;bottom:16px}}
 </style>
+<script src="data-sekolah.js"></script>
 </head>
 <body>
 <div class="topbar">
@@ -229,12 +230,12 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
         <p class="ds">Sekolah dasar Islam swasta di Jakarta Timur yang menumbuhkan siswa beriman, cerdas, sehat, dan berakhlak mulia.</p>
         <div class="bt"><a class="p" href="#profil">Kenali Sekolah Kami <i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a><a class="s" href="#spmb">Info SPMB</a></div>
         <div class="st">
-          <div><b>A</b><span>Akreditasi BAN (98)</span></div>
-          <div><b id="hxTahun">2002</b><span>Tahun berdiri</span></div>
-          <div><b><i class="cnt" data-to="700">700</i>+</b><span>Lulusan (alumni)</span></div>
-          <div><b><i class="cnt" data-to="50">50</i>+</b><span>Guru &amp; tenaga kependidikan</span></div>
-          <div><b><i class="cnt" data-to="14">14</i></b><span>Ekstrakurikuler</span></div>
-          <div><b><i class="cnt" data-to="8">8</i></b><span>Club</span></div>
+          <div><b data-s="akreditasiPredikat">A</b><span>Akreditasi BAN (<data data-s="akreditasiNilai">98</data>)</span></div>
+          <div><b id="hxTahun" data-s="tahunBerdiri">2002</b><span>Tahun berdiri</span></div>
+          <div><b><i class="cnt" data-s="lulusanBeranda" data-to="700">700</i>+</b><span>Lulusan (alumni)</span></div>
+          <div><b><i class="cnt" data-s="guruTendikBeranda" data-to="50">50</i>+</b><span>Guru &amp; tenaga kependidikan</span></div>
+          <div><b><i class="cnt" data-s="jumlahEkskul" data-to="14">14</i></b><span>Ekstrakurikuler</span></div>
+          <div><b><i class="cnt" data-s="jumlahClub" data-to="8">8</i></b><span>Club</span></div>
         </div>
         <div class="ch"><span>Sekolah Dasar Islam Swasta</span><span>NPSN 20109114</span><span>Senin–Jumat 07.00–16.00</span></div>
       </div></div>
@@ -283,7 +284,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
         <div>
           <div class="logo"><img src="logo-at-taqwa.png" alt=""><div><b>SDS Islam At-Taqwa</b><span>Rawamangun, Jakarta Timur</span></div></div>
           <p class="desc">Belajar Nyaman, Perilaku Islami, Insan Bertaqwa</p>
-          <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: 20109114 · Akreditasi: A (Score: 98 by BAN)<br><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek Akreditasi →</a></div>
+          <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: 20109114 · Akreditasi: <data data-s="akreditasiPredikat">A</data> (Score: <data data-s="akreditasiNilai">98</data> by BAN)<br><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek Akreditasi →</a></div>
           <div class="soc">
             <a href="https://www.instagram.com/sdi_attaqwa/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/></svg></a>
             <a href="https://bit.ly/facebook-attaqwa" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M14.5 21v-8h2.7l.5-3.2h-3.2V7.9c0-.9.4-1.6 1.7-1.6h1.6V3.5c-.3 0-1.3-.2-2.4-.2-2.4 0-4 1.4-4 4.1v2.4H8.3V13H11v8z"/></svg></a>
@@ -500,7 +501,7 @@ route();
   if (!els.length) return;
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function run(el) {
-    var to = +el.dataset.to, dur = 1800, t0 = null;
+    var DS = window.DATA_SEKOLAH || {}, to = +(DS[el.dataset.s] != null ? DS[el.dataset.s] : el.dataset.to), dur = 1800, t0 = null;
     if (reduce) { el.textContent = to; return; }
     el.textContent = '0';
     function tick(t) {

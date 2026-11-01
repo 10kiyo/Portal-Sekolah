@@ -27,6 +27,7 @@ h2{margin:0 0 12px;color:var(--navy);font-size:20px}
 .empty{text-align:center;color:var(--mute);padding:30px 0}
 .emb .wrap{padding-top:12px}
 </style>
+<script src="data-sekolah.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -42,17 +43,18 @@ h2{margin:0 0 12px;color:var(--navy);font-size:20px}
    Kabar/dokumentasi (foto, teks) dikelola admin lewat "Kelola info" dengan mengisi
    kolom "Jenis kegiatan" (Ekstrakurikuler / Club / Kegiatan Unggulan).
    ============================================================ */
+const D = window.DATA_SEKOLAH;
 const JENIS = {
   ekskul: {
     judul: 'Ekstrakurikuler', sub: 'Kegiatan pengembangan minat dan bakat di luar jam pelajaran',
     kenalJudul: 'Pilihan ekstrakurikuler',
-    daftar: ['Iqro', 'KPPC', 'Tari', 'Bahasa Inggris', 'Lukis', 'Sains', 'Coding', 'Robotik', 'Musik', 'Panahan', 'Basket', 'Pencak Silat', 'Renang', 'Taekwondo'],
+    daftar: D.ekskul,
     isi: ''
   },
   club: {
     judul: 'Club', sub: 'Komunitas belajar murid sesuai minat',
     kenalJudul: 'Club yang tersedia',
-    daftar: ['Tahfidz', 'Marawis', 'PMR', 'Paduan Suara', 'MIPAS', 'English Club', 'Pramuka', 'Dokter Kecil'],
+    daftar: D.club,
     isi: ''
   },
   unggulan: {

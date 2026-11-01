@@ -27,6 +27,7 @@ h3{margin:0 0 4px;color:var(--navy);font-size:16px}
 .tags{display:flex;gap:8px;flex-wrap:wrap}.tags span{padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--navy);font-weight:700;font-size:14px}
 .emb .wrap{padding-top:12px}
 </style>
+<script src="data-sekolah.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -40,15 +41,16 @@ h3{margin:0 0 4px;color:var(--navy);font-size:16px}
    Bagian yang dikosongkan ("" atau []) otomatis tidak ditampilkan.
    Isi awal diambil dari visi/misi dan sejarah di halaman Profil Sekolah.
    ============================================================ */
+const D = window.DATA_SEKOLAH;
 const LULUSAN = {
   pengantar: 'Lulusan At-Taqwa diharapkan menjadi insan yang beriman, bertaqwa dan berakhlak mulia, cerdas, sehat rohani dan jasmani, serta berperilaku Islami.',
 
   // Angka ringkas (kosongkan label/angka yang belum ada)
   angka: [
-    { angka: '14', label: 'angkatan telah diluluskan' },
-    { angka: '> 80', label: 'rata-rata nilai Ujian Nasional' },
-    { angka: 'A (98)', label: 'akreditasi BAN' }
-  ],
+    { angka: String(D.angkatan), label: 'angkatan telah diluluskan' },
+    { angka: D.rataUN, label: 'rata-rata nilai Ujian Nasional' },
+    { angka: `${D.akreditasiPredikat} (${D.akreditasiNilai})`, label: 'akreditasi BAN' }
+  ].filter(x => x.angka),
 
   // Profil / karakter lulusan
   profil: [
