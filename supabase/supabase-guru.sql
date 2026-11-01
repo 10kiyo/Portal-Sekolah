@@ -40,7 +40,7 @@ begin
     new.username := lower(btrim(new.username));
   end if;
   if new.pin is null or btrim(new.pin) = '' then
-    new.pin := lpad((abs(('x' || substr(md5(gen_random_uuid()::text), 1, 8))::bit(32)::bigint) % 1000000)::text, 6, '0');
+    new.pin := (100000 + abs(('x' || substr(md5(gen_random_uuid()::text), 1, 8))::bit(32)::bigint) % 900000)::text;   -- 6 angka, angka pertama 1-9 (0 di depan sering hilang di CSV/Excel)
   end if;
   return new;
 end $$;

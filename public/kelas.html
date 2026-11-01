@@ -96,7 +96,7 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
   <div class="bar"><img src="logo-at-taqwa.png" alt=""><h1>Administrasi Guru dan Staf</h1></div>
   <p class="mut">Masuk dengan username dan PIN dari sekolah.</p>
   <div id="fUser">
-    <label for="un">Username</label><input id="un" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="contoh: eki.yogawanto">
+    <label for="un">Username</label><input id="un" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="contoh: nama.depan">
     <label for="pinIn" style="margin-top:10px">PIN</label><input id="pinIn" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="6 angka">
   </div>
   <p><button class="p" id="btnLogin">Masuk</button></p>
@@ -178,7 +178,8 @@ $('#btnLogin').onclick = async () => {
   try {
     let email, password;
     {
-      const username = $('#un').value.trim(), pin = $('#pinIn').value.trim();
+      const username = $('#un').value.trim(); let pin = $('#pinIn').value.trim();
+      if (/^\d{1,5}$/.test(pin)) pin = pin.padStart(6, '0');   // PIN selalu 6 angka; 0 di depan yang hilang dikembalikan
       if (!username || !pin) return bad('Isi username dan PIN.');
       let r, d = {};
       try { r = await fetch('/api/guru-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, pin }) }); d = await r.json().catch(() => ({})); }
