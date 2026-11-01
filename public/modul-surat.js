@@ -53,17 +53,18 @@ function htmlSurat(D, cfg) {
   }).join('');
   const rinci = D.rincian.filter(r => (r.k || '').trim() || (r.v || '').trim()).map(r => `<tr><td>${esc(r.k)}</td><td>:</td><td>${tebalMiring(r.v)}</td></tr>`).join('');
   const tem = baris(D.tembusan), tgl = tglPanjang(D.tanggal);
+  const kepsek = /^kepala sekolah/i.test((D.ttdJabatan || '').trim()) && !D.ttdImg && !D.stempelImg;   // otomatis: tanda tangan + stempel Kepala Sekolah
   const auto = !D.ukuran || D.ukuran === 'auto', pt = auto ? 12 : (Number(D.ukuran) || 12);
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc((D.nomor || 'Surat').replace(/\//g, '-'))}</title><style>
 @page{size:A4;margin:14mm 20mm 16mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}@media screen{body{padding:14mm 20mm 16mm;min-height:297mm}}
 body{margin:0;background:#fff;color:#000;font:${pt}pt/1.35 "Times New Roman",Times,serif}
 .kop{display:block;width:100%;height:auto;margin:0 0 4mm}
-.hd{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hd table{border-collapse:collapse}.hd td{padding:0 4px 0 0;vertical-align:top}.hd>.dt{width:6.6cm;flex:none;white-space:nowrap}
+.hd{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.hd table{border-collapse:collapse}.hd td{padding:0 4px 0 0;vertical-align:top}.hd>.dt{flex:none;white-space:nowrap;text-align:right}
 p{margin:0 0 8px;text-align:justify}.ind{text-indent:1.1cm}.salam{font-style:italic;font-weight:700;margin:0 0 6px}
 ol{margin:2px 0 6px;padding-left:1.1cm;text-align:justify}ol li{margin-bottom:4px;padding-left:4px}ol ol{margin:2px 0 2px;padding-left:.9cm}
 .rin{border-collapse:collapse;margin:0 0 8px 1.1cm}.rin td{padding:1px 6px 1px 0;vertical-align:top}.rin td:first-child{white-space:nowrap}
-.ttd{margin:14px 0 0 auto;width:6.6cm;text-align:left;page-break-inside:avoid}.ttd .ruang{position:relative;height:2.4cm}
-.ttd .ruang img{position:absolute;max-height:2.4cm;max-width:6.4cm}.ttd .ruang .st{left:0;top:0;opacity:.85}.ttd .ruang .tt{left:1.6cm;top:.1cm}
+.ttd{margin:14px 0 0;text-align:right;page-break-inside:avoid}.ttd .ruang{position:relative;height:2.4cm}
+.ttd .ruang img{position:absolute;max-height:2.4cm;max-width:6.4cm}.ttd .ruang .kp{right:.2cm;top:.1cm;width:4.8cm;max-height:none}.ttd .ruang .st{right:2.4cm;top:0;opacity:.85}.ttd .ruang .tt{right:.2cm;top:.1cm}
 .tem{margin-top:6px;font-size:10pt;page-break-inside:avoid}.tem ol{padding-left:.7cm;margin:0}.tem li{margin:0;padding-left:2px}
 </style></head><body>
 <img class="kop" src="${kop}" alt="Kop surat SDS Islam At-Taqwa">
@@ -76,7 +77,7 @@ ${rinci ? `<table class="rin">${rinci}</table>` : ''}
 ${butir ? `<ol>${butir}</ol>` : ''}
 <p class="ind">${tebalMiring(cfg.penutup)}</p>
 <p class="salam">${esc(cfg.salamTutup)}</p>
-<div class="ttd"><div>${esc(D.ttdJabatan)},</div><div class="ruang">${D.stempelImg ? `<img class="st" src="${D.stempelImg}" alt="">` : ''}${D.ttdImg ? `<img class="tt" src="${D.ttdImg}" alt="">` : ''}</div>
+<div class="ttd"><div>${esc(D.ttdJabatan)},</div><div class="ruang">${kepsek ? `<img class="kp" src="${location.origin}/ttd-kepsek.png" alt="">` : ''}${D.stempelImg ? `<img class="st" src="${D.stempelImg}" alt="">` : ''}${D.ttdImg ? `<img class="tt" src="${D.ttdImg}" alt="">` : ''}</div>
 <div><b>${esc(D.ttdNama)}</b></div>${D.ttdNip ? `<div>NIP/NIY. ${esc(D.ttdNip)}</div>` : ''}</div>
 ${D.tembusanOn && tem.length ? `<div class="tem"><i>Tembusan :</i><ol>${tem.map(t => `<li><i>${esc(t)}</i></li>`).join('')}</ol></div>` : ''}
 ${auto ? `<script>(function(){var f=12;function h(){document.body.style.fontSize=f+'pt';return document.body.offsetHeight}while(f>10&&h()>1124){f-=.25}h()})()</script>` : ''}
@@ -157,10 +158,11 @@ MODUL.buatsurat = async function (jenisBaru) {
     <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--navy)">Rincian (hari, waktu, tempat)</b><button type="button" id="addR">+ Baris</button></div><div id="rincian">${rinciHtml()}</div></div>
     <div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--navy)">Butir bernomor</b><button type="button" id="addB">+ Butir</button></div><div id="butir" style="margin-top:6px">${butirHtml()}</div></div>
     <h3>4. Penandatangan</h3>
+    <p class="mut" style="margin:0 0 8px">Bila jabatan penandatangan <b>Kepala Sekolah</b>, tanda tangan dan stempel terpasang otomatis.</p>
     <div class="grid"><div><label for="f-tj">Jabatan</label><input id="f-tj" data-f="ttdJabatan" value="${esc(D.ttdJabatan)}"></div><div><label for="f-tn">Nama (beserta gelar)</label><input id="f-tn" data-f="ttdNama" value="${esc(D.ttdNama)}"></div>
       <div><label for="f-tp">NIP/NIY (opsional)</label><input id="f-tp" data-f="ttdNip" value="${esc(D.ttdNip)}"></div></div>
-    <div class="grid" style="margin-top:8px"><div><label for="f-img">Gambar tanda tangan (PNG, opsional)</label><input id="f-img" type="file" accept="image/*" data-img="ttdImg"></div>
-      <div><label for="f-stp">Gambar stempel (PNG, opsional)</label><input id="f-stp" type="file" accept="image/*" data-img="stempelImg"></div></div>
+    <div class="grid" style="margin-top:8px"><div><label for="f-img">Tanda tangan penandatangan lain (PNG, opsional)</label><input id="f-img" type="file" accept="image/*" data-img="ttdImg"></div>
+      <div><label for="f-stp">Stempel penandatangan lain (PNG, opsional)</label><input id="f-stp" type="file" accept="image/*" data-img="stempelImg"></div></div>
     <p class="mut" style="margin:4px 0 0">${D.ttdImg || D.stempelImg ? 'Gambar terpasang. ' : ''}<a href="#" id="hapusImg">Hapus gambar</a></p>
     <h3>5. Tembusan</h3>
     <label class="sr-sw"><input type="checkbox" data-f="tembusanOn" ${D.tembusanOn ? 'checked' : ''}> Cantumkan tembusan</label>
