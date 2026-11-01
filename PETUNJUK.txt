@@ -191,3 +191,10 @@ HAPUS LOGIN EMAIL + AKUN GURU LAMA BERBASIS EMAIL
 1. public/kelas.html (DIGANTI): tombol/form "Masuk dengan email" dihapus; hanya username + PIN.
 2. Pembersihan data di Supabase: buka supabase-hapus-akun-email.sql di SQL Editor. BACKUP dulu. Jalankan Bagian 1 (pratinjau akun & jumlah baris),
    isi daftar "pertahankan" bila perlu (mis. email admin utama), lalu jalankan Bagian 2. Akun username+PIN (@guru.at-taqwa.sch.id) dan tabel guru_staf tidak dihapus.
+
+TAMPILAN BERANDA BARU (hero gelap + pita nilai berjalan + Visi & Kepala Sekolah)
+1. Hanya satu file diganti: public/index.html. Tidak ada SQL dan tidak ada file API yang berubah.
+2. Aset yang dipakai sudah ada: foto-sekolah.jpg (hero), foto-pimpinan.jpg (bagian Visi), logo-at-taqwa.png.
+3. Ubah teks: cari komentar "HERO" (judul, tagline, angka statistik, lencana) dan "NILAI" (teks pita berjalan) di index.html.
+   Teks sambutan tetap di blok SAMBUTAN pada script. Bagian Info terbaru, Video, Prestasi (galeri berjalan), dan footer tidak berubah.
+4. Saat menyalin ke repo: GABUNGKAN/timpa file saja, jangan mengganti seluruh folder public.
