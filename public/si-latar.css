@@ -1,27 +1,28 @@
 /* ============================================================
-   Latar SI-TAQWA untuk 4 layanan: Pantau Belajar Anak, Buku Tamu,
-   Administrasi Guru dan Staf, Kegiatan (Panitia).
+   Latar SI-TAQWA untuk halaman MASUK / PENCARIAN saja:
+   Pantau Belajar Anak (form kode), Buku Tamu (pencarian tamu & login admin),
+   Administrasi Guru dan Staf (login), Kegiatan (login).
+   Begitu berhasil masuk (#app tampil) atau hasil tampil (#hasil), latar kembali polos.
    Dipasang lewat <link rel="stylesheet" href="si-latar.css"> di akhir <head>.
    Ganti foto: ubah foto-sekolah.jpg di bawah. Hanya untuk layar (cetak tetap putih).
    ============================================================ */
 @media screen {
-  body {
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) {
     background:
       linear-gradient(160deg, #10325acc 0%, #2a3f9acc 55%, #7a4a8acc 100%),
       url(foto-sekolah.jpg) 60% 55% / cover fixed no-repeat,
       #16396b;
   }
-  /* Judul yang berada di luar kartu putih dibuat panel putih agar tetap terbaca di atas foto */
-  header, #app > .top, #adminRoot .top {
+  /* Judul di luar kartu putih dibuat panel putih agar terbaca di atas foto */
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) header,
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) #adminRoot .top {
     background: #f4f7fde6;
     border-radius: 24px;
     padding: 18px clamp(14px, 3vw, 28px);
     box-shadow: 0 14px 36px #0b1f3340;
   }
-  header { margin-bottom: 18px !important; }
-  #app > .top, #adminRoot .top { margin-bottom: 14px; }
-  .admin button { color: #fff !important; text-shadow: 0 1px 6px #0b1f3399; }
-  .card, #side { box-shadow: 0 14px 36px #0b1f3340; }
-  /* Kegiatan: kartu login tidak terlalu jauh dari atas */
-  #login.card { background: #f4f7fd; border-color: #ffffff66; }
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) header { margin-bottom: 18px !important; }
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) .admin button { color: #fff !important; text-shadow: 0 1px 6px #0b1f3399; }
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) .card { box-shadow: 0 14px 36px #0b1f3340; }
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) #login.card { background: #f4f7fd; border-color: #ffffff66; }
 }
