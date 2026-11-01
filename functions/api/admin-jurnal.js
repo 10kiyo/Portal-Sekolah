@@ -1,13 +1,13 @@
-// Cloudflare Worker route: GET/POST /api/admin-jurnal  (khusus admin info, token dari /api/admin-auth)
+// Cloudflare Worker route: GET/POST /api/admin-jurnal  (PIN admin ATAU akun guru/staf berperan 'info' / admin)
 //   GET                                           -> semua jurnal (terbaru dulu) + foto sementara
 //   POST { action:'status', id, status, catatan } -> status: disetujui | revisi | ditolak | menunggu
 //   POST { action:'hapus', id }
-import { json, cfg, dbGet, hariIni, adminOk, urlFoto } from '../_lib/util.js';
+import { json, cfg, dbGet, hariIni, infoOk, urlFoto } from '../_lib/util.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function onRequest({ request, env }) {
-  if (!(await adminOk(request, env))) return json(401, { error: 'Sesi admin tidak valid. Silakan login ulang.' });
+  if (!(await infoOk(request, env))) return json(401, { error: 'Sesi tidak valid atau akun tidak punya akses Info & Galeri. Silakan login ulang.' });
   const c = cfg(env);
   if (!c) return json(500, { error: 'SUPABASE_SERVICE_ROLE_KEY belum diatur.' });
   const get = dbGet(c), jh = { ...c.h, 'Content-Type': 'application/json', Prefer: 'return=minimal' };

@@ -199,8 +199,8 @@ $('#masuk').onclick = async () => {
 $('#pin').onkeydown = e => { if (e.key === 'Enter') $('#masuk').click(); };
 async function mulai() {
   if (STAF) {
-    document.querySelector('[data-t="jurnal"]').classList.add('hidden'); $('#keluar').classList.add('hidden'); $('#login').classList.add('hidden');   // verifikasi jurnal tetap lewat PIN admin
-    try { D = await api(); $('#app').classList.remove('hidden'); render(); }
+    $('#keluar').classList.add('hidden'); $('#login').classList.add('hidden');   // peran Admin Info juga memverifikasi Jurnal Murid
+    try { D = await api(); $('#app').classList.remove('hidden'); render(); muatJ(); }
     catch (e) { $('#login').classList.remove('hidden'); $('#login').innerHTML = `<h1>Tidak bisa dibuka</h1><p class="err">${esc(e.message)}</p><p class="mut">Pastikan akunmu punya peran Admin Info & Galeri.</p>`; }
     return;
   }
@@ -300,11 +300,11 @@ $('#simpan').onclick = async () => {
 let J = [], sJ = 'menunggu', bukaJ = new Set();
 const SJ = { menunggu: ['Menunggu', 'warn'], revisi: ['Revisi diminta', 'blue'], disetujui: ['Tayang', 'ok'], ditolak: ['Ditolak', 'bad'] };
 async function apiJ(body) {
-  const h = { Authorization: 'Bearer ' + sessionStorage.getItem(TOKEN_KEY) };
+  const h = { Authorization: 'Bearer ' + await tokenAdmin() };   // PIN admin (token lama) atau token akun guru/staf berperan Admin Info
   if (body) h['Content-Type'] = 'application/json';
   const r = await fetch('/api/admin-jurnal', body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h });
   const d = await r.json().catch(() => ({}));
-  if (r.status === 401) { sessionStorage.removeItem(TOKEN_KEY); showLogin(); throw new Error(d.error || 'Sesi berakhir.'); }
+  if (r.status === 401) { if (!STAF) { sessionStorage.removeItem(TOKEN_KEY); showLogin(); } throw new Error(d.error || 'Sesi berakhir.'); }
   if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.');
   return d;
 }

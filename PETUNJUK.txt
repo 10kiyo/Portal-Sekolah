@@ -178,3 +178,11 @@ PERAN "ADMIN INFO & GALERI": tombol "Kelola info/galeri (admin)" dipindah ke aku
    mengizinkan akun aktif berperan Admin Info (atau admin). Mencabut peran = akses langsung hilang.
 5. Tombol admin di halaman Info Terbaru dan Galeri Prestasi sudah dihapus. Alamat lama /#info-admin (dengan PIN admin) tetap berfungsi sebagai cadangan.
 6. Verifikasi Jurnal Murid tidak termasuk peran ini (tab itu disembunyikan di mode staf); tetap lewat /#info-admin dengan PIN admin.
+
+VERIFIKASI JURNAL MURID UNTUK PERAN ADMIN INFO + GALERI BERANDA BERJALAN
+1. Tidak ada SQL baru (peran 'info' sudah dibuat lewat supabase-peran-info.sql).
+2. File diganti: functions/api/admin-jurnal.js, public/info-admin.html, public/index.html.
+3. Akun guru/staf berperan Admin Info (atau peran tambahan 'info', atau admin) kini melihat tab "Jurnal Murid" di menu
+   Kelola Info & Galeri dan bisa menyetujui / minta revisi / menolak / menghapus jurnal tanpa PIN admin. Jalur PIN di /#info-admin tetap berfungsi.
+4. Beranda: bagian "Prestasi siswa" kini berjalan otomatis (marquee). Berhenti saat kursor di atasnya / layar disentuh; klik foto membuka lightbox
+   seperti sebelumnya. Pengguna dengan pengaturan "kurangi gerakan" mendapat baris yang bisa digeser manual.
