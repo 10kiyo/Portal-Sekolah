@@ -634,52 +634,95 @@ MODUL.agenda = async function (bln) {
 
 /* ================= OPERATOR ================= */
 const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'bk', 'staf'];
+const PERAN_LABEL = { guru: 'Guru', pustakawan: 'Pustakawan', keuangan: 'Keuangan', persuratan: 'Persuratan', operator: 'Operator', sarpras: 'Sarpras', bk: 'Guru BK', staf: 'Staf', admin: 'Admin' };
+const opsiPeran = (list, sel) => list.map(v => `<option value="${v}" ${v === sel ? 'selected' : ''}>${PERAN_LABEL[v] || v}</option>`).join('');
+function cssAkun() {
+  if (document.getElementById('akunCss')) return;
+  const st = document.createElement('style'); st.id = 'akunCss';
+  st.textContent = `
+  .ak-add{background:var(--soft);border-radius:14px;padding:14px 14px 4px;margin:12px 0 4px}.ak-add .grid{margin-bottom:10px;align-items:end}
+  .ak-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 10px}.ak-bar .cari{flex:1 1 260px;max-width:360px}.ak-bar select{width:auto;min-width:150px}
+  .ak-bar .sp{flex:1 1 0}.ak-bar button{padding:9px 14px}.ak-wrap{overflow-x:auto;border:1px solid #e6eef5;border-radius:14px}
+  .ak-tbl{width:100%;border-collapse:collapse;min-width:900px}.ak-tbl td:first-child{min-width:210px}.ak-tbl th{background:#f6fafd;padding:10px 12px;font-size:12px;color:var(--mute);white-space:nowrap}
+  .ak-tbl td{padding:11px 12px;vertical-align:middle;border-bottom:1px solid #eef3f8}.ak-tbl tr:last-child td{border-bottom:0}.ak-tbl tbody tr:hover{background:#fafcfe}
+  .ak-nm b{display:block;color:var(--navy);line-height:1.3}.ak-nm span,.ak-ac span{display:block;font-size:13px;color:var(--mute)}.ak-ac b{display:block;color:var(--navy)}
+  .ak-tbl select{width:auto;min-width:122px;padding:8px 10px;font-size:14px}.ak-off td{opacity:.5}.ak-off td.ak-keep{opacity:1}
+  .ak-chip{position:relative;display:inline-block;margin:0 5px 5px 0;font-weight:400}.ak-chip input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer}
+  .ak-chip span{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;color:var(--mute);background:#fff;border:1px solid var(--line)}
+  .ak-chip.on span{background:var(--soft);border-color:#b9d8f2;color:var(--blue)}.ak-chip.on:hover span{border-color:var(--danger);color:var(--danger);background:#fbeceb}.ak-tbl select.ak-add1{min-width:0;width:auto;padding:3px 8px;font-size:12px;font-weight:700;color:var(--mute);border-radius:99px;margin:0 5px 5px 0;vertical-align:top}.ak-chip input:focus-visible+span{outline:3px solid #1677c850}
+  .ak-sw{position:relative;display:inline-block;width:40px;height:23px;margin:0;vertical-align:middle}.ak-sw input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer}
+  .ak-sw i{position:absolute;inset:0;border-radius:99px;background:#cbd8e6;transition:.15s}.ak-sw i:after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.15s}
+  .ak-sw input:checked+i{background:var(--ok)}.ak-sw input:checked+i:after{left:20px}.ak-sw input:focus-visible+i{outline:3px solid #1677c850}
+  @media(max-width:720px){.ak-wrap{border:0;overflow:visible}.ak-tbl{min-width:0}.ak-tbl thead{display:none}.ak-tbl,.ak-tbl tbody{display:block}.ak-tbl tr{display:block;border:1px solid #e6eef5;border-radius:14px;padding:10px 12px;margin-bottom:10px}.ak-tbl td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:6px 0;min-width:0!important}.ak-tbl td:first-child{display:block;padding-bottom:8px;border-bottom:1px solid #eef3f8;margin-bottom:4px}.ak-tbl td[data-l]:before{content:attr(data-l);font-size:12px;font-weight:700;color:var(--mute);flex:none}.ak-tbl td.ak-ac{text-align:right}.ak-tbl td[data-l="Peran tambahan"]{align-items:flex-start}.ak-tbl td[data-l="Peran tambahan"]>span{text-align:right}.ak-off td{opacity:.55}}.ak-sw2{display:inline-flex;gap:8px;align-items:center;font-weight:600;margin:0}.ak-cnt{font-size:13px;color:var(--mute);margin:0 0 8px}`;
+  document.head.appendChild(st);
+}
 MODUL.akun = async function () {
+  cssAkun();
   const rows = await run(sb.from('guru_staf').select('id,nama,jabatan,kelompok,peran,peran_tambahan,username,pin,aktif,auth_user_id').order('nama'));
   let lihat = false;
+  const cocok = r => {
+    const q = $('#aq').value.trim().toLowerCase(), f = $('#af').value;
+    return (!q || (r.nama + ' ' + (r.jabatan || '') + ' ' + (r.username || '')).toLowerCase().includes(q)) && (!f || r.peran === f || (r.peran_tambahan || []).includes(f));
+  };
   const gambar = () => {
-    $('#al').innerHTML = `<table><tr><th>Nama</th><th>Jabatan</th><th>Peran menu</th><th>Peran tambahan</th><th>Username</th><th>PIN</th><th>Aktif</th><th class="noprint"></th></tr>
-    ${rows.map(r => `<tr><td>${esc(r.nama)}</td><td>${esc(r.jabatan)}</td>
-    <td><select data-peran="${r.id}" class="noprint">${opsi(r.peran === 'admin' ? [...PERAN, 'admin'] : PERAN, r.peran)}</select><span class="print-only">${esc(r.peran)}</span></td>
-    <td class="noprint">${PERAN.filter(x => x !== 'staf' && x !== r.peran).map(x => `<label style="display:inline-flex;gap:3px;font-weight:400;font-size:12px;margin:0 8px 0 0"><input type="checkbox" style="width:auto" data-tam="${r.id}" data-role="${x}" ${(r.peran_tambahan || []).includes(x) ? 'checked' : ''}> ${x}</label>`).join('')}</td>
-    <td><b>${esc(r.username)}</b></td><td><b>${lihat ? esc(r.pin) : '••••••'}</b></td>
-    <td><input type="checkbox" style="width:auto" data-aktif="${r.id}" ${r.aktif ? 'checked' : ''}></td>
-    <td class="noprint"><button data-nm="${r.id}">Ubah nama</button> <button data-jab="${r.id}">Ubah jabatan</button> <button data-pin="${r.id}">Reset PIN</button></td></tr>`).join('')}</table>`;
+    const l = rows.filter(cocok);
+    $('#ac').textContent = l.length === rows.length ? rows.length + ' akun' : l.length + ' dari ' + rows.length + ' akun';
+    $('#al').innerHTML = l.length ? `<div class="ak-wrap"><table class="ak-tbl"><thead><tr><th>Nama & jabatan</th><th>Akun login</th><th>Peran menu</th><th>Peran tambahan</th><th>Aktif</th><th class="noprint"></th></tr></thead><tbody>
+    ${l.map(r => `<tr class="${r.aktif ? '' : 'ak-off'}"><td class="ak-nm"><b>${esc(r.nama)}</b><span>${esc(r.jabatan || '-')}</span></td>
+    <td class="ak-ac" data-l="Akun login"><b>${esc(r.username)}</b><span>PIN ${lihat ? '<b style="display:inline;color:var(--ink)">' + esc(r.pin) + '</b>' : '••••••'}</span></td>
+    <td data-l="Peran menu"><select data-peran="${r.id}" class="noprint">${opsiPeran(r.peran === 'admin' ? [...PERAN, 'admin'] : PERAN, r.peran)}</select><span class="print-only">${esc(PERAN_LABEL[r.peran] || r.peran)}</span></td>
+    <td data-l="Peran tambahan"><span class="noprint">${(r.peran_tambahan || []).filter(x => x !== r.peran).map(x => `<label class="ak-chip on" title="Klik untuk mencabut"><input type="checkbox" data-tam="${r.id}" data-role="${x}" checked><span>${PERAN_LABEL[x] || x} ×</span></label>`).join('')}${PERAN.filter(x => x !== 'staf' && x !== r.peran && !(r.peran_tambahan || []).includes(x)).length ? `<select class="ak-add1" data-tamadd="${r.id}" aria-label="Tambah peran untuk ${esc(r.nama)}"><option value="">+ Tambah</option>${PERAN.filter(x => x !== 'staf' && x !== r.peran && !(r.peran_tambahan || []).includes(x)).map(x => `<option value="${x}">${PERAN_LABEL[x]}</option>`).join('')}</select>` : ''}</span><span class="print-only">${esc((r.peran_tambahan || []).map(x => PERAN_LABEL[x] || x).join(', ') || '-')}</span></td>
+    <td class="ak-keep" data-l="Aktif"><label class="ak-sw noprint" title="${r.aktif ? 'Akun aktif' : 'Akun nonaktif'}"><input type="checkbox" data-aktif="${r.id}" ${r.aktif ? 'checked' : ''}><i></i></label><span class="print-only">${r.aktif ? 'ya' : 'tidak'}</span></td>
+    <td class="noprint ak-keep" data-l="Aksi"><select data-aksi="${r.id}" aria-label="Aksi untuk ${esc(r.nama)}"><option value="">Aksi…</option><option value="nm">Ubah nama</option><option value="jab">Ubah jabatan</option><option value="pin">Reset PIN</option></select></td></tr>`).join('')}</tbody></table></div>` : '<p class="mut">Tidak ada akun yang cocok.</p>';
   };
   $('#view').innerHTML = `<h2>Akun guru & staf</h2>
   <p class="mut">Username dan PIN dibuat otomatis. Akun login aktif saat orangnya pertama kali masuk. Peran menentukan menu yang tampil di akunnya.</p>
-  <div class="grid"><div><label for="an">Nama</label><input id="an" placeholder="Nama lengkap, boleh dengan gelar"></div><div><label for="aj">Jabatan</label><input id="aj"></div>
+  <div class="ak-add noprint"><div class="grid"><div><label for="an">Nama</label><input id="an" placeholder="Nama lengkap + gelar"></div><div><label for="aj">Jabatan</label><input id="aj" placeholder="Mis. Wali Kelas 4B"></div>
   <div><label for="ak">Kelompok</label><select id="ak"><option value="guru">Guru</option><option value="staf">Staf</option><option value="pimpinan">Pimpinan</option></select></div>
-  <div><label for="ar">Peran menu</label><select id="ar"><option value="">Otomatis dari jabatan</option>${opsi(PERAN, '')}</select></div></div>
-  <p><button class="p" id="aAdd">Tambah guru / staf</button></p><div id="msg" class="msg"></div>
-  <p class="noprint"><label style="display:inline-flex;gap:6px;font-weight:600"><input type="checkbox" id="aLihat" style="width:auto"> Tampilkan PIN</label> <button onclick="print()">Cetak daftar akun</button> <button id="aCsv">Unduh CSV</button></p>
-  <div id="al"></div>`;
+  <div><label for="ar">Peran menu</label><select id="ar"><option value="">Otomatis dari jabatan</option>${opsiPeran(PERAN, '')}</select></div>
+  <div><button class="p" id="aAdd" style="width:100%">Tambah akun</button></div></div></div>
+  <div id="msg" class="msg"></div>
+  <div class="ak-bar noprint"><input class="cari" id="aq" type="search" placeholder="Cari nama, jabatan, username..." aria-label="Cari akun">
+  <select id="af" aria-label="Filter peran"><option value="">Semua peran</option>${opsiPeran(PERAN, '')}</select>
+  <span class="sp"></span><label class="ak-sw2"><span class="ak-sw"><input type="checkbox" id="aLihat"><i></i></span> Tampilkan PIN</label><button onclick="print()">Cetak</button><button id="aCsv">CSV</button></div>
+  <div class="ak-cnt noprint" id="ac"></div><div id="al"></div>`;
   gambar();
-  $('#aLihat').onchange = e => { lihat = e.target.checked; gambar(); };
+  $('#aq').oninput = gambar;
   $('#aAdd').onclick = async () => {
     if (!$('#an').value.trim()) return msg('Isi nama.', true);
     const { error } = await sb.from('guru_staf').insert({ nama: $('#an').value.trim(), jabatan: $('#aj').value.trim() || null, kelompok: $('#ak').value, peran: $('#ar').value || null });
     if (error) return msg(error.message.includes('duplicate') ? 'Nama itu sudah ada.' : error.message, true);
     MODUL.akun();
   };
-  $('#aCsv').onclick = () => csv('akun-guru-staf.csv', [['Nama', 'Jabatan', 'Peran', 'Username', 'PIN', 'Aktif'], ...rows.map(r => [r.nama, r.jabatan, r.peran, r.username, r.pin, r.aktif ? 'ya' : 'tidak'])]);
+  $('#aCsv').onclick = () => csv('akun-guru-staf.csv', [['Nama', 'Jabatan', 'Peran', 'Peran tambahan', 'Username', 'PIN', 'Aktif'], ...rows.map(r => [r.nama, r.jabatan, r.peran, (r.peran_tambahan || []).join(' '), r.username, r.pin, r.aktif ? 'ya' : 'tidak'])]);
+  const aksi = async (r, a) => {
+    if (a === 'nm') { const n = prompt('Nama baru (boleh dengan gelar):', r.nama); if (n && n.trim() && n.trim() !== r.nama) { const { error } = await sb.from('guru_staf').update({ nama: n.trim() }).eq('id', r.id); if (error) return msg(error.message.includes('duplicate') ? 'Nama itu sudah ada.' : error.message, true); MODUL.akun(); } }
+    if (a === 'jab') { const j = prompt('Jabatan baru untuk ' + r.nama + ':', r.jabatan || ''); if (j !== null) { await run(sb.from('guru_staf').update({ jabatan: j.trim() || null }).eq('id', r.id)); MODUL.akun(); } }
+    if (a === 'pin' && confirm('Buat PIN baru untuk ' + r.nama + '? PIN lama tidak berlaku lagi.')) {
+      const hasil = await run(sb.from('guru_staf').update({ pin: null }).eq('id', r.id).select('pin').single());
+      msg('PIN baru ' + r.nama + ': ' + hasil.pin); r.pin = hasil.pin; gambar();
+    }
+  };
   $('#view').onchange = async e => {
     const d = e.target.dataset;
-    if (d.peran) { await run(sb.from('guru_staf').update({ peran: e.target.value }).eq('id', d.peran)); rows.find(r => r.id === d.peran).peran = e.target.value; msg('Peran diperbarui. Berlaku saat orangnya membuka ulang halaman ini.'); }
+    if (e.target.id === 'aLihat') { lihat = e.target.checked; gambar(); }
+    if (e.target.id === 'af') gambar();
+    if (d.aksi) { const v = e.target.value; e.target.value = ''; if (v) await aksi(rows.find(r => r.id === d.aksi), v); }
+    if (d.peran) { await run(sb.from('guru_staf').update({ peran: e.target.value }).eq('id', d.peran)); rows.find(r => r.id === d.peran).peran = e.target.value; gambar(); msg('Peran diperbarui. Berlaku saat orangnya membuka ulang halaman ini.'); }
     if (d.tam) {
       const r = rows.find(x => x.id === d.tam), set = new Set(r.peran_tambahan || []); e.target.checked ? set.add(d.role) : set.delete(d.role);
       await run(sb.from('guru_staf').update({ peran_tambahan: [...set] }).eq('id', r.id)); r.peran_tambahan = [...set];
-      msg('Peran tambahan ' + r.nama + ' diperbarui. Menunya muncul saat orangnya membuka ulang halaman ini.');
+      gambar(); msg('Peran tambahan ' + r.nama + ' diperbarui. Menunya muncul saat orangnya membuka ulang halaman ini.');
     }
-    if (d.aktif) { await run(sb.from('guru_staf').update({ aktif: e.target.checked }).eq('id', d.aktif)); rows.find(r => r.id === d.aktif).aktif = e.target.checked; msg(e.target.checked ? 'Akun diaktifkan.' : 'Akun dinonaktifkan: tidak tampil di halaman Guru & Staff dan tidak bisa login baru.'); }
-  };
-  $('#view').onclick = async e => {
-    const d = e.target.dataset, r = rows.find(x => x.id === (d.jab || d.pin || d.nm));
-    if (d.nm) { const n = prompt('Nama baru (boleh dengan gelar):', r.nama); if (n && n.trim() && n.trim() !== r.nama) { const { error } = await sb.from('guru_staf').update({ nama: n.trim() }).eq('id', r.id); if (error) return msg(error.message.includes('duplicate') ? 'Nama itu sudah ada.' : error.message, true); MODUL.akun(); } }
-    if (d.jab) { const j = prompt('Jabatan baru untuk ' + r.nama + ':', r.jabatan || ''); if (j !== null) { await run(sb.from('guru_staf').update({ jabatan: j.trim() || null }).eq('id', r.id)); MODUL.akun(); } }
-    if (d.pin && confirm('Buat PIN baru untuk ' + r.nama + '? PIN lama tidak berlaku lagi.')) {
-      const hasil = await run(sb.from('guru_staf').update({ pin: null }).eq('id', r.id).select('pin').single());
-      msg('PIN baru ' + r.nama + ': ' + hasil.pin); r.pin = hasil.pin; gambar();
+    if (d.tamadd && e.target.value) {
+      const r = rows.find(x => x.id === d.tamadd), set = new Set(r.peran_tambahan || []); set.add(e.target.value);
+      await run(sb.from('guru_staf').update({ peran_tambahan: [...set] }).eq('id', r.id)); r.peran_tambahan = [...set];
+      gambar(); msg('Peran tambahan ' + r.nama + ' diperbarui. Menunya muncul saat orangnya membuka ulang halaman ini.');
+    }
+    if (d.aktif) {
+      await run(sb.from('guru_staf').update({ aktif: e.target.checked }).eq('id', d.aktif)); rows.find(r => r.id === d.aktif).aktif = e.target.checked;
+      e.target.closest('tr').classList.toggle('ak-off', !e.target.checked);
+      msg(e.target.checked ? 'Akun diaktifkan.' : 'Akun dinonaktifkan: tidak tampil di halaman Guru & Staff dan tidak bisa login baru.');
     }
   };
 };
