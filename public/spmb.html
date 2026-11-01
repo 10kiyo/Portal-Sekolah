@@ -85,7 +85,8 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
 .fs::after{content:"›";position:absolute;right:-23px;top:34px;width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--navy);font-weight:900;font-size:22px;line-height:1;display:grid;place-items:center;padding-bottom:3px;z-index:3;box-shadow:0 2px 6px #102a4330}
 .fs:nth-child(3n)::after,.fs:last-child::after{display:none}
 .fs-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.fs-ic{width:48px;height:48px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:24px;box-shadow:0 4px 12px #102a431a}
+.fs-ic{width:48px;height:48px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--blue);box-shadow:0 4px 12px #102a431a}
+.fs-ic svg{display:block}
 .fs-n{font-size:13px;font-weight:800;color:var(--bc);background:#fff;border-radius:99px;padding:3px 11px}
 .fs .fs-w{align-self:flex-start;margin:2px 0 4px;background:#fff;border:1px solid var(--line);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:800;color:var(--blue)}
 .fs-l{list-style:none;margin:10px 0 12px;padding:0;display:grid;gap:8px}
@@ -156,6 +157,17 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
    - Alur    : tiap item di `tahapan` jadi satu kartu langkah. `ringkas` = poin singkat yang selalu tampil,
                `poin` = isi lengkap yang muncul saat "Lihat detail lengkap" dibuka.
    ============================================================ */
+/* Ikon langkah (SVG inline, gaya Lucide, mengikuti warna teks) */
+const IKON = {
+  daftar: '<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.4 18.6a2 2 0 0 1-.9.5l-2.9.8a.5.5 0 0 1-.6-.6l.8-2.9a2 2 0 0 1 .5-.9z"/><path d="m15 5 3 3"/>',
+  pantau: '<circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/>',
+  bayar: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+  wawancara: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  seragam: '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>',
+  tas: '<path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M8 21v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v5"/><path d="M8 10h8"/><path d="M8 18h8"/>'
+};
+const ikonSvg = k => IKON[k] ? `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">${IKON[k]}</svg>` : '';
+
 const KONTAK = [
   { nama: 'Ibu Zulmy',       wa: '6281220706200', tampil: '0812 2070 6200' },
   { nama: 'Ibu Sri Hartati', wa: '6285794994432', tampil: '0857 9499 4432' },
@@ -179,19 +191,19 @@ const PEMBAYARAN = { label: 'Pembayaran (transfer dan sertakan nama peserta didi
   'IPSP, IPP, dan SPP: Bank BNI a.n. Yayasan Masjid At-Taqwa Kampus Rawamangun, no. rek. 8888-21-0033.',
   'Uang seragam dan alat: Bank Mandiri a.n. Mundi Indriyadi / Efayanti, S.Pd, no. rek. 0060010547960.'] };
 const TAHAP_LANJUT = [
-  { judul: 'Wawancara Orang Tua', ikon: '🤝', waktu: '12 – 13 Des 2026',
+  { judul: 'Wawancara Orang Tua', ikon: 'wawancara', waktu: '12 – 13 Des 2026',
     ringkas: ['Wajib dihadiri Bapak dan Ibu', 'Syarat: administrasi keuangan sudah selesai', 'Pilih waktu sesuai tanggal tersebut'],
     poin: [
     'Wajib diikuti oleh orang tua (Bapak dan Ibu) peserta didik yang telah menyelesaikan administrasi keuangan.',
     'Dilaksanakan pada 12 – 13 Desember 2026. Orang tua dapat memilih waktu sesuai tanggal tersebut.'] },
-  { judul: 'Pengukuran Seragam', ikon: '📏', waktu: '12 – 13 Des 2026',
+  { judul: 'Pengukuran Seragam', ikon: 'seragam', waktu: '12 – 13 Des 2026',
     ringkas: ['Siswa wajib hadir', 'Orang tua mengisi surat pernyataan ukuran seragam', 'Tidak ada pengukuran atau penukaran di luar jadwal'],
     poin: [
     'Dilaksanakan pada 12 – 13 Desember 2026. Siswa wajib hadir.',
     'Orang tua wajib mengisi surat pernyataan ukuran seragam peserta didik dan akan menerima jadwal mengenakan seragam.',
     'Tidak ada pelayanan komplain/penukaran seragam di luar ukuran yang telah disepakati.',
     'Tidak ada pelayanan pengukuran di luar jadwal yang telah ditentukan.'] },
-  { judul: 'Hari Pertama Tahun Ajaran 2027/2028', ikon: '🎒', waktu: 'Senin, 12 Juli 2027',
+  { judul: 'Hari Pertama Tahun Ajaran 2027/2028', ikon: 'tas', waktu: 'Senin, 12 Juli 2027',
     ringkas: ['Tiba paling lambat 06.50 WIB, pulang 10.10 WIB', 'Orang tua wajib mengantar selama MPLS', 'Pekan pertama boleh menunggu; mulai pekan ke-2 mandiri'],
     poin: [
     'Seluruh peserta didik hadir pada Senin, 12 Juli 2027 dengan seragam sesuai ketentuan (jika ada perubahan, akan diberitahu melalui telepon dan web sekolah).',
@@ -201,7 +213,7 @@ const TAHAP_LANJUT = [
     'Jadwal pembelajaran dan kegiatan sekolah diberikan pada pertemuan orang tua/wali di awal tahun ajaran.'] }
 ];
 const tahapan = (hariSabtu, tombol) => [
-  { judul: 'Pendaftaran', ikon: '📝', waktu: '1 Okt – 13 Nov 2026', tombol,
+  { judul: 'Pendaftaran', ikon: 'daftar', waktu: '1 Okt – 13 Nov 2026', tombol,
     ringkas: ['Isi formulir online, lalu daftar di Tata Usaha', 'Senin – Jumat 07.30 – 14.00 WIB, Sabtu ' + hariSabtu, 'Usia minimal 5 tahun 10 bulan per Juli 2027'],
     poin: [
     'Tempat pendaftaran: Tata Usaha SDS Islam At-Taqwa Rawamangun.',
@@ -209,11 +221,11 @@ const tahapan = (hariSabtu, tombol) => [
     'Hari Sabtu pukul ' + hariSabtu + '.',
     'Usia calon peserta didik per Juli 2027 minimal 5 tahun 10 bulan.',
     'Isi formulir pendaftaran online melalui tombol di atas.'] },
-  { judul: 'Pemantauan Calon Peserta Didik', ikon: '🧒', waktu: '14 Nov 2026 · 08.00 – 11.00 WIB',
+  { judul: 'Pemantauan Calon Peserta Didik', ikon: 'pantau', waktu: '14 Nov 2026 · 08.00 – 11.00 WIB',
     ringkas: ['Tiba paling lambat 07.50 WIB; lewat 08.30 dianggap mundur', 'Bawa alat tulis, minum, dan makanan kecil', 'Dinilai: bahasa, logika, motorik, kematangan belajar, hafalan surat pendek, doa harian, Iqra', 'Pengumuman: Senin, 23 Nov 2026'],
     poin: [
     'Sabtu, 14 November 2026, pukul 08.00 – 11.00 WIB.', 'Pengumuman: Senin, 23 November 2026.', PERSIAPAN, MATERI] },
-  { judul: 'Daftar Ulang', ikon: '🧾', waktu: '23 Nov – 7 Des 2026',
+  { judul: 'Daftar Ulang', ikon: 'bayar', waktu: '23 Nov – 7 Des 2026',
     ringkas: ['Siapkan fotokopi akte, KK, dan rapor TK B yang dilegalisir', 'Transfer IPSP, IPP, SPP, serta seragam dan alat sampai lunas', 'Serahkan bukti transfer ke sekolah atau WhatsApp Ibu Zulmy', 'Lewat 7 Des belum lunas = dianggap mengundurkan diri'],
     poin: [
     BERKAS,
@@ -353,7 +365,7 @@ function jadwal(list) {
 const WARNA_LANGKAH = ['var(--navy)', 'var(--blue)', '#c98a0a'];
 function alur(list) {
   return `<ol class="flow">${list.map((t, i) => `<li class="fs" style="--bc:${WARNA_LANGKAH[i % 3]}">
-    <div class="fs-top"><span class="fs-ic" aria-hidden="true">${esc(t.ikon || '')}</span><span class="fs-n">Langkah ${i + 1}</span></div>
+    <div class="fs-top"><span class="fs-ic" aria-hidden="true">${ikonSvg(t.ikon)}</span><span class="fs-n">Langkah ${i + 1}</span></div>
     <h3>${esc(t.judul)}</h3>
     ${t.waktu ? `<div class="fs-w">${esc(t.waktu)}</div>` : ''}
     ${t.ringkas && t.ringkas.length ? `<ul class="fs-l">${t.ringkas.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
