@@ -63,6 +63,7 @@ main{flex:1;position:relative;min-height:0}
 .hx .bt a:focus-visible,.hx .vsL:focus-visible{outline:3px solid #8fcbff;outline-offset:3px}
 .hx .st{display:flex;flex-wrap:wrap;gap:clamp(18px,4vw,44px);margin-top:26px;padding-top:20px;border-top:1px solid #ffffff2e}
 .hx .st div{min-width:84px}.hx .st b{display:block;font-size:clamp(26px,3.6vw,36px);font-weight:800;letter-spacing:-.03em;line-height:1}
+.hx .st b i{font-style:normal;font-variant-numeric:tabular-nums}
 .hx .st span{display:block;margin-top:6px;font-size:13px;color:#a9c2d8}
 .hx .ch{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
 .hx .ch span{font-size:12.5px;font-weight:600;color:#d3e4f3;border:1px solid #ffffff33;background:#ffffff12;border-radius:99px;padding:6px 13px}
@@ -230,8 +231,10 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
         <div class="st">
           <div><b>A</b><span>Akreditasi BAN (98)</span></div>
           <div><b id="hxTahun">2002</b><span>Tahun berdiri</span></div>
-          <div><b>14</b><span>Ekstrakurikuler</span></div>
-          <div><b>8</b><span>Club</span></div>
+          <div><b><i class="cnt" data-to="700">700</i>+</b><span>Lulusan (alumni)</span></div>
+          <div><b><i class="cnt" data-to="50">50</i>+</b><span>Guru &amp; tenaga kependidikan</span></div>
+          <div><b><i class="cnt" data-to="14">14</i></b><span>Ekstrakurikuler</span></div>
+          <div><b><i class="cnt" data-to="8">8</i></b><span>Club</span></div>
         </div>
         <div class="ch"><span>Sekolah Dasar Islam Swasta</span><span>NPSN 20109114</span><span>Senin–Jumat 07.00–16.00</span></div>
       </div></div>
@@ -490,6 +493,32 @@ $lb('lb').onclick = e => { if (e.target.id === 'lb' || e.target.id === 'lbA') pr
 addEventListener('keydown', e => { if ($lb('lb').hidden) return; if (e.key === 'Escape') prTutup(); if (e.key === 'ArrowLeft') prBuka(prI - 1); if (e.key === 'ArrowRight') prBuka(prI + 1); });
 addEventListener('hashchange', route);
 route();
+
+/* Hitung bergerak untuk angka di beranda (berhenti di angka akhir). */
+(function () {
+  var els = document.querySelectorAll('.hx .st .cnt');
+  if (!els.length) return;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function run(el) {
+    var to = +el.dataset.to, dur = 1800, t0 = null;
+    if (reduce) { el.textContent = to; return; }
+    el.textContent = '0';
+    function tick(t) {
+      if (t0 === null) t0 = t;
+      var p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(to * e);
+      if (p < 1) requestAnimationFrame(tick); else el.textContent = to;
+    }
+    requestAnimationFrame(tick);
+  }
+  function go() { els.forEach(run); }
+  if ('IntersectionObserver' in window) {
+    var started = false, io = new IntersectionObserver(function (en) {
+      if (!started && en.some(function (x) { return x.isIntersecting; })) { started = true; io.disconnect(); go(); }
+    }, { threshold: .3 });
+    io.observe(document.querySelector('.hx .st'));
+  } else go();
+})();
 </script>
 </body>
 </html>
