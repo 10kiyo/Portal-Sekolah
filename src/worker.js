@@ -9,6 +9,7 @@ import * as ortuKegiatan from '../functions/api/ortu-kegiatan.js';
 import * as adminKegiatan from '../functions/api/admin-kegiatan.js';
 import * as umumKegiatan from '../functions/api/umum-kegiatan.js';
 import * as info from '../functions/api/info.js';
+import * as galeri from '../functions/api/galeri.js';
 import * as adminInfo from '../functions/api/admin-info.js';
 import * as youtube from '../functions/api/youtube.js';
 import * as guru from '../functions/api/guru.js';
@@ -29,6 +30,7 @@ const routes = {
   '/api/admin-kegiatan': adminKegiatan,
   '/api/umum-kegiatan': umumKegiatan,
   '/api/info': info,
+  '/api/galeri': galeri,
   '/api/admin-info': adminInfo,
   '/api/youtube': youtube,
   '/api/guru': guru,

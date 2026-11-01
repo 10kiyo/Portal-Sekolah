@@ -58,6 +58,15 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
 .jr textarea{min-height:60px;margin-top:8px;font-size:14px}
 .link{background:none;border:0;color:var(--blue);padding:0;font-weight:700;font-size:13px}
 .emb .wrap{padding-top:12px}
+.gz{border:2px dashed var(--line);border-radius:16px;padding:18px;text-align:center;background:#fafcfe;transition:.15s}.gz.on{border-color:var(--blue);background:var(--soft)}
+.gz p{margin:0 0 10px;color:var(--mute)}.gq{margin-top:10px;font-size:14px;color:var(--navy)}
+.gbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #dbe8f2;position:sticky;top:6px;z-index:4}
+.gbar .chk{margin-right:6px}.gbar .n{font-size:13px;color:var(--mute);margin-right:auto}
+.gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+.gi{position:relative;border:1px solid #dbe8f2;border-radius:12px;overflow:hidden;background:#fff}.gi img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;cursor:zoom-in}
+.gi.off img{opacity:.35}.gi.sel{outline:3px solid var(--blue);outline-offset:-3px}.gi .cap{padding:6px 8px;font-size:12px;color:var(--mute);min-height:34px;overflow-wrap:anywhere}
+.gi .pk{position:absolute;top:6px;left:6px;display:flex;background:#fff;border-radius:8px;padding:4px;margin:0;box-shadow:0 2px 8px #0003}.gi .pk input{width:18px;height:18px;margin:0;padding:0}
+.gi .pill{position:absolute;top:8px;right:6px}
 @media(max-width:560px){.jr{flex-direction:column}.jr img{width:100%;height:auto;aspect-ratio:16/10}}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
 </style>
@@ -76,11 +85,11 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
 
 <div id="app" class="hidden">
   <div class="top">
-    <div><h1>Kelola Info Terbaru</h1><div class="mut">Info Terbaru, Jurnal Murid, Ekstrakurikuler, Club, dan Kegiatan Unggulan — masing-masing dikelola di tab-nya sendiri</div></div>
+    <div><h1>Kelola Info Terbaru</h1><div class="mut">Info Terbaru, Galeri Prestasi, Jurnal Murid, Ekstrakurikuler, Club, dan Kegiatan Unggulan — masing-masing dikelola di tab-nya sendiri</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button id="tambah">+ Tambah info</button><button class="sec" id="muat">Muat ulang</button><button class="sec" id="keluar">Keluar</button></div>
   </div>
   <div class="menus" id="menus">
-    <div class="mg"><span>Info</span><div class="row"><button class="on" data-t="info">Info Terbaru <small id="n-info"></small></button></div></div>
+    <div class="mg"><span>Info &amp; galeri</span><div class="row"><button class="on" data-t="info">Info Terbaru <small id="n-info"></small></button><button data-t="galeri">Galeri Prestasi <small id="n-galeri"></small></button></div></div>
     <div class="mg"><span>Menu Kegiatan</span><div class="row">
       <button data-t="jurnal">Jurnal Murid <small id="nMenunggu"></small></button>
       <button data-t="ekskul">Ekstrakurikuler <small id="n-ekskul"></small></button>
@@ -90,6 +99,22 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
   </div>
 
   <section id="pInfo"><div class="tinfo" id="tinfo"></div><div id="list" class="list"></div></section>
+
+  <section id="pGaleri" class="hidden">
+    <div class="tinfo" id="gInfo"></div>
+    <div class="card" id="gUnggahBox">
+      <h2 style="font-size:18px">Unggah foto prestasi</h2>
+      <div class="gz" id="gZona" style="margin-top:10px"><p>Tarik banyak foto ke sini, atau</p><button class="sec" type="button" id="gPilih">Pilih foto…</button>
+        <input id="gFile" type="file" accept="image/*" multiple class="hidden"><div class="hint">JPG, PNG, atau WEBP. Boleh puluhan foto sekaligus; foto otomatis diperkecil agar cepat dimuat.</div><div id="gAntre" class="gq"></div></div>
+      <div class="grid2" style="margin-top:12px"><div><label for="gTgl">Tanggal <span class="mut">(menentukan urutan di galeri)</span></label><input id="gTgl" type="date"></div>
+        <div><label for="gKet">Keterangan <span class="mut">(opsional, sama untuk semua foto)</span></label><input id="gKet" maxlength="150" placeholder="mis. Juara 1 Olimpiade Sains 2026"></div></div>
+      <div class="acts" style="margin-top:12px"><button id="gUnggah" disabled>Unggah</button><button class="sec" id="gKosong">Kosongkan antrean</button></div>
+      <div id="gStat" class="hint" style="font-size:13px;margin-top:8px"></div>
+    </div>
+    <div class="gbar" id="gBar"><label class="chk"><input type="checkbox" id="gSemua"> Pilih semua</label><span class="n" id="gN"></span>
+      <button class="sec sm" data-g="tampil">Tampilkan</button><button class="sec sm" data-g="sembunyi">Sembunyikan</button><button class="sec sm" data-g="ket">Ubah keterangan</button><button class="bad sm" data-g="hapus">Hapus</button></div>
+    <div id="gGrid" class="gg"></div>
+  </section>
 
   <section id="pJurnal" class="hidden">
     <div class="tabsA" id="fJ" style="margin-top:12px">
@@ -171,6 +196,7 @@ async function mulai() {
 }
 
 function render() {
+  renderG();
   Object.keys(TAB).forEach(k => { const n = D.info.filter(x => jenisInfo(x) === TAB[k].jenis).length; const el = $('#n-' + k); if (el) el.textContent = n ? `(${n})` : ''; });
   const T = TAB[tabA]; if (!T) return;
   const rows = D.info.filter(x => jenisInfo(x) === T.jenis);
@@ -220,7 +246,7 @@ function bacaFile(f) {
     const fr = new FileReader();
     fr.onerror = () => no(new Error('File tidak bisa dibaca.'));
     fr.onload = () => {
-      if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return ok(fr.result);
+      if (!/^image\//.test(f.type)) return ok(fr.result);
       const img = new Image();
       img.onerror = () => no(new Error('Gambar tidak valid.'));
       img.onload = () => {
@@ -305,10 +331,72 @@ $('#menus').onclick = e => {
   const b = e.target.closest('button[data-t]'); if (!b) return;
   tabA = b.dataset.t;
   document.querySelectorAll('#menus button[data-t]').forEach(x => x.classList.toggle('on', x === b));
-  const jr = tabA === 'jurnal';
-  $('#pInfo').classList.toggle('hidden', jr); $('#pJurnal').classList.toggle('hidden', !jr); $('#tambah').classList.toggle('hidden', jr);
+  const jr = tabA === 'jurnal', gl = tabA === 'galeri';
+  $('#pInfo').classList.toggle('hidden', jr || gl); $('#pJurnal').classList.toggle('hidden', !jr); $('#pGaleri').classList.toggle('hidden', !gl); $('#tambah').classList.toggle('hidden', jr || gl);
   if (jr) muatJ(); else render();
 };
+/* ---------- Galeri Prestasi: unggah banyak foto, kelola ---------- */
+let antreG = [], pilihG = new Set();
+const adaGambar = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name);
+function renderAntre() {
+  const n = antreG.length, mb = antreG.reduce((t, f) => t + f.size, 0) / 1048576;
+  $('#gAntre').innerHTML = n ? `<b>${n} foto siap diunggah</b> <span class="mut">(${mb.toFixed(1)} MB sebelum diperkecil)</span>` : '';
+  $('#gUnggah').disabled = !n; $('#gUnggah').textContent = n ? `Unggah ${n} foto` : 'Unggah';
+}
+function tambahAntre(files) { antreG.push(...[...files].filter(adaGambar)); renderAntre(); }
+$('#gPilih').onclick = () => $('#gFile').click();
+$('#gFile').onchange = e => { tambahAntre(e.target.files); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(t => $('#gZona').addEventListener(t, e => { e.preventDefault(); $('#gZona').classList.add('on'); }));
+['dragleave', 'drop'].forEach(t => $('#gZona').addEventListener(t, e => { e.preventDefault(); $('#gZona').classList.remove('on'); }));
+$('#gZona').addEventListener('drop', e => tambahAntre(e.dataTransfer.files));
+$('#gKosong').onclick = () => { antreG = []; $('#gStat').textContent = ''; renderAntre(); };
+$('#gUnggah').onclick = async () => {
+  const btn = $('#gUnggah'), files = antreG.slice(), ket = $('#gKet').value.trim(), tg = $('#gTgl').value || D.today, hasil = [], gagal = [];
+  let i = 0, selesai = 0; btn.disabled = true; $('#gKosong').disabled = true;
+  const kerja = async () => {
+    while (i < files.length) {
+      const f = files[i++];
+      try { const up = await api({ action: 'upload', folder: 'galeri', file: await bacaFile(f) }); hasil.push({ url: up.url, keterangan: ket }); }
+      catch (e) { gagal.push(f); }
+      selesai++; $('#gStat').textContent = `Mengunggah ${selesai} dari ${files.length} foto…`;
+    }
+  };
+  await Promise.all([kerja(), kerja(), kerja()]);
+  try {
+    for (let k = 0; k < hasil.length; k += 40) await api({ action: 'galeri_tambah', items: hasil.slice(k, k + 40), tanggal: tg });
+    antreG = gagal; $('#gStat').textContent = `${hasil.length} foto berhasil ditambahkan ke galeri.` + (gagal.length ? ` ${gagal.length} foto gagal dan masih di antrean; klik Unggah untuk mencoba lagi.` : '');
+    D = await api();
+  } catch (e) { $('#gStat').textContent = 'Foto terunggah tetapi gagal didaftarkan: ' + e.message; }
+  $('#gKosong').disabled = false; renderAntre(); renderG();
+};
+function renderG() {
+  const G = D.galeri, nInfo = D.info.filter(x => x.kategori === 'prestasi' && x.terbit && /\.(jpe?g|png|webp)(\?|$)/i.test(x.lampiran_url || '')).length;
+  if (!$('#gTgl').value) $('#gTgl').value = D.today;
+  $('#n-galeri').textContent = G && G.length ? `(${G.length})` : '';
+  $('#gUnggahBox').classList.toggle('hidden', G === null); $('#gBar').classList.toggle('hidden', G === null);
+  $('#gInfo').innerHTML = G === null ? '<b>Tabel galeri belum dibuat.</b> Jalankan <b>supabase-galeri.sql</b> di Supabase SQL Editor, lalu klik Muat ulang.'
+    : `Foto di sini tampil di bagian <b>Prestasi siswa</b> beranda dan halaman <b>Galeri Prestasi</b>, <b>digabung</b> dengan ${nInfo} gambar dari Info berkategori Prestasi (dikelola di tab Info Terbaru). Tidak perlu membuat Info untuk tiap foto.`;
+  const rows = G || []; pilihG = new Set([...pilihG].filter(id => rows.some(x => x.id === id)));
+  $('#gGrid').innerHTML = rows.length ? rows.map(x => `<div class="gi ${x.tampil ? '' : 'off'} ${pilihG.has(x.id) ? 'sel' : ''}" data-id="${x.id}"><label class="pk"><input type="checkbox" data-pk ${pilihG.has(x.id) ? 'checked' : ''} aria-label="Pilih foto"></label>${x.tampil ? '' : '<span class="pill warn">Disembunyikan</span>'}<img src="${esc(x.foto_url)}" alt="${esc(x.keterangan || 'Foto prestasi')}" loading="lazy" data-zoom><div class="cap">${esc(x.keterangan || '—')}<br>${tgl(x.tanggal)}</div></div>`).join('')
+    : (G === null ? '' : '<div class="card mut" style="text-align:center;grid-column:1/-1">Belum ada foto. Unggah foto di atas.</div>');
+  $('#gN').textContent = pilihG.size ? `${pilihG.size} foto dipilih` : `${rows.length} foto`;
+  $('#gSemua').checked = rows.length > 0 && pilihG.size === rows.length;
+  document.querySelectorAll('#gBar button').forEach(b => { b.disabled = !pilihG.size; });
+}
+$('#gGrid').onchange = e => { const k = e.target.closest('.gi'); if (!k || e.target.dataset.pk === undefined) return; e.target.checked ? pilihG.add(k.dataset.id) : pilihG.delete(k.dataset.id); renderG(); };
+$('#gGrid').onclick = e => { if (e.target.dataset.zoom) window.open(e.target.src, '_blank', 'noopener'); };
+$('#gSemua').onchange = e => { pilihG = e.target.checked ? new Set((D.galeri || []).map(x => x.id)) : new Set(); renderG(); };
+$('#gBar').onclick = async e => {
+  const b = e.target.closest('button[data-g]'); if (!b || !pilihG.size) return;
+  const ids = [...pilihG], a = b.dataset.g;
+  try {
+    if (a === 'hapus') { if (!confirm(`Hapus ${ids.length} foto secara permanen? Foto juga dihapus dari penyimpanan.`)) return; await api({ action: 'galeri_hapus', ids }); pilihG = new Set(); }
+    if (a === 'tampil' || a === 'sembunyi') await api({ action: 'galeri_ubah', ids, tampil: a === 'tampil' });
+    if (a === 'ket') { const t = prompt(`Keterangan untuk ${ids.length} foto terpilih (kosongkan untuk menghapus keterangan):`, ''); if (t === null) return; await api({ action: 'galeri_ubah', ids, keterangan: t }); }
+    D = await api(); renderG();
+  } catch (err) { alert(err.message); }
+};
+
 mulai();
 </script>
 </body>

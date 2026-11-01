@@ -119,6 +119,10 @@ footer.site .pills a:hover{background:#ffffff26}
 footer.site a:focus-visible{outline:3px solid #8fcbff80;outline-offset:2px}
 footer.site .copy{margin-top:28px;padding-top:18px;border-top:1px solid #ffffff22;font-size:13px;color:#9db4c9}
 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}
+#lb{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;background:#0a1824ee}#lb[hidden]{display:none}
+#lb img{max-width:min(1000px,100%);max-height:78vh;object-fit:contain;border-radius:10px}.lbt{color:#fff;text-align:center;max-width:720px}.lbt a{color:#9fd0ff;font-weight:700}
+#lb button{position:absolute;border:0;cursor:pointer;color:#fff;background:#ffffff26;font-size:26px;line-height:1;width:46px;height:46px;border-radius:50%}#lb button:hover{background:#ffffff45}#lb button:focus-visible{outline:3px solid #8fcbff}
+#lbX{top:14px;right:14px}#lbP{left:14px;top:50%}#lbN{right:14px;top:50%}@media(max-width:560px){#lbP,#lbN{top:auto;bottom:16px}}
 </style>
 </head>
 <body>
@@ -158,6 +162,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </div>
 </nav>
 
+<div id="lb" role="dialog" aria-modal="true" aria-label="Foto prestasi" hidden><button id="lbX" aria-label="Tutup">×</button><button id="lbP" aria-label="Foto sebelumnya">‹</button><button id="lbN" aria-label="Foto berikutnya">›</button><img id="lbI" alt=""><div class="lbt" id="lbT"></div></div>
 <main>
   <section id="beranda">
     <div class="herobg"><div class="hero">
@@ -183,7 +188,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
     </section>
 
     <section class="sec" id="prestasi" hidden>
-      <div class="lh"><h2>Prestasi siswa</h2><a href="#info/prestasi">Lihat semua →</a></div>
+      <div class="lh"><h2>Prestasi siswa</h2><a href="#galeri" id="prAll">Lihat semua →</a></div>
       <div class="pr" id="prList"></div>
     </section>
 
@@ -256,6 +261,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
   <iframe id="f-club" title="Club" hidden></iframe>
   <iframe id="f-unggulan" title="Kegiatan Unggulan" hidden></iframe>
   <iframe id="f-info" title="Info Terbaru" allow="web-share; clipboard-write" hidden></iframe>
+  <iframe id="f-galeri" title="Galeri Prestasi Siswa" hidden></iframe>
   <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
   <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
   <iframe id="f-kelas" title="Administrasi Guru dan Staf" hidden></iframe>
@@ -264,8 +270,8 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 </main>
 
 <script>
-const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', fasilitas: 'fasilitas.html', lulusan: 'lulusan.html', jurnal: 'jurnal.html', ekskul: 'kegiatan-sekolah.html?j=ekskul', club: 'kegiatan-sekolah.html?j=club', unggulan: 'kegiatan-sekolah.html?j=unggulan', info: 'info.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', fasilitas: 'Fasilitas Sekolah', lulusan: 'Profil Lulusan', jurnal: 'Jurnal Murid', ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan', info: 'Info Terbaru', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Guru dan Staf', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
+const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', fasilitas: 'fasilitas.html', lulusan: 'lulusan.html', jurnal: 'jurnal.html', ekskul: 'kegiatan-sekolah.html?j=ekskul', club: 'kegiatan-sekolah.html?j=club', unggulan: 'kegiatan-sekolah.html?j=unggulan', info: 'info.html', galeri: 'galeri.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html' };
+const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', fasilitas: 'Fasilitas Sekolah', lulusan: 'Profil Lulusan', jurnal: 'Jurnal Murid', ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan', info: 'Info Terbaru', galeri: 'Galeri Prestasi Siswa', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Guru dan Staf', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak' };
 
 document.getElementById('thn').textContent = new Date().getFullYear();
 
@@ -363,14 +369,30 @@ fetch('/api/youtube').then(r => r.json()).then(d => {
   document.getElementById('video').hidden = false;
 }).catch(e => console.warn('Video YouTube gagal dimuat', e));
 
-// ===== Foto prestasi: dari lampiran gambar info berkategori Prestasi, tertaut ke info terkait =====
-fetch('/api/info?kategori=prestasi&limit=24').then(r => r.json()).then(d => {
+// ===== Prestasi siswa: foto yang diunggah admin (Kelola Info > Galeri Prestasi) DIGABUNG dengan gambar lampiran Info berkategori Prestasi =====
+let PRF = [], prI = 0;
+fetch('/api/galeri?limit=8').then(r => r.json()).then(d => {
   const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const rows = (d.info || []).filter(x => UUID.test(x.id) && /^https?:\/\//i.test(x.lampiran_url || '') && /\.(jpe?g|png|webp)(\?|$)/i.test(x.lampiran_url)).slice(0, 8);
-  if (!rows.length) return;
-  document.getElementById('prList').innerHTML = rows.map(x => `<a href="#info/${x.id}" aria-label="${esc(x.judul)}"><img src="${esc(x.lampiran_url)}" alt="${esc(x.judul)}" loading="lazy"></a>`).join('');
+  PRF = (d.foto || []).filter(x => /^https?:\/\//i.test(x.foto || ''));
+  if (!PRF.length) return;
+  document.getElementById('prList').innerHTML = PRF.map((x, i) => `<a href="#galeri" data-i="${i}" aria-label="${esc(x.judul || 'Foto prestasi')}"><img src="${esc(x.foto)}" alt="${esc(x.judul || 'Foto prestasi siswa')}" loading="lazy"></a>`).join('');
+  if (d.total > PRF.length) document.getElementById('prAll').textContent = `Lihat semua (${d.total} foto) →`;
   document.getElementById('prestasi').hidden = false;
 }).catch(() => {});
+// Lightbox sederhana untuk foto di beranda; foto dari Info punya tautan "Baca beritanya".
+const $lb = id => document.getElementById(id);
+function prBuka(i) {
+  prI = (i + PRF.length) % PRF.length; const x = PRF[prI], esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  $lb('lbI').src = x.foto; $lb('lbI').alt = x.judul || 'Foto prestasi siswa';
+  $lb('lbT').innerHTML = (x.judul ? `<div>${esc(x.judul)}</div>` : '') + (x.info_id && UUID.test(x.info_id) ? `<a href="#info/${x.info_id}" id="lbA">Baca beritanya →</a>` : '');
+  $lb('lbP').hidden = $lb('lbN').hidden = PRF.length < 2;
+  if ($lb('lb').hidden) { $lb('lb').hidden = false; $lb('lbX').focus(); }
+}
+const prTutup = () => { $lb('lb').hidden = true; $lb('lbI').src = ''; };
+$lb('prList').onclick = e => { const a = e.target.closest('a[data-i]'); if (!a) return; e.preventDefault(); prBuka(+a.dataset.i); };
+$lb('lbX').onclick = prTutup; $lb('lbP').onclick = () => prBuka(prI - 1); $lb('lbN').onclick = () => prBuka(prI + 1);
+$lb('lb').onclick = e => { if (e.target.id === 'lb' || e.target.id === 'lbA') prTutup(); };
+addEventListener('keydown', e => { if ($lb('lb').hidden) return; if (e.key === 'Escape') prTutup(); if (e.key === 'ArrowLeft') prBuka(prI - 1); if (e.key === 'ArrowRight') prBuka(prI + 1); });
 addEventListener('hashchange', route);
 route();
 </script>

@@ -150,3 +150,19 @@ BIMBINGAN KONSELING (BK): kedisiplinan + poin + SP, konseling rahasia, orang tua
 7. Orang tua melihat kartu "Kedisiplinan" (jumlah, poin, tindak lanjut, rincian) di Pantau Belajar Anak. Konseling & catatan orang tua tidak pernah dikirim.
    Matikan lewat BK > Pengaturan bila belum ingin ditampilkan.
 8. Belum termasuk: pengajuan konseling oleh murid, integrasi presensi guru kelas (data alpa milik tiap guru), notifikasi WhatsApp, audit log.
+
+GALERI PRESTASI SISWA (beranda): unggah banyak foto sekaligus, digabung dengan Info berkategori Prestasi
+1. Supabase > SQL Editor: jalankan supabase-galeri.sql (membuat tabel galeri_prestasi). JALANKAN SEBELUM DEPLOY.
+   Foto disimpan di bucket "info" yang sudah ada (folder galeri/); tidak perlu bucket baru.
+2. File baru/diganti (struktur sama):
+   BARU    : supabase-galeri.sql, functions/api/galeri.js, public/galeri.html
+   DIGANTI : src/worker.js (rute /api/galeri), functions/api/admin-info.js (aksi galeri_tambah/galeri_ubah/galeri_hapus),
+             public/info-admin.html (tab "Galeri Prestasi"), public/index.html (galeri beranda gabungan + lightbox + halaman #galeri)
+3. Admin yang sama dengan Info Terbaru (PIN admin yang sama): buka Kelola Info Terbaru > tab "Galeri Prestasi" >
+   Pilih foto (boleh puluhan, atau tarik ke kotak) > isi tanggal dan keterangan (opsional) > Unggah.
+   Foto diperkecil otomatis di browser (maks. sisi 1600 px) dan diunggah 3 sekaligus. Foto yang gagal tetap di antrean untuk dicoba lagi.
+4. Kelola: centang beberapa foto lalu Tampilkan / Sembunyikan / Ubah keterangan / Hapus (hapus juga membuang file dari penyimpanan).
+5. Digabung: beranda (bagian Prestasi siswa) dan halaman Galeri (/#galeri, tombol "Lihat semua") menampilkan foto galeri + gambar lampiran
+   Info berkategori Prestasi yang terbit, diurutkan tanggal terbaru dulu (Info yang disematkan di paling depan); foto yang sama tidak dobel.
+   Foto dari Info punya tautan "Baca beritanya" di lightbox; foto galeri tidak. Perubahan muncul paling lambat 60 detik (cache).
+6. Sebelum supabase-galeri.sql dijalankan, beranda tetap berfungsi seperti biasa (hanya foto dari Info).

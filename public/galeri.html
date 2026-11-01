@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeri Prestasi Siswa</title>
+<link rel="icon" href="logo-at-taqwa.png">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(1100px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.adm{flex:none;display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.adm:hover{filter:brightness(1.2)}.adm:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
+.mut{color:var(--mute);font-size:14px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.bar input{flex:1 1 220px;max-width:420px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#fff}
+.bar input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.grid{column-width:230px;column-gap:14px;margin-top:16px}
+.g{display:block;width:100%;margin:0 0 14px;padding:0;border:1px solid #dbe8f2;border-radius:16px;overflow:hidden;background:#fff;cursor:zoom-in;break-inside:avoid;text-align:left;font:inherit;box-shadow:0 8px 24px #102a430d;transition:transform .18s,border-color .18s}
+.g:hover{transform:translateY(-3px);border-color:var(--blue)}.g:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+.g img{display:block;width:100%;height:auto;background:var(--soft);min-height:120px}
+.g .cap{display:block;padding:9px 12px 11px;font-size:13px;line-height:1.4;color:var(--ink)}.g .cap small{display:block;color:var(--mute);margin-top:2px}
+.more{text-align:center;margin-top:8px}.more button{font:inherit;font-weight:700;cursor:pointer;padding:11px 22px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.kosong{text-align:center;color:var(--mute);padding:40px 0}
+#lb{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;background:#0a1824ee}
+#lb[hidden]{display:none}#lb img{max-width:min(1000px,100%);max-height:78vh;object-fit:contain;border-radius:10px;background:#fff1}
+#lb .info{color:#fff;text-align:center;max-width:720px}#lb .info a{color:#9fd0ff;font-weight:700}#lb .info small{display:block;color:#b9cadb}
+#lb button{position:absolute;border:0;cursor:pointer;color:#fff;background:#ffffff26;font-size:26px;line-height:1;width:46px;height:46px;border-radius:50%}
+#lb button:hover{background:#ffffff45}#lb button:focus-visible{outline:3px solid #8fcbff}
+#lbX{top:14px;right:14px}#lbP{left:14px;top:50%}#lbN{right:14px;top:50%}
+@media(max-width:560px){#lbP,#lbN{top:auto;bottom:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><h1>Galeri Prestasi Siswa</h1><div class="mut" id="sub">Memuat foto…</div></div>
+    <a class="adm" href="/#info-admin" target="_top">⚙ Kelola galeri (admin)</a>
+  </div>
+  <div class="bar"><input id="cari" type="search" placeholder="Cari prestasi, mis. olimpiade, juara…" aria-label="Cari foto prestasi"></div>
+  <div id="grid" class="grid"></div>
+  <div class="more"><button id="more" hidden>Muat lebih banyak</button></div>
+</div>
+<div id="lb" role="dialog" aria-modal="true" aria-label="Foto prestasi" hidden>
+  <button id="lbX" aria-label="Tutup">×</button><button id="lbP" aria-label="Foto sebelumnya">‹</button><button id="lbN" aria-label="Foto berikutnya">›</button>
+  <img id="lbI" alt=""><div class="info" id="lbT"></div>
+</div>
+<script>
+const $ = s => document.querySelector(s), PER = 48;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+let SEMUA = [], LIHAT = [], tampilN = PER, idx = 0;
+fetch('/api/galeri').then(r => r.json()).then(d => { SEMUA = d.foto || []; $('#sub').textContent = SEMUA.length ? `${SEMUA.length} foto prestasi siswa` : 'Belum ada foto.'; saring(); })
+  .catch(() => { $('#sub').textContent = 'Foto belum bisa dimuat. Coba lagi nanti.'; });
+function saring() {
+  const q = $('#cari').value.trim().toLowerCase();
+  LIHAT = SEMUA.filter(x => !q || String(x.judul || '').toLowerCase().includes(q));
+  tampilN = PER; gambar();
+}
+function gambar() {
+  const l = LIHAT.slice(0, tampilN);
+  $('#grid').innerHTML = l.map((x, i) => `<button class="g" data-i="${i}" aria-label="${esc(x.judul || 'Foto prestasi')}"><img src="${esc(x.foto)}" alt="${esc(x.judul || 'Foto prestasi siswa')}" loading="lazy">${x.judul || x.tanggal ? `<span class="cap">${esc(x.judul)}<small>${esc(tgl(x.tanggal))}</small></span>` : ''}</button>`).join('')
+    || (SEMUA.length ? '<div class="kosong">Tidak ada foto yang cocok.</div>' : '');
+  $('#more').hidden = LIHAT.length <= tampilN;
+}
+$('#cari').oninput = saring;
+$('#more').onclick = () => { tampilN += PER; gambar(); };
+$('#grid').onclick = e => { const b = e.target.closest('.g'); if (b) buka(+b.dataset.i); };
+function buka(i) {
+  if (!LIHAT.length) return;
+  idx = (i + LIHAT.length) % LIHAT.length; const x = LIHAT[idx];
+  $('#lbI').src = x.foto; $('#lbI').alt = x.judul || 'Foto prestasi siswa';
+  $('#lbT').innerHTML = `${x.judul ? `<div>${esc(x.judul)}</div>` : ''}<small>${esc(tgl(x.tanggal))} · ${idx + 1} dari ${LIHAT.length}</small>${x.info_id && UUID.test(x.info_id) ? `<a href="/#info/${x.info_id}" target="_top">Baca beritanya →</a>` : ''}`;
+  const dua = LIHAT.length < 2; $('#lbP').hidden = dua; $('#lbN').hidden = dua;
+  if ($('#lb').hidden) { $('#lb').hidden = false; $('#lbX').focus(); }
+}
+const tutup = () => { $('#lb').hidden = true; $('#lbI').src = ''; const b = document.querySelector(`.g[data-i="${idx}"]`); if (b) b.focus(); };
+$('#lbX').onclick = tutup; $('#lbP').onclick = () => buka(idx - 1); $('#lbN').onclick = () => buka(idx + 1);
+$('#lb').onclick = e => { if (e.target.id === 'lb') tutup(); };
+addEventListener('keydown', e => { if ($('#lb').hidden) return; if (e.key === 'Escape') tutup(); if (e.key === 'ArrowLeft') buka(idx - 1); if (e.key === 'ArrowRight') buka(idx + 1); });
+</script>
+</body>
+</html>

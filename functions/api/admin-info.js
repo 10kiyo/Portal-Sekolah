@@ -21,7 +21,9 @@ export async function onRequest({ request, env }) {
     if (request.method === 'GET') {
       const rows = await get('/info_sekolah?order=tanggal_terbit.desc,created_at.desc&limit=500&select=*').catch(() => null);
       if (!rows) return json(500, { error: 'Tabel info_sekolah belum ada. Jalankan supabase-info.sql di Supabase SQL Editor.' });
-      return json(200, { today: hariIni(), info: rows });
+      // Galeri Prestasi (supabase-galeri.sql). null = tabel belum dibuat; info tetap berfungsi.
+      const galeri = await get('/galeri_prestasi?order=tanggal.desc,created_at.desc&limit=1000&select=*').catch(() => null);
+      return json(200, { today: hariIni(), info: rows, galeri });
     }
     if (request.method !== 'POST') return json(405, { error: 'Metode tidak diizinkan.' });
     const b = await request.json().catch(() => ({}));
@@ -32,8 +34,9 @@ export async function onRequest({ request, env }) {
       let bytes;
       try { bytes = Uint8Array.from(atob(s.slice(i + 1)), ch => ch.charCodeAt(0)); } catch (e) { return json(400, { error: 'File tidak valid.' }); }
       if (bytes.length > MAXFILE) return json(400, { error: 'Ukuran file maksimal 4 MB.' });
-      const tipe = m[1].toLowerCase();
-      const path = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${TIPE[tipe]}`;
+      const tipe = m[1].toLowerCase(), galeriFoto = b.folder === 'galeri';
+      if (galeriFoto && tipe === 'application/pdf') return json(400, { error: 'Galeri hanya menerima foto (JPG, PNG, WEBP).' });
+      const path = `${galeriFoto ? 'galeri/' : ''}${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${TIPE[tipe]}`;
       const up = await fetch(`${c.URL}/storage/v1/object/info/${path}`, { method: 'POST', headers: { ...c.h, 'Content-Type': tipe }, body: bytes });
       if (!up.ok) return json(500, { error: 'Gagal mengunggah. Pastikan bucket "info" sudah dibuat (lihat supabase-info.sql).' });
       return json(200, { url: prefix + path });
@@ -70,6 +73,37 @@ export async function onRequest({ request, env }) {
         if (r.ok && old && old.lampiran_url && old.lampiran_url !== k.lampiran_url) await hapusFile(old.lampiran_url);
       } else r = await fetch(`${c.REST}/info_sekolah`, { method: 'POST', headers: jh, body: JSON.stringify(k) });
       return r.ok ? json(200, { ok: true }) : json(500, { error: 'Gagal menyimpan. Pastikan supabase-info.sql sudah dijalankan.' });
+    }
+
+    // ---- Galeri Prestasi: unggah banyak foto sekaligus (file diunggah satu per satu lewat action 'upload', lalu didaftarkan di sini) ----
+    if (b.action === 'galeri_tambah') {
+      const items = Array.isArray(b.items) ? b.items.slice(0, 50) : [], tanggal = String(b.tanggal || hariIni());
+      if (!items.length) return json(400, { error: 'Tidak ada foto.' });
+      if (!TGL.test(tanggal)) return json(400, { error: 'Format tanggal tidak valid.' });
+      const baris = items.map(i => ({ foto_url: String((i && i.url) || ''), keterangan: String((i && i.keterangan) || '').trim().slice(0, 150) || null, tanggal }));
+      if (baris.some(x => !x.foto_url.startsWith(prefix + 'galeri/'))) return json(400, { error: 'Foto harus diunggah lewat panel ini.' });
+      const r = await fetch(`${c.REST}/galeri_prestasi`, { method: 'POST', headers: jh, body: JSON.stringify(baris) });
+      return r.ok ? json(200, { ok: true, jumlah: baris.length }) : json(500, { error: 'Gagal menyimpan. Pastikan supabase-galeri.sql sudah dijalankan.' });
+    }
+    if (b.action === 'galeri_ubah') {
+      const ids = (Array.isArray(b.ids) ? b.ids : [b.id]).map(String).filter(x => UUID.test(x)).slice(0, 200);
+      if (!ids.length) return json(400, { error: 'ID tidak valid.' });
+      const f = {};
+      if (typeof b.tampil === 'boolean') f.tampil = b.tampil;
+      if (typeof b.keterangan === 'string') f.keterangan = b.keterangan.trim().slice(0, 150) || null;
+      if (b.tanggal) { if (!TGL.test(String(b.tanggal))) return json(400, { error: 'Format tanggal tidak valid.' }); f.tanggal = String(b.tanggal); }
+      if (!Object.keys(f).length) return json(400, { error: 'Tidak ada perubahan.' });
+      const r = await fetch(`${c.REST}/galeri_prestasi?id=in.(${ids.join(',')})`, { method: 'PATCH', headers: jh, body: JSON.stringify(f) });
+      return r.ok ? json(200, { ok: true }) : json(500, { error: 'Gagal menyimpan.' });
+    }
+    if (b.action === 'galeri_hapus') {
+      const ids = (Array.isArray(b.ids) ? b.ids : []).map(String).filter(x => UUID.test(x)).slice(0, 200);
+      if (!ids.length) return json(400, { error: 'ID tidak valid.' });
+      const lama = await get(`/galeri_prestasi?id=in.(${ids.join(',')})&select=foto_url`).catch(() => []);
+      const r = await fetch(`${c.REST}/galeri_prestasi?id=in.(${ids.join(',')})`, { method: 'DELETE', headers: c.h });
+      if (!r.ok) return json(500, { error: 'Gagal menghapus.' });
+      await Promise.all(lama.map(x => hapusFile(x.foto_url)));
+      return json(200, { ok: true });
     }
 
     if (b.action === 'terbit' || b.action === 'sematkan') {
