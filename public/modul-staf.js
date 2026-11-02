@@ -12,7 +12,7 @@ const MODUL = {};
 // diisi lewat fungsi simpan_foto_saya() sehingga langsung tampil di halaman Guru & Staff. Lihat supabase-foto-guru.sql.
 async function unggahFotoGuru(file) {
   const u = (await sb.auth.getUser()).data.user.id, path = u + '.jpg';
-  const up = await sb.storage.from('foto-guru').upload(path, await resize(file, 600), { contentType: 'image/jpeg', upsert: true, cacheControl: '3600' });
+  const up = await sb.storage.from('foto-guru').upload(path, await resizeProfil(file, 600), { contentType: 'image/jpeg', upsert: true, cacheControl: '3600' });
   if (up.error) throw up.error;
   const url = sb.storage.from('foto-guru').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
   const rpc = await sb.rpc('simpan_foto_saya', { p_url: url });
