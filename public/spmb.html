@@ -26,7 +26,7 @@ body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,
 .status{display:inline-flex;gap:8px;align-items:center;margin-top:16px;padding:8px 14px;border-radius:12px;background:#ffffff1f;font-weight:700;font-size:14px}
 .status i{width:9px;height:9px;border-radius:50%;background:#5bd68f;flex:none}.status.off i{background:#f5b335}
 .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-.btn{display:inline-block;text-decoration:none;font-weight:800;font-size:15px;padding:12px 20px;border-radius:12px;border:1.5px solid #ffffff80;color:#fff;cursor:pointer;background:none;font-family:inherit}
+.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:800;font-size:15px;padding:12px 20px;border-radius:12px;border:1.5px solid #ffffff80;color:#fff;cursor:pointer;background:none;font-family:inherit}
 .btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
 .btn.dark{background:var(--navy);border-color:var(--navy);color:#fff}
 .btn.line{color:var(--navy);border-color:var(--line);background:#fff}
@@ -83,7 +83,7 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
 /* ===== Alur pendaftaran: kartu langkah ===== */
 .flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .fs{position:relative;display:flex;flex-direction:column;background:var(--soft);border-radius:18px;border-top:5px solid var(--bc);padding:16px 16px 12px}
-.fs::after{content:"›";position:absolute;right:-23px;top:34px;width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--navy);font-weight:900;font-size:22px;line-height:1;display:grid;place-items:center;padding-bottom:3px;z-index:3;box-shadow:0 2px 6px #102a4330}
+.fs::after{content:"";position:absolute;right:-23px;top:34px;width:28px;height:28px;border-radius:50%;background:var(--gold) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23102a43' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center/16px no-repeat;z-index:3;box-shadow:0 2px 6px #102a4330}
 .fs:nth-child(3n)::after,.fs:last-child::after{display:none}
 .fs-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 .fs-ic{width:48px;height:48px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--blue);box-shadow:0 4px 12px #102a431a}
@@ -97,8 +97,8 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
 .fs-more{margin-top:auto;border-top:1px dashed var(--line);padding-top:4px}
 .fs-more summary{cursor:pointer;list-style:none;font-weight:700;font-size:14px;color:var(--blue);padding:8px 0}
 .fs-more summary::-webkit-details-marker{display:none}
-.fs-more summary::after{content:" ▾"}
-.fs-more[open] summary::after{content:" ▴"}
+.fs-more summary::after{content:"";display:inline-block;width:14px;height:14px;margin-left:6px;vertical-align:-2px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center/contain no-repeat;transition:transform .2s}
+.fs-more[open] summary::after{transform:rotate(180deg)}
 .fs-more .pts{font-size:14px;margin-bottom:8px}
 
 @media(max-width:860px){.snake{--T:46px;--R:76px;--hp:18px}}
@@ -160,6 +160,7 @@ tr.tot td{font-weight:800;color:var(--navy);border-bottom:0;background:var(--sof
                `poin` = isi lengkap yang muncul saat "Lihat detail lengkap" dibuka.
    ============================================================ */
 /* Ikon langkah (SVG inline, gaya Lucide, mengikuti warna teks) */
+const PANAH = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const IKON = {
   daftar: '<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.4 18.6a2 2 0 0 1-.9.5l-2.9.8a.5.5 0 0 1-.6-.6l.8-2.9a2 2 0 0 1 .5-.9z"/><path d="m15 5 3 3"/>',
   pantau: '<circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/>',
@@ -263,7 +264,7 @@ const SPMB = {
         { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua dan pengukuran seragam', isi: 'Wawancara wajib dihadiri Bapak dan Ibu; siswa hadir untuk ukur seragam' },
         { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/2028', isi: 'Tiba paling lambat 06.50 WIB, pulang 10.10 WIB' }
       ],
-      tahapan: tahapan('08.00 – 12.00 WIB', { teks: 'Isi formulir pendaftaran →', url: 'https://bit.ly/FORMULIRSPMBSDISLAMATTAQWA2027-2028KBTKATTAQWA' }),
+      tahapan: tahapan('08.00 – 12.00 WIB', { teks: 'Isi formulir pendaftaran', url: 'https://bit.ly/FORMULIRSPMBSDISLAMATTAQWA2027-2028KBTKATTAQWA' }),
       biaya: {
         judul: 'Rincian Uang Masuk TK Dalam (berlaku 7 Oktober 2026)',
         kolom: ['Okt – Des 2026', 'Jan – Juni 2027'],
@@ -289,7 +290,7 @@ const SPMB = {
         { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua dan pengukuran seragam', isi: 'Wawancara wajib dihadiri Bapak dan Ibu; siswa hadir untuk ukur seragam' },
         { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/2028', isi: 'Tiba paling lambat 06.50 WIB, pulang 10.10 WIB' }
       ],
-      tahapan: tahapan('08.00 – 12.00 WIB (dengan perjanjian)', { teks: 'Isi formulir pendaftaran →', url: 'https://bit.ly/FORMULIRPENDAFTARANSPMBSDISLAMATTAQWARAWAMANGUNTAHUNAJARAN20272028TKLUAR' }),
+      tahapan: tahapan('08.00 – 12.00 WIB (dengan perjanjian)', { teks: 'Isi formulir pendaftaran', url: 'https://bit.ly/FORMULIRPENDAFTARANSPMBSDISLAMATTAQWARAWAMANGUNTAHUNAJARAN20272028TKLUAR' }),
       biaya: {
         judul: 'Rincian Uang Masuk TK Luar (berlaku 7 Oktober 2026)',
         kolom: ['Okt – Des 2026', 'Jan – Juni 2027'],
@@ -331,7 +332,7 @@ $('status').innerHTML = '<i></i>' + (TODAY < P0.mulai ? 'Pendaftaran dibuka mula
 
 const wa = 'https://wa.me/6281220706200?text=' + encodeURIComponent("Assalamu'alaikum, saya ingin menanyakan informasi SPMB SDS Islam At-Taqwa tahun ajaran " + S.tahunAjaran + '.');
 $('btns').innerHTML = S.jalur.map((j, i) => https(j.daftarUrl)
-  ? `<a class="btn ${i ? '' : 'gold'}" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">${esc(j.label)} →</a>` : '').join('')
+  ? `<a class="btn ${i ? '' : 'gold'}" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">${esc(j.label)} ${PANAH}</a>` : '').join('')
   + `<a class="btn" href="${wa}" target="_blank" rel="noopener">Tanya via WhatsApp</a>`;
 
 $('facts').innerHTML = S.fakta.map(f => `<div><b>${esc(f.angka)}</b><span>${esc(f.label)}</span></div>`).join('');
@@ -371,7 +372,7 @@ function alur(list) {
     <h3>${esc(t.judul)}</h3>
     ${t.waktu ? `<div class="fs-w">${esc(t.waktu)}</div>` : ''}
     ${t.ringkas && t.ringkas.length ? `<ul class="fs-l">${t.ringkas.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
-    ${t.tombol && https(t.tombol.url) ? `<a class="btn dark sm" href="${esc(t.tombol.url)}" target="_blank" rel="noopener">${esc(t.tombol.teks)}</a>` : ''}
+    ${t.tombol && https(t.tombol.url) ? `<a class="btn dark sm" href="${esc(t.tombol.url)}" target="_blank" rel="noopener">${esc(t.tombol.teks)} ${PANAH}</a>` : ''}
     ${t.poin && t.poin.length ? `<details class="fs-more"><summary>Lihat detail lengkap</summary><ul class="pts">${t.poin.map(poin).join('')}</ul></details>` : ''}
   </li>`).join('')}</ol>`;
 }
@@ -379,7 +380,7 @@ function alur(list) {
 function panel(j) {
   const out = [];
   out.push(`<section class="card"><h2>Pendaftaran — ${esc(j.nama)}</h2><div class="sum">${j.ringkas.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
-    <div class="btns">${https(j.daftarUrl) ? `<a class="btn dark" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">Isi formulir pendaftaran →</a>` : ''}${https(j.panduanUrl) || j.panduanUrl ? `<a class="btn line" href="${esc(j.panduanUrl)}" target="_blank" rel="noopener">Unduh buku panduan (PDF)</a>` : ''}</div></section>`);
+    <div class="btns">${https(j.daftarUrl) ? `<a class="btn dark" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">Isi formulir pendaftaran ${PANAH}</a>` : ''}${https(j.panduanUrl) || j.panduanUrl ? `<a class="btn line" href="${esc(j.panduanUrl)}" target="_blank" rel="noopener">Unduh buku panduan (PDF)</a>` : ''}</div></section>`);
   out.push(`<section class="card"><h2>Jadwal SPMB</h2>${jadwal(j.jadwal)}</section>`);
   out.push(`<section class="card"><h2>Alur Pendaftaran</h2><p class="mut" style="margin:-6px 0 18px">Ikuti langkahnya secara berurutan. Buka Lihat detail lengkap pada tiap kartu untuk aturan selengkapnya.</p>${alur(j.tahapan)}</section>`);
   const b = j.biaya, tot = b.kolom.map((_, i) => b.baris.reduce((s, r) => s + r[i + 1], 0));

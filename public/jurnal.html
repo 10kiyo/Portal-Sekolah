@@ -15,7 +15,7 @@ h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03
 h2{margin:0 0 10px;color:var(--navy);font-size:20px}
 .mut{color:var(--mute);font-size:14px}
 .tabs{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
-.tabs button{font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.tabs button{display:inline-flex;align-items:center;gap:7px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy)}
 .tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-top:14px}
@@ -63,7 +63,7 @@ dialog .isi{margin-top:14px;line-height:1.75;white-space:pre-wrap;overflow-wrap:
   <div class="mut">Karya tulis dan berita buatan murid At-Taqwa — belajar jurnalistik dan menulis dari rumah</div>
   <div class="tabs" role="tablist">
     <button class="on" data-t="baca" role="tab">Baca jurnal</button>
-    <button data-t="tulis" role="tab">✏️ Tulis jurnalku</button>
+    <button data-t="tulis" role="tab"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg> Tulis jurnalku</button>
   </div>
 
   <section id="baca">
