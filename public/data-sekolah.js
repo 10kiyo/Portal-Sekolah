@@ -22,6 +22,7 @@
 
     // ---- SDM & rombel ----
     guruPegawaiMin: 45,                // teks sejarah: "lebih dari 45 orang"
+    muridAktifBeranda: 450,            // angka bulat untuk beranda, tampil "450+"
     guruTendikBeranda: 50,             // angka bulat untuk beranda, tampil "50+"
     rombelPerTingkat: 3,
     muridPerKelas: 25,

@@ -45,6 +45,22 @@ button:focus-visible{outline:3px solid #1677c850}
 #menu button.on{background:var(--navy);color:#fff}
 .ic{padding:9px 13px;font-size:18px;line-height:1}
 .scrim{display:none}
+
+/* ===== Tata letak admin: sidebar kiri penuh dari atas ke bawah ===== */
+@media(min-width:861px){
+  body.in-app .wrap{width:auto;max-width:none;margin:0;padding:0}
+  body.in-app #app{padding:16px 24px 60px 24px;transition:padding-left .2s}
+  body.in-app[data-menu="1"] #app{padding-left:284px}
+  body.in-app .shell{display:block;margin-top:14px}
+  body.in-app #side{position:fixed;left:0;top:0;bottom:0;width:260px;margin:0;max-height:none;border-radius:0;border:0;border-right:1px solid #dbe8f2;box-shadow:6px 0 24px #102a4310;display:flex;flex-direction:column;z-index:30;padding:14px 12px}
+  body.in-app .shell[data-open="0"] #side{display:none}
+  body.in-app #menu{flex:1;overflow:auto;min-height:0}
+  body.in-app .scrim{display:none!important}
+}
+#sideFoot{display:none;padding-top:10px;border-top:1px solid #e6eef5;margin-top:8px}
+body.in-app #sideFoot{display:block}
+#sideFoot button{width:100%;text-align:left}
+@media print{body.in-app #app{padding:0!important}}
 .print-only{display:none}
 .chklist{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 12px;margin-bottom:12px}
 .chk{display:flex;gap:8px;align-items:center;margin:0;font-weight:600;cursor:pointer;padding:3px 0}.chk input{width:auto}
@@ -119,7 +135,7 @@ a.btn{display:inline-block;text-decoration:none;font-weight:700;padding:10px 15p
     </div>
   </div>
   <div class="shell" id="shell" data-open="1">
-    <aside id="side"><div id="sideHead"><b id="sideNama">Guru</b><span id="sideJab"></span></div><nav id="menu"></nav></aside>
+    <aside id="side"><div id="sideHead"><b id="sideNama">Guru</b><span id="sideJab"></span></div><nav id="menu"></nav><div id="sideFoot"><button id="btnHome" type="button">&larr; Beranda sekolah</button></div></aside>
     <div class="scrim" id="scrim"></div>
     <main class="main">
       <div class="card" id="kelasCard" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
@@ -177,7 +193,7 @@ async function run(q) { const id = S.rid; const { data, error } = await q; if (i
 /* ---------- login ---------- */
 async function boot() {
   const { data } = await sb.auth.getSession();
-  data.session ? start() : ($('#login').classList.remove('hidden'), $('#app').classList.add('hidden'));
+  data.session ? start() : ($('#login').classList.remove('hidden'), $('#app').classList.add('hidden'), kabar(false));
 }
 $('#btnLogin').onclick = async () => {
   const bad = t => { $('#loginMsg').textContent = t; };
@@ -205,7 +221,7 @@ $('#btnOut').onclick = async () => { await sb.auth.signOut(); location.reload();
 
 /* ---------- kelas ---------- */
 async function start() {
-  $('#app').classList.remove('hidden');
+  $('#app').classList.remove('hidden'); document.body.classList.add('in-app'); kabar(true);
   await loadProfil();
   await loadPeran();
   if (!(S.prof && S.prof.nama)) await isiNamaDariDaftar();
@@ -240,10 +256,12 @@ $('#menu').onclick = e => {
   S.tab = t; S.tugas = null; show();
   if (matchMedia('(max-width:860px)').matches) setMenu(false);
 };
-function setMenu(open) { $('#shell').dataset.open = open ? '1' : '0'; $('#btnMenu').setAttribute('aria-expanded', open); try { localStorage.setItem('menuAdminTerbuka', open ? '1' : '0'); } catch (e) {} }
+function kabar(v) { try { if (parent !== window) parent.postMessage({ adminMode: v }, location.origin); } catch (e) {} }
+$('#btnHome').onclick = () => { if (parent !== window) { try { parent.location.hash = '#beranda'; return; } catch (e) {} } location.href = 'index.html'; };
+function setMenu(open) { document.body.dataset.menu = open ? '1' : '0'; $('#shell').dataset.open = open ? '1' : '0'; $('#btnMenu').setAttribute('aria-expanded', open); try { localStorage.setItem('menuAdminTerbuka', open ? '1' : '0'); } catch (e) {} }
 $('#btnMenu').onclick = () => setMenu($('#shell').dataset.open !== '1');
 $('#scrim').onclick = () => setMenu(false);
-(() => { let o = !matchMedia('(max-width:860px)').matches; try { const v = localStorage.getItem('menuAdminTerbuka'); if (v && o) o = v === '1'; } catch (e) {} $('#shell').dataset.open = o ? '1' : '0'; })();
+(() => { let o = !matchMedia('(max-width:860px)').matches; try { const v = localStorage.getItem('menuAdminTerbuka'); if (v && o) o = v === '1'; } catch (e) {} $('#shell').dataset.open = o ? '1' : '0'; document.body.dataset.menu = o ? '1' : '0'; })();
 async function loadKelas(pick) {
   S.kelas = await run(sb.from('kelas_kelas').select('*').order('nama'));
   S.kid = pick || (S.kelas.find(k => k.id === S.kid) || S.kelas[0] || {}).id || null;

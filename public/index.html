@@ -42,6 +42,7 @@ nav{flex:none;display:flex;align-items:center;gap:14px;padding:8px 16px;backgrou
 .menu a:focus-visible,.brand:focus-visible,.pr a:focus-visible,.latest .li:focus-visible{outline:3px solid #1677c850}
 @media(max-width:760px){.brand span{display:none}}
 main{flex:1;position:relative;min-height:0}
+body.admin-penuh .topbar,body.admin-penuh>nav{display:none}
 #beranda{height:100%;overflow:auto;padding:clamp(24px,6vw,64px) 16px}
 /* ===== HERO BERANDA (foto sekolah di kanan memudar ke kiri, statistik, pita nilai berjalan) ===== */
 .hx{--hb:#0b1f33;position:relative;isolation:isolate;margin:calc(-1*clamp(24px,6vw,64px)) -16px 0;background:var(--hb);color:#fff;overflow:hidden}
@@ -148,32 +149,7 @@ main{flex:1;position:relative;min-height:0}
 @keyframes prJalan{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.pr{overflow-x:auto;-webkit-mask-image:none;mask-image:none;margin:14px 0 0}.pr .trk{animation:none}.pr .grp+.grp{display:none}}
 /* ===== Footer Beranda ===== */
-footer.site{max-width:none;width:auto;margin:56px -16px calc(-1*clamp(24px,6vw,64px));background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(28px,4vw,48px) clamp(20px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
-footer.site .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
-footer.site h3{margin:0 0 14px;color:#8fcbff;font-size:18px;letter-spacing:-.01em}
-footer.site .logo{display:flex;align-items:center;gap:12px}
-footer.site .logo img{width:56px;height:56px;background:#fff;border-radius:14px;padding:5px;object-fit:contain}
-footer.site .logo b{display:block;color:#fff;font-size:18px;letter-spacing:-.02em}
-footer.site .logo span{font-size:13px;color:#9db4c9}
-footer.site p{margin:0;line-height:1.7;font-size:15px}
-footer.site .desc{margin-top:16px;color:#c3d4e4}
-footer.site .lbl{display:block;margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.08em;color:#8fcbff;text-transform:uppercase}
-footer.site .blk{margin-bottom:16px}
-footer.site .blk b{display:block;color:#fff;margin-bottom:3px}
-footer.site a{color:#fff}
-footer.site .badge{display:block;margin-top:18px;padding:12px 14px;border:1px solid #ffffff30;border-radius:14px;background:#ffffff0d;font-size:14px}
-footer.site .badge b{display:block;color:#8fcbff}
-footer.site .badge a{font-size:13px;color:#c3d4e4}
-footer.site .soc{display:flex;gap:10px;margin-top:18px}
-footer.site .soc a{width:42px;height:42px;display:grid;place-items:center;border:1px solid #ffffff30;border-radius:50%;background:#ffffff0d;transition:.18s}
-footer.site .soc a:hover{background:#ffffff26;transform:translateY(-2px)}
-footer.site .soc svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-footer.site .map{position:static;inset:auto;width:100%;height:220px;border:0;border-radius:16px;background:#1d3d5a;display:block}
-footer.site .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-footer.site .pills a{text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border:1px solid #ffffff30;border-radius:99px;background:#ffffff0d}
-footer.site .pills a:hover{background:#ffffff26}
-footer.site a:focus-visible{outline:3px solid #8fcbff80;outline-offset:2px}
-footer.site .copy{margin-top:28px;padding-top:18px;border-top:1px solid #ffffff22;font-size:13px;color:#9db4c9}
+#beranda .idf{margin:56px -16px calc(-1*clamp(24px,6vw,64px))}
 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}
 #lb{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;background:#0a1824ee}#lb[hidden]{display:none}
 #lb img{max-width:min(1000px,100%);max-height:78vh;object-fit:contain;border-radius:10px}.lbt{color:#fff;text-align:center;max-width:720px}.lbt a{color:#9fd0ff;font-weight:700}
@@ -227,13 +203,12 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
         <div class="bt"><a class="p" href="#profil">Kenali Sekolah Kami <i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a><a class="s" href="#spmb">Info SPMB</a></div>
         <div class="st">
           <div><b data-s="akreditasiPredikat">A</b><span>Akreditasi BAN (<data data-s="akreditasiNilai">98</data>)</span></div>
-          <div><b id="hxTahun" data-s="tahunBerdiri">2002</b><span>Tahun berdiri</span></div>
           <div><b><i class="cnt" data-s="lulusanBeranda" data-to="700">700</i>+</b><span>Lulusan (alumni)</span></div>
+          <div><b><i class="cnt" data-s="muridAktifBeranda" data-to="450">450</i>+</b><span>Murid aktif</span></div>
           <div><b><i class="cnt" data-s="guruTendikBeranda" data-to="50">50</i>+</b><span>Guru &amp; tenaga kependidikan</span></div>
           <div><b><i class="cnt" data-s="jumlahEkskul" data-to="14">14</i></b><span>Ekstrakurikuler</span></div>
           <div><b><i class="cnt" data-s="jumlahClub" data-to="8">8</i></b><span>Club</span></div>
         </div>
-        <div class="ch"><span>Sekolah Dasar Islam Swasta</span><span>NPSN 20109114</span><span>Senin–Jumat 07.00–16.00</span></div>
       </div></div>
       <div class="mq" aria-hidden="true"><div class="trk" id="hxMq"></div></div>
     </header>
@@ -271,65 +246,9 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
       <div class="pr" id="prList"></div>
     </section>
 
-    <!-- ===== FOOTER BERANDA =====
-         Edit teks/tautan di bawah sesuai kebutuhan. Bagian bertanda (isi ...) adalah contoh yang perlu diganti. -->
-    <footer class="site">
-      <div class="cols">
-
-        <!-- Kolom 1: identitas sekolah -->
-        <div>
-          <div class="logo"><img src="logo-at-taqwa.png" alt=""><div><b>SDS Islam At-Taqwa</b><span>Rawamangun, Jakarta Timur</span></div></div>
-          <p class="desc">Belajar Nyaman, Perilaku Islami, Insan Bertaqwa</p>
-          <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: 20109114 · Akreditasi: <data data-s="akreditasiPredikat">A</data> (Score: <data data-s="akreditasiNilai">98</data> by BAN)<br><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek Akreditasi →</a></div>
-          <div class="soc">
-            <a href="https://www.instagram.com/sdi_attaqwa/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/></svg></a>
-            <a href="https://bit.ly/facebook-attaqwa" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M14.5 21v-8h2.7l.5-3.2h-3.2V7.9c0-.9.4-1.6 1.7-1.6h1.6V3.5c-.3 0-1.3-.2-2.4-.2-2.4 0-4 1.4-4 4.1v2.4H8.3V13H11v8z"/></svg></a>
-            <a href="https://www.youtube.com/@sdiattaqwa2688" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.8" width="18.4" height="12.4" rx="3.6"/><path d="M10 9.4v5.2l4.6-2.6z"/></svg></a>
-          </div>
-        </div>
-
-        <!-- Kolom 2: kontak -->
-        <div>
-          <h3>Hubungi Kami</h3>
-          <div class="blk"><span class="lbl">WhatsApp</span><a href="https://wa.me/6281220706200" target="_blank" rel="noopener">+62-812-2070-6200</a></div>
-          <div class="blk"><span class="lbl">Email</span><a href="mailto:info@attaqwa.sch.id">info@attaqwa.sch.id</a></div>
-          <div class="blk"><span class="lbl">Jam layanan</span><p>Senin – Jumat, (07:00 - 16:00)</p></div>
-        </div>
-
-        <!-- Kolom 3: alamat -->
-        <div>
-          <h3>Alamat Sekolah</h3>
-          <div class="blk"><b>SDS Islam At-Taqwa Rawamangun</b><p>Jl. Daksinapati Raya No. 2, Komp. UI/UNJ, RT.11/RW.14, Rawamangun, Kec. Pulogadung, Jakarta Timur, 13220</p></div>
-        </div>
-
-        <!-- Kolom 4: peta + tautan cepat -->
-        <div>
-          <h3>Lokasi Sekolah</h3>
-          <!-- Peta: ganti isi q= dengan nama/alamat tepat jika hasilnya kurang pas -->
-          <iframe class="map" title="Peta lokasi sekolah" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=SDS+Islam+At-Taqwa+Rawamangun,+Jl.+Daksinapati+Raya+No.+2,+Jakarta+Timur&hl=id&z=16&output=embed" allowfullscreen></iframe>
-          <div class="pills">
-            <a href="#beranda">Beranda</a>
-            <a href="#profil">Profil Sekolah</a>
-            <a href="#guru">Guru &amp; Staff</a>
-            <a href="#lulusan">Profil Lulusan</a>
-            <a href="#spmb">SPMB</a>
-            <a href="#jurnal">Jurnal Murid</a>
-            <a href="#ekskul">Ekstrakurikuler</a>
-            <a href="#club">Club</a>
-            <a href="#unggulan">Kegiatan Unggulan</a>
-            <a href="#info">Info Terbaru</a>
-            <a href="#si-taqwa">SI-TAQWA</a>
-            <a href="#buku-tamu">Buku Tamu Sekolah</a>
-            <a href="#kelas">Administrasi Guru dan Staf</a>
-            <a href="#kegiatan">Kegiatan (Panitia)</a>
-            <a href="#ortu">Pantau Belajar Anak</a>
-            <!-- Tambah tautan lain di sini: <a href="https://...">Nama</a> -->
-          </div>
-        </div>
-
-      </div>
-      <div class="copy">© <span id="thn"></span> SDS Islam At-Taqwa Rawamangun. Seluruh layanan digital ini disiapkan untuk mendukung orang tua, guru, dan tamu sekolah.</div>
-    </footer>
+    <!-- ===== FOOTER: sama dengan halaman Profil Sekolah. Isinya diedit di footer-sekolah.js ===== -->
+    <footer id="foot" class="idf" aria-label="Identitas Sekolah"></footer>
+    <script src="footer-sekolah.js"></script>
   </section>
   <iframe id="f-spmb" title="SPMB" hidden></iframe>
   <iframe id="f-profil" title="Profil Sekolah" hidden></iframe>
@@ -354,7 +273,6 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:tran
 const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', fasilitas: 'fasilitas.html', lulusan: 'lulusan.html', jurnal: 'jurnal.html', ekskul: 'kegiatan-sekolah.html?j=ekskul', club: 'kegiatan-sekolah.html?j=club', unggulan: 'kegiatan-sekolah.html?j=unggulan', info: 'info.html', galeri: 'galeri.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html', 'si-taqwa': 'si-taqwa.html' };
 const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', fasilitas: 'Fasilitas Sekolah', lulusan: 'Profil Lulusan', jurnal: 'Jurnal Murid', ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan', info: 'Info Terbaru', galeri: 'Galeri Prestasi Siswa', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Guru dan Staf', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak', 'si-taqwa': 'SI-TAQWA — Sistem Informasi Terpadu At-Taqwa' };
 
-document.getElementById('thn').textContent = new Date().getFullYear();
 
 // ===== Dropdown "Profil" dan "Kegiatan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
 const DDS = [['ddBtnP', 'ddpP'], ['ddBtnK', 'ddpK']].map(([b, p]) => ({ btn: document.getElementById(b), pnl: document.getElementById(p) }));
@@ -379,6 +297,12 @@ addEventListener('blur', ddClose);                       // klik ke dalam iframe
 document.querySelector('.menu').addEventListener('scroll', ddClose);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, KATS = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'];
+let adminMasuk = false, rAktif = '';
+function terapkanAdmin() { document.body.classList.toggle('admin-penuh', adminMasuk && rAktif === 'kelas'); }
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || typeof e.data.adminMode !== 'boolean') return;
+  adminMasuk = e.data.adminMode; terapkanAdmin();
+});
 function route() {
   const [r0, seg = '', mode = ''] = (location.hash.slice(1) || 'beranda').split('/');
   let r = r0;
@@ -403,6 +327,7 @@ function route() {
     if (k === r && (!f.getAttribute('src') || admin || f.dataset.q !== qk)) { f.dataset.q = qk; f.src = PAGES[k] + qk + (admin ? '?t=' + Date.now() + '#admin' : ''); }
   }
   document.title = TITLES[r];
+  rAktif = r; terapkanAdmin();
 }
 // Cuplikan info terbaru (daftar ke bawah, maksimal 3, dengan gambar lampiran bila ada) di beranda (diam-diam dilewati jika belum ada data / belum disiapkan)
 fetch('/api/info?utama=1&limit=3').then(r => r.json()).then(d => {
