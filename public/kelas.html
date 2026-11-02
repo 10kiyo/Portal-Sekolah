@@ -290,6 +290,7 @@ function show() {
   if (MODUL[S.tab]) return jalan(MODUL[S.tab]);
   if (!S.kid) { $('#view').innerHTML = '<p>Belum ada kelas. Klik <b>Tarik Daftar Murid dari Database</b> untuk membuat kelas dan murid secara otomatis.</p>'; $('#kelasCard').style.display = 'flex'; return; }
   if (['pertemuan', 'rekap', 'tugas'].includes(S.tab) && !S.mid) { $('#view').innerHTML = '<p>Belum ada mata pelajaran untuk kelas ini. Buka <b>Profil saya</b> di menu kiri, tambahkan mapel, lalu centang kelas yang kamu ajar.</p>'; return; }
+  if (S.tab === 'murid' && bisaSync()) syncMurid(false);
   ({ murid: vMurid, pertemuan: vPertemuan, rekap: vRekap, tugas: vTugas, rubrik: vRubrik, galeri: vGaleri, jadwal: vJadwal })[S.tab]();
 }
 // Menjalankan modul staf; bila gagal (mis. tabel belum dibuat) tampilkan pesan yang jelas.
@@ -303,14 +304,8 @@ const murid = () => run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid)
 async function vMurid() {
   const ms = await murid();
   $('#view').innerHTML = `<h2>Data murid (${ms.length})</h2>
-  <p class="mut">Murid baru hanya ditambahkan oleh Operator Sekolah (menu <b>Data murid</b>) supaya data tidak bertabrakan. Setelah operator menambahkan, klik <b>Sinkronkan Murid</b> di atas untuk memuatnya ke kelas ini.</p>
-  <p class="mut">Orang tua cukup memasukkan kode akses ini di menu Pantau Belajar Anak. Murid hasil tarik daftar dari database memakai satu kode yang sama di semua guru.</p>
-  <table><tr><th>Nama</th><th>Kode akses</th><th></th></tr>
-  ${ms.map(m => `<tr><td>${esc(m.nama)}</td><td><b>${esc(m.kode_akses)}</b></td><td><button class="d" data-del="${m.id}">Hapus</button></td></tr>`).join('')}</table>`;
-  $('#view').onclick = async e => {
-    const id = e.target.dataset.del;
-    if (id && confirm('Hapus murid ini beserta presensi dan nilainya?')) { await run(sb.from('kelas_murid').delete().eq('id', id)); vMurid(); }
-  };
+  <table><tr><th>Nama</th><th>Kode akses</th></tr>
+  ${ms.map(m => `<tr><td>${esc(m.nama)}</td><td><b>${esc(m.kode_akses)}</b></td></tr>`).join('') || '<tr><td colspan="2" class="mut">Belum ada murid di kelas ini.</td></tr>'}</table>`;
 }
 
 /* ---------- pertemuan: jurnal + presensi ---------- */
@@ -503,21 +498,22 @@ async function vImport() {
   $('#view').innerHTML = '<p>Memuat daftar murid...</p>';
   let g; try { g = await allGuests(); } catch (e) { $('#view').innerHTML = `<p class="msg err">Tidak bisa membaca daftar_tamu_gabungan: ${esc(e.message)}</p><p class="mut">Jalankan baris "grant select ... to authenticated" di supabase-kelas-3.sql, lalu coba lagi.</p>`; return; }
   if (!g.length) { $('#view').innerHTML = '<p class="msg err">Data kosong. Kalau datanya ada di Supabase, jalankan baris "grant select ... to authenticated" di supabase-kelas-3.sql.</p>'; return; }
-  const jenis = [...new Set(g.map(x => x.jenis_undangan).filter(Boolean))].sort();
+  // Data murid selalu berasal dari undangan Orang Tua/Wali Siswa, jadi jenis undangan tidak perlu dipilih lagi.
+  const semuaJenis = [...new Set(g.map(x => x.jenis_undangan).filter(Boolean))];
+  let jenisMurid = semuaJenis.filter(j => /orang\s*tua|wali|siswa|murid|anak/i.test(j));
+  if (!jenisMurid.length) jenisMurid = semuaJenis.filter(j => !/guru|karyawan|jw|khusus/i.test(j));
   $('#view').innerHTML = `<h2>Tarik Daftar Murid dari Database</h2>
-  <label>Jenis undangan yang berisi murid</label>
-  <p>${jenis.map(j => `<label class="cbl"><input type="checkbox" class="j" value="${esc(j)}" ${/siswa|murid|anak/i.test(j) ? 'checked' : ''}>${esc(j)}</label>`).join('')}</p>
   <label>Tingkat kelas yang kamu ajar</label>
   <p>${[1, 2, 3, 4, 5, 6].map(n => `<label class="cbl"><input type="checkbox" class="t" value="${n}" ${[1, 4, 5, 6].includes(n) ? 'checked' : ''}>Kelas ${n}</label>`).join('')}</p>
   <div id="pre" style="margin:12px 0"></div>
   <p><button class="p" id="doImp">Impor murid</button></p><div id="msg" class="msg"></div>
   <p class="mut">Nama yang sudah pernah diimpor dilewati. Kelas (mis. 1A) dibuat otomatis. Kode akses dibuat untuk tiap murid.</p>`;
   const compute = () => {
-    const js = [...document.querySelectorAll('.j:checked')].map(i => i.value), ts = [...document.querySelectorAll('.t:checked')].map(i => i.value), by = {};
+    const js = jenisMurid, ts = [...document.querySelectorAll('.t:checked')].map(i => i.value), by = {};
     g.forEach(x => { const k = String(x.instansi_kelas || '').trim(), t = (k.match(/\d+/) || [])[0]; if (k && t && ts.includes(t) && js.includes(x.jenis_undangan) && x.guest_name) (by[k] = by[k] || []).push(x); });
     return by;
   };
-  const render = () => { const by = compute(), ks = Object.keys(by).sort(); $('#pre').innerHTML = ks.length ? `<b>${ks.reduce((a, k) => a + by[k].length, 0)} murid di ${ks.length} kelas:</b><div class="mut">${ks.map(k => `${esc(k)} (${by[k].length})`).join(', ')}</div>` : '<span class="mut">Tidak ada data yang cocok. Periksa pilihan jenis undangan dan kelas.</span>'; };
+  const render = () => { const by = compute(), ks = Object.keys(by).sort(); $('#pre').innerHTML = ks.length ? `<b>${ks.reduce((a, k) => a + by[k].length, 0)} murid di ${ks.length} kelas:</b><div class="mut">${ks.map(k => `${esc(k)} (${by[k].length})`).join(', ')}</div>` : '<span class="mut">Tidak ada data yang cocok. Periksa pilihan tingkat kelas.</span>'; };
   $('#view').onchange = render; $('#view').onclick = null; render();
   $('#doImp').onclick = async () => {
     const by = compute(), names = Object.keys(by).sort(); if (!names.length) return;
@@ -595,7 +591,7 @@ async function isiNamaDariDaftar() {
    murid yang sudah tidak ada di database dinonaktifkan (nilai & presensi tetap tersimpan). Tidak membuat kelas baru. */
 let syncing = false, lastSync = 0;
 async function syncMurid(manual) {
-  if (syncing) return; syncing = true;
+  if (syncing || (!manual && Date.now() - lastSync < 15000)) return; syncing = true;
   const info = t => { const e = $('#syncMsg'); if (e) e.textContent = t; };
   try {
     const u = (await sb.auth.getUser()).data.user; if (!u) return;
@@ -634,7 +630,10 @@ async function syncMurid(manual) {
     if (manual) info('Gagal sinkron: ' + (e.message || e));
   } finally { syncing = false; lastSync = Date.now(); }
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden && S.kelas.length && !syncing && Date.now() - lastSync > 5 * 60 * 1000) syncMurid(false); });
+// Murid yang ditambah/dinonaktifkan operator ikut berubah otomatis di daftar guru (saat halaman dibuka lagi, dan tiap 1 menit selama terbuka).
+const bisaSync = () => !document.hidden && S.kelas.length && ['guru', 'admin'].includes(S.peran);
+document.addEventListener('visibilitychange', () => { if (bisaSync() && Date.now() - lastSync > 20 * 1000) syncMurid(false); });
+setInterval(() => { if (bisaSync()) syncMurid(false); }, 60 * 1000);
 
 /* ---------- ekspor CSV (bisa dibuka di Excel) ---------- */
 function csv(name, rows) {

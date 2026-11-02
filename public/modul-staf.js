@@ -776,7 +776,7 @@ MODUL.data = async function () {
       <td class="noprint"><button data-ed="${esc(x.id)}">Ubah</button> <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td colspan="7" class="mut">Tidak ada data.</td></tr>'}</table>`;
     return l;
   };
-  const selesai = async (t) => { await MODUL.data(); msg(t + ' Guru menerimanya otomatis saat membuka Administrasi Kelas, atau lewat tombol "Sinkronkan Murid". Nilai & presensi yang sudah ada tidak berubah.'); };
+  const selesai = async (t) => { await MODUL.data(); msg(t + ' Daftar murid di akun guru ikut berubah otomatis dalam sekitar satu menit. Nilai & presensi yang sudah ada tidak berubah.'); };
 
   $('#view').innerHTML = `<h2>Data murid (${aktif.length} aktif${mati.length ? `, ${mati.length} nonaktif` : ''})</h2><p class="mut">${hitung}</p>
   <p class="noprint"><select id="dk" style="max-width:150px"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select> <select id="ds" style="max-width:150px"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option><option value="semua">Semua</option></select>
