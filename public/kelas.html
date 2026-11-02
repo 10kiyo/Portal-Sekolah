@@ -135,7 +135,7 @@ td.cb{text-align:center;width:1%;white-space:nowrap}th.cbh{text-align:center;fon
 <div id="app" class="hidden">
   <div class="bar" id="topbar">
     <button id="btnMenu" class="ic" title="Tampilkan / sembunyikan menu" aria-label="Menu" aria-expanded="true">&#9776;</button>
-    <button id="btnProf" class="prof" title="Profil saya"><span id="av" class="av">G</span><span><small>Selamat datang,</small><b id="hello">Guru</b></span></button>
+    <div id="btnProf" class="prof"><span id="av" class="av">G</span><span><small>Selamat datang,</small><b id="hello">Guru</b></span></div>
     <div class="nav">
       <button id="btnOut">Keluar</button>
     </div>
@@ -642,7 +642,6 @@ function csv(name, rows) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv' })); a.download = name; a.click();
 }
 
-$('#btnProf').onclick = () => { S.tab = 'profil'; S.tugas = null; show(); };
 $('#btnImp').onclick = () => vImport();
 $('#btnSync').onclick = () => syncMurid(true);
 $('#btnDel').onclick = async () => {
