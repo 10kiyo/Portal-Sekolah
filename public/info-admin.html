@@ -70,6 +70,7 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
 .gi .pill{position:absolute;top:8px;right:6px}
 @media(max-width:560px){.jr{flex-direction:column}.jr img{width:100%;height:auto;aspect-ratio:16/10}}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.ico{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}.pin,.pbtn,.meta{align-items:center}.pin,.pbtn{display:inline-flex;gap:5px}
 </style>
 <link rel="stylesheet" href="si-tema.css">
 </head>
@@ -146,7 +147,7 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px
       <input id="f-url" placeholder="https://… (mis. tautan Google Drive)" style="margin-top:8px">
       <input id="f-nama" placeholder="Nama tombol lampiran, mis. Surat Edaran Libur" maxlength="100" style="margin-top:8px">
       <div id="f-cur" class="hint"></div></div>
-    <div><label class="chk"><input type="checkbox" id="f-pin"> 📌 Sematkan di atas</label></div>
+    <div><label class="chk"><input type="checkbox" id="f-pin"> <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v1.5H7V13l3-3z"/><path d="M12 14.5V20"/></svg> Sematkan di atas</label></div>
     <div><label class="chk"><input type="checkbox" id="f-pub" checked> Tampilkan ke publik</label></div>
   </div>
   <div id="dlgErr" class="err"></div>
@@ -219,9 +220,9 @@ function render() {
   $('#tinfo').innerHTML = `Daftar di bawah tampil di ${T.tampil}. Klik <b>+ Tambah info</b> untuk menambah ke menu ini.`;
   $('#list').innerHTML = rows.length ? rows.map(x => `<div class="it ${x.terbit ? '' : 'off'}" data-id="${x.id}">
     <span class="pill blue">${esc(KAT[x.kategori] || x.kategori)}</span>
-    <span class="pill ${x.terbit ? 'ok' : 'warn'}">${x.terbit ? 'Tampil' : 'Disembunyikan'}</span>${x.sematkan ? ' <span class="pill warn">📌 Disematkan</span>' : ''}
+    <span class="pill ${x.terbit ? 'ok' : 'warn'}">${x.terbit ? 'Tampil' : 'Disembunyikan'}</span>${x.sematkan ? ' <span class="pill warn"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v1.5H7V13l3-3z"/><path d="M12 14.5V20"/></svg> Disematkan</span>' : ''}
     <h3>${esc(x.judul)}</h3>
-    <div class="mut">Terbit ${tgl(x.tanggal_terbit)}${x.tanggal_agenda ? ' · Acara ' + tgl(x.tanggal_agenda) : ''}${x.lampiran_url ? ' · 📎 ' + esc(x.lampiran_nama || 'Lampiran') : ''}</div>
+    <div class="mut">Terbit ${tgl(x.tanggal_terbit)}${x.tanggal_agenda ? ' · Acara ' + tgl(x.tanggal_agenda) : ''}${x.lampiran_url ? ' · <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg> ' + esc(x.lampiran_nama || 'Lampiran') : ''}</div>
     <div class="acts"><button class="sec sm" data-a="edit">Ubah</button>
       <button class="sec sm" data-a="terbit">${x.terbit ? 'Sembunyikan' : 'Tampilkan'}</button>
       <button class="sec sm" data-a="pin">${x.sematkan ? 'Lepas sematan' : 'Sematkan'}</button>
@@ -325,7 +326,7 @@ function renderJ() {
       <div class="isi ${long && !buka ? 'cut' : ''}">${esc(x.isi)}</div>${long ? `<button class="link" data-a="lebih">${buka ? 'Tutup' : 'Baca lengkap'}</button>` : ''}
       ${x.catatan_admin ? `<div class="mut" style="margin-top:6px">Catatan terkirim: ${esc(x.catatan_admin)}</div>` : ''}
       ${x.status === 'disetujui' ? '' : `<textarea placeholder="Catatan untuk murid (wajib bila minta revisi / menolak)" data-c></textarea>`}
-      <div class="acts">${x.status !== 'disetujui' ? '<button class="sm" data-a="disetujui" style="background:var(--ok)">✓ Setujui &amp; tayangkan</button>' : '<button class="sec sm" data-a="menunggu">Tarik dari tayang</button>'}
+      <div class="acts">${x.status !== 'disetujui' ? '<button class="sm" data-a="disetujui" style="background:var(--ok)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg> Setujui &amp; tayangkan</button>' : '<button class="sec sm" data-a="menunggu">Tarik dari tayang</button>'}
         ${x.status !== 'disetujui' ? '<button class="sec sm" data-a="revisi">Minta revisi</button><button class="sec sm" data-a="ditolak">Tolak</button>' : ''}
         <button class="bad sm" data-a="hapusJ">Hapus</button></div></div></div></div>`;
   }).join('') : '<div class="card mut" style="text-align:center">Tidak ada jurnal di kategori ini.</div>';

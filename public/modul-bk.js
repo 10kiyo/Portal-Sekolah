@@ -354,7 +354,7 @@ MODUL.bkkonsel = bkJalan(async function (editId) {
   const lihat = rows.filter(r => ids.has(r.guest_id));
   const sedit = typeof editId === 'string' ? rows.find(r => r.id === editId) : null;
   $('#view').innerHTML = `<h2>Konseling</h2>${bkBar()}
-  <p class="mut">🔒 Catatan konseling bersifat <b>rahasia</b>: hanya akun guru BK yang bisa membukanya. Wali kelas, guru lain, operator, dan orang tua tidak bisa melihatnya.</p>
+  <p class="mut"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" style="width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg> Catatan konseling bersifat <b>rahasia</b>: hanya akun guru BK yang bisa membukanya. Wali kelas, guru lain, operator, dan orang tua tidak bisa melihatnya.</p>
   <p class="noprint"><button class="p" id="kBaru">Catatan konseling baru</button></p><div id="kForm"></div><div id="msg" class="msg"></div>
   <div class="grid"><div><label for="kFs">Status</label><select id="kFs"><option value="">Semua</option>${Object.entries(BK_STATUS_K).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join('')}</select></div><div><label for="kFc">Cari nama / masalah</label><input id="kFc"></div></div>
   <div id="kList" style="overflow-x:auto"></div>`;

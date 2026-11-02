@@ -27,6 +27,7 @@ h2{margin:0 0 12px;color:var(--navy);font-size:20px}
 .pin{color:#a65f00;font-weight:700;font-size:12px}
 .empty{text-align:center;color:var(--mute);padding:30px 0}
 .emb .wrap{padding-top:12px}
+.ico{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}.pin,.pbtn,.meta{align-items:center}.pin,.pbtn{display:inline-flex;gap:5px}
 </style>
 <script src="data-sekolah.js"></script>
 <link rel="stylesheet" href="si-tema.css">
@@ -84,10 +85,10 @@ fetch('/api/info?limit=100&jenis=' + jk).then(r => r.json()).then(d => {
   $('#list').innerHTML = rows.length ? rows.map(x => {
     const lamp = /^https?:\/\//.test(x.lampiran_url || '') ? x.lampiran_url : '', isImg = /\.(jpe?g|png|webp)(\?|$)/i.test(lamp);
     const long = (x.isi || '').length > 280 || (x.isi || '').split('\n').length > 5;
-    return `<article class="card post"><div class="meta">${x.sematkan ? '<span class="pin">📌 Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div><h3>${esc(x.judul)}</h3>
+    return `<article class="card post"><div class="meta">${x.sematkan ? '<span class="pin"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v1.5H7V13l3-3z"/><path d="M12 14.5V20"/></svg> Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div><h3>${esc(x.judul)}</h3>
       ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
       ${isImg ? `<a href="${esc(lamp)}" target="_blank" rel="noopener"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
-      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener">📎 ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}</article>`;
+      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg> ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}</article>`;
   }).join('') : '<div class="card empty">Belum ada kabar untuk ditampilkan.</div>';
   document.querySelectorAll('.more').forEach(b => b.onclick = () => { const c = b.previousElementSibling.classList.toggle('cut'); b.textContent = c ? 'Baca selengkapnya' : 'Tutup'; });
 }).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat.')}</div>`; });

@@ -87,6 +87,7 @@ dialog.pv::backdrop{background:#102a4380}
 .pv .big{margin:14px 20px 0;border-radius:14px;overflow:hidden;background:#e6eef6;text-align:center}
 .pv .big img{display:block;margin:0 auto;max-width:100%;max-height:calc(100vh - 170px);max-height:calc(100dvh - 170px);width:auto;height:auto}
 .pv .ft2{padding:12px 20px 18px;font-size:13px}.pv .ft2 a{color:var(--blue);font-weight:700}
+.ico{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}.pin,.pbtn,.meta{align-items:center}.pin,.pbtn{display:inline-flex;gap:5px}
 </style>
 <link rel="stylesheet" href="si-tema.css">
 </head>
@@ -164,7 +165,7 @@ document.addEventListener('click', async ev => {
   try { await navigator.clipboard.writeText(u); ok = true; }
   catch (_) { const a = document.createElement('textarea'); a.value = u; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch (_) {} a.remove(); }
   if (!ok) { prompt('Salin tautan ini:', u); return; }
-  b.textContent = 'Tautan disalin ✓'; setTimeout(() => { b.textContent = 'Salin tautan'; }, 2500);
+  b.innerHTML = 'Tautan disalin ' + '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'; setTimeout(() => { b.textContent = 'Salin tautan'; }, 2500);
 });
 
 let DATA = [], TODAY = '', kat = 'semua';
@@ -194,12 +195,12 @@ function render() {
     const isImg = /\.(jpe?g|png|webp)(\?|$)/i.test(lamp);
     const long = (x.isi || '').length > 280 || (x.isi || '').split('\n').length > 5;
     return `<article class="card post" data-id="${esc(x.id)}">
-      <div class="meta"><span class="pill ${esc(x.kategori)}">${esc(KAT[x.kategori] || 'Info')}</span>${x.sematkan ? '<span class="pin">📌 Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div>
+      <div class="meta"><span class="pill ${esc(x.kategori)}">${esc(KAT[x.kategori] || 'Info')}</span>${x.sematkan ? '<span class="pin"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v1.5H7V13l3-3z"/><path d="M12 14.5V20"/></svg> Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div>
       <h3>${esc(x.judul)}</h3>
-      ${x.tanggal_agenda ? `<div class="meta">🗓 ${tgl(x.tanggal_agenda)}${x.lokasi ? ' · ' + esc(x.lokasi) : ''}</div>` : (x.lokasi ? `<div class="meta">📍 ${esc(x.lokasi)}</div>` : '')}
+      ${x.tanggal_agenda ? `<div class="meta"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.6"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg> ${tgl(x.tanggal_agenda)}${x.lokasi ? ' · ' + esc(x.lokasi) : ''}</div>` : (x.lokasi ? `<div class="meta"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg> ${esc(x.lokasi)}</div>` : '')}
       ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
       ${isImg ? `<a class="pvl" href="${esc(lamp)}" target="_blank" rel="noopener" data-judul="${esc(x.judul)}"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
-      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener">📎 ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
+      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg> ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
       ${bagiHtml(x)}
     </article>`;
   }).join('') : `<div class="card empty">${kosong}</div>`;
@@ -230,8 +231,8 @@ function renderPeriode() {
     $('#arsip').hidden = true; return;
   }
   const judul = periode === 'terbaru' ? `<h2>Info bulan ini</h2><div class="mut">${namaBln(ym(TODAY))}</div>` : `<h2>Arsip · ${namaBln(periode)}</h2><div class="mut">${arsip[periode] || 0} info</div>`;
-  const tombol = (periode !== 'terbaru' ? '<button class="pbtn" data-p="terbaru">← Info terbaru</button> ' : '')
-    + (keys.length ? `<button class="pbtn ${arsipBuka ? 'on' : ''}" data-p="arsip" aria-expanded="${arsipBuka}">📁 Arsip (${keys.length} bulan)</button>` : '');
+  const tombol = (periode !== 'terbaru' ? '<button class="pbtn" data-p="terbaru"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Info terbaru</button> ' : '')
+    + (keys.length ? `<button class="pbtn ${arsipBuka ? 'on' : ''}" data-p="arsip" aria-expanded="${arsipBuka}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.5h6.5a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg> Arsip (${keys.length} bulan)</button>` : '');
   $('#per').innerHTML = `<div>${judul}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${tombol}</div>`;
   const tahun = [...new Set(keys.map(k => k.slice(0, 4)))];
   $('#arsip').hidden = !arsipBuka || !keys.length;
@@ -279,7 +280,7 @@ fetch(FOKUS ? '/api/info?limit=1000' : '/api/info?utama=1&limit=1000').then(r =>
   if (SOLO && f) {                          // dibuka dari tautan bagikan: hanya info ini
     DATA = [f]; document.body.classList.add('solo');
     document.querySelector('.bar').style.display = 'none'; $('#chips').style.display = 'none';
-    $('#list').insertAdjacentHTML('afterend', '<p style="text-align:center;margin-top:18px"><a class="lamp" href="/#info" target="_top">Lihat info lainnya →</a></p>');
+    $('#list').insertAdjacentHTML('afterend', '<p style="text-align:center;margin-top:18px"><a class="lamp" href="/#info" target="_top">Lihat info lainnya <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>');
     render();
   } else {
     const bl = QS.get('bulan');                       // ?bulan=2026-09 membuka arsip bulan itu

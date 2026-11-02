@@ -55,6 +55,7 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px
 .emb .wrap{padding-top:12px}
 @media(max-width:560px){.grid2,.filters{grid-template-columns:1fr}}
 @media print{.noprint{display:none!important}body{background:#fff}.card{box-shadow:none;border:0}}
+.ico{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}.pin,.pbtn,.meta{align-items:center}.pin,.pbtn{display:inline-flex;gap:5px}
 </style>
 <link rel="stylesheet" href="si-tema.css">
 <link rel="stylesheet" href="si-latar.css">
@@ -170,7 +171,7 @@ async function salin(teks, tombol) {
   let ok = false;
   try { await navigator.clipboard.writeText(teks); ok = true; } catch (_) {}
   if (!ok) { prompt('Salin tautan ini:', teks); return; }
-  const lama = tombol.textContent; tombol.textContent = 'Tersalin ✓'; setTimeout(() => { tombol.textContent = lama; }, 2000);
+  const lama = tombol.innerHTML; tombol.innerHTML = 'Tersalin ' + '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'; setTimeout(() => { tombol.innerHTML = lama; }, 2000);
 }
 const stat = id => { const p = D.pendaftar.filter(x => x.kegiatan_id === id), n = s => p.filter(x => x.status === s).length; return { total: p.length, menunggu: n('menunggu'), lunas: n('lunas'), ditolak: n('ditolak') }; };
 

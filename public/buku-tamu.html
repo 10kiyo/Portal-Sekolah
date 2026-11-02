@@ -203,7 +203,8 @@
     #adminRoot input.note{padding:7px 10px;font-size:14px;min-width:200px}
     @media print{#adminRoot input.note{border:0;padding:0;background:none;box-shadow:none;min-width:0;font-size:11.5px;color:#000}#adminRoot input.note::placeholder{color:transparent}}
     #adminRoot .bar2{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  </style>
+  .ico{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}.pin,.pbtn,.meta{align-items:center}.pin,.pbtn{display:inline-flex;gap:5px}
+</style>
 <link rel="stylesheet" href="si-tema.css">
 <link rel="stylesheet" href="si-latar.css">
 </head>
@@ -256,7 +257,7 @@
     <div><label for="pin">PIN admin</label><input id="pin" type="password" autocomplete="current-password" required /></div>
     <p id="loginErr" class="err"></p>
     <button class="primary" type="submit">Masuk</button>
-    <button class="secondary" id="backGuest" type="button">← Kembali ke buku tamu</button>
+    <button class="secondary" id="backGuest" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Kembali ke buku tamu</button>
   </form>
 </section>
 
@@ -409,13 +410,13 @@
 
         if (!response.ok) {
           const result = await response.json().catch(() => ({}));
-          alert('⚠️ Gagal sinkronisasi online: ' + (result.error || 'Terjadi kesalahan sistem.'));
+          alert('Gagal sinkronisasi online: ' + (result.error || 'Terjadi kesalahan sistem.'));
         } else {
-          alert('✅ Sukses! Kehadiran ' + normalizedEntry.name + ' berhasil disimpan online.');
+          alert('Sukses! Kehadiran ' + normalizedEntry.name + ' berhasil disimpan online.');
         }
       } catch (error) {
         console.error('Error saat submit online:', error);
-        alert('⚠️ Terjadi masalah jaringan. Data disimpan lokal pada browser.');
+        alert('Terjadi masalah jaringan. Data disimpan lokal pada browser.');
       }
     };
     
@@ -774,7 +775,7 @@ $('#drawBtn').addEventListener('click',()=>{
   $('#drawBtn').disabled=true;$('#saveWin').classList.add('hidden');let n=0;
   const t=setInterval(()=>{
     $('#drawBox').textContent=pool[rnd(pool.length)].name;
-    if(++n>22){clearInterval(t);pending=pool[rnd(pool.length)];$('#drawBox').textContent='🎉 '+pending.name+' ('+pending.origin+')';$('#drawBtn').disabled=false;$('#drawBtn').textContent='Undi ulang';$('#saveWin').classList.remove('hidden')}
+    if(++n>22){clearInterval(t);pending=pool[rnd(pool.length)];$('#drawBox').textContent=pending.name+' ('+pending.origin+')';$('#drawBtn').disabled=false;$('#drawBtn').textContent='Undi ulang';$('#saveWin').classList.remove('hidden')}
   },70);
 });
 $('#saveWin').addEventListener('click',()=>{
