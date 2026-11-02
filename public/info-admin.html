@@ -23,8 +23,14 @@ button.bad{background:var(--danger)}
 button.sm{padding:6px 11px;font-size:13px}
 button:disabled{opacity:.6;cursor:wait}
 label{display:block;font-weight:700;color:var(--navy);margin:0 0 5px;font-size:14px}
-input,select,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);font:inherit;color:var(--ink);background:#fff}
-textarea{min-height:140px;resize:vertical}
+input,select,textarea{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);font:inherit;font-size:15px;color:var(--ink);background:#fff}
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]),select{box-sizing:border-box;height:42px;padding-top:0;padding-bottom:0;line-height:normal}
+input[type=date],input[type=month],input[type=time],input[type=number]{min-width:0;-webkit-appearance:none;appearance:none}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
+input[type=file]{padding:8px 10px;height:auto}
+select{-webkit-appearance:none;appearance:none;padding-right:34px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center}
+input[type=checkbox]{width:20px;height:20px;min-width:20px;margin:0;padding:0;flex:none;accent-color:var(--blue);cursor:pointer}
+textarea{min-height:140px;resize:vertical;line-height:1.5}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
 .err{margin-top:10px;color:var(--danger);font-weight:650}
 .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
@@ -36,7 +42,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);bo
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 dialog{border:0;border-radius:18px;padding:20px;width:min(620px,calc(100% - 24px));box-shadow:0 20px 60px #102a4350}dialog::backdrop{background:#102a4380}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid2 .full{grid-column:1/-1}
-.chk{display:flex;gap:8px;align-items:center;font-weight:600;margin:0}.chk input{width:auto}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600;margin:0}.chk input{width:20px}
 .hint{font-size:12px;color:var(--mute);margin-top:4px}
 .tabsA{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
 .tabsA button{background:#fff;color:var(--navy);border:1px solid var(--line);border-radius:99px;padding:8px 16px;font-size:14px}

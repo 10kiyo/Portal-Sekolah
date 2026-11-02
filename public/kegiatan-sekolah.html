@@ -28,6 +28,21 @@ h2{margin:0 0 12px;color:var(--navy);font-size:20px}
 .empty{text-align:center;color:var(--mute);padding:30px 0}
 .emb .wrap{padding-top:12px}
 .ico{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}.pin,.pbtn,.meta{align-items:center}.pin,.pbtn{display:inline-flex;gap:5px}
+/* Pop-up foto & bagikan (sama seperti halaman Info Terbaru) */
+.lamp-img{cursor:zoom-in}
+.share{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #e6eef5;font-size:13px;color:var(--mute)}
+.sh{font:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy);text-decoration:none}
+.sh:hover{background:var(--soft)}.sh:focus-visible{outline:3px solid #1677c850}
+.sh.wa{background:#1fa855;border-color:#1fa855;color:#fff}.sh.wa:hover{filter:brightness(1.08);background:#1fa855}
+dialog.pv{border:0;border-radius:18px;padding:0;width:min(760px,calc(100% - 24px));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;box-shadow:0 20px 60px #102a4350;color:var(--ink)}
+dialog.pv::backdrop{background:#102a4380}
+.pv .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:18px 20px 0}
+.pv .dh h3{margin:0;color:var(--navy);font-size:21px;line-height:1.25;letter-spacing:-.02em}
+.pv .x{border:0;background:var(--soft);color:var(--navy);font-size:22px;line-height:1;width:36px;height:36px;border-radius:50%;cursor:pointer;flex:none}
+.pv .x:hover{filter:brightness(.95)}.pv .x:focus-visible{outline:3px solid #1677c850}
+.pv .big{margin:14px 20px 0;border-radius:14px;overflow:hidden;background:#e6eef6;text-align:center}
+.pv .big img{display:block;margin:0 auto;max-width:100%;max-height:calc(100vh - 170px);max-height:calc(100dvh - 170px);width:auto;height:auto}
+.pv .ft2{padding:12px 20px 18px;font-size:13px}.pv .ft2 a{color:var(--blue);font-weight:700}
 </style>
 <script src="data-sekolah.js"></script>
 <link rel="stylesheet" href="si-tema.css">
@@ -40,6 +55,11 @@ h2{margin:0 0 12px;color:var(--navy);font-size:20px}
   <h2 style="margin:26px 0 0">Kabar &amp; dokumentasi terbaru</h2>
   <div id="list"><div class="card empty">Memuat…</div></div>
 </div>
+<dialog class="pv" id="pvDlg" aria-labelledby="pvT">
+  <div class="dh"><h3 id="pvT"></h3><button class="x" id="pvX" type="button" aria-label="Tutup">×</button></div>
+  <div class="big"><img id="pvImg" alt=""></div>
+  <div class="ft2"><a id="pvOpen" href="#" target="_blank" rel="noopener">Buka ukuran penuh di tab baru</a></div>
+</dialog>
 <script>
 /* ============================================================
    ISI HALAMAN KEGIATAN — edit data di bawah ini.
@@ -72,6 +92,40 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const linkify = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
 const tglS = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Foto dibuka sebagai pop-up (bukan halaman baru). Klik tengah / Ctrl / Cmd tetap membuka tab baru.
+document.addEventListener('click', e => {
+  const a = e.target.closest('a.pvl'); if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  const im = a.querySelector('img');
+  document.getElementById('pvT').textContent = a.dataset.judul || '';
+  const big = document.getElementById('pvImg'); big.src = a.href; big.alt = im ? im.alt : '';
+  document.getElementById('pvOpen').href = a.href;
+  document.getElementById('pvDlg').showModal();
+});
+document.getElementById('pvX').onclick = () => document.getElementById('pvDlg').close();
+document.getElementById('pvDlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+// Tautan bagikan: /bagikan/<id> (pratinjau judul + ringkasan di WhatsApp dll), lalu membuka info itu saja.
+function bagiHtml(x) {
+  if (!UUID.test(x.id)) return '';
+  const u = location.origin + '/bagikan/' + x.id, t = x.judul, e = encodeURIComponent;
+  return `<div class="share" data-u="${esc(u)}" data-t="${esc(t)}"><span>Bagikan:</span>
+    <a class="sh wa" href="https://wa.me/?text=${esc(e(t + '\n' + u))}" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="sh" href="https://www.facebook.com/sharer/sharer.php?u=${esc(e(u))}" target="_blank" rel="noopener">Facebook</a>
+    <a class="sh" href="https://t.me/share/url?url=${esc(e(u))}&text=${esc(e(t))}" target="_blank" rel="noopener">Telegram</a>
+    <a class="sh" href="https://twitter.com/intent/tweet?url=${esc(e(u))}&text=${esc(e(t))}" target="_blank" rel="noopener">X</a>
+    <button class="sh" data-copy>Salin tautan</button>${navigator.share ? '<button class="sh" data-native>Lainnya…</button>' : ''}</div>`;
+}
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('button.sh'); if (!b) return;
+  const w = b.closest('.share'), u = w.dataset.u, t = w.dataset.t;
+  if (b.dataset.native !== undefined) { try { await navigator.share({ title: t, text: t, url: u }); } catch (_) {} return; }
+  let ok = false;
+  try { await navigator.clipboard.writeText(u); ok = true; }
+  catch (_) { const a = document.createElement('textarea'); a.value = u; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch (_) {} a.remove(); }
+  if (!ok) { prompt('Salin tautan ini:', u); return; }
+  b.innerHTML = 'Tautan disalin <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'; setTimeout(() => { b.textContent = 'Salin tautan'; }, 2500);
+});
 if (self !== top) document.body.classList.add('emb');
 const j = new URLSearchParams(location.search).get('j'), J = JENIS[j] || JENIS.unggulan, jk = JENIS[j] ? j : 'unggulan';
 document.title = J.judul; $('#judul').textContent = J.judul; $('#sub').textContent = J.sub;
@@ -87,8 +141,9 @@ fetch('/api/info?limit=100&jenis=' + jk).then(r => r.json()).then(d => {
     const long = (x.isi || '').length > 280 || (x.isi || '').split('\n').length > 5;
     return `<article class="card post"><div class="meta">${x.sematkan ? '<span class="pin"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v1.5H7V13l3-3z"/><path d="M12 14.5V20"/></svg> Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div><h3>${esc(x.judul)}</h3>
       ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
-      ${isImg ? `<a href="${esc(lamp)}" target="_blank" rel="noopener"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
-      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg> ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}</article>`;
+      ${isImg ? `<a class="pvl" href="${esc(lamp)}" target="_blank" rel="noopener" data-judul="${esc(x.judul)}"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
+      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg> ${esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
+      ${bagiHtml(x)}</article>`;
   }).join('') : '<div class="card empty">Belum ada kabar untuk ditampilkan.</div>';
   document.querySelectorAll('.more').forEach(b => b.onclick = () => { const c = b.previousElementSibling.classList.toggle('cut'); b.textContent = c ? 'Baca selengkapnya' : 'Tutup'; });
 }).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat.')}</div>`; });
