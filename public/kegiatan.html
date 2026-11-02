@@ -25,6 +25,16 @@ button:disabled{opacity:.6;cursor:wait}
 label{display:block;font-weight:700;color:var(--navy);margin:0 0 5px;font-size:14px}
 input,select,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);font:inherit;color:var(--ink);background:#fff}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+/* seragam: semua kotak isian 44px, font 15px, checkbox 20px */
+input:not([type=checkbox]),select{height:44px;padding-top:0;padding-bottom:0;font-size:15px}
+textarea{font-size:15px;min-height:88px}
+input[type=checkbox]{width:20px;height:20px;padding:0;margin:0;flex:none;accent-color:var(--blue);cursor:pointer}
+.cbl{display:flex;gap:10px;align-items:center;font-weight:400;font-size:15px;color:var(--ink);margin:0;cursor:pointer}
+.opts{display:flex;gap:10px 22px;flex-wrap:wrap}
+fieldset.fs{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0}
+fieldset.fs legend{font-weight:700;color:var(--navy);font-size:14px;padding:0 6px}
+#fK label:not(.cbl){font-size:14px}
+button,.btn{min-height:44px}button.sm{min-height:34px}
 .err{margin-top:10px;color:var(--danger);font-weight:650}
 .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
 .pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.bad{background:#fbeceb;color:var(--danger)}.pill.blue{background:#e3f0fb;color:var(--blue)}
@@ -78,31 +88,37 @@ dialog{border:0;border-radius:18px;padding:20px;width:min(560px,calc(100% - 24px
 
 <dialog id="dlgK">
   <form id="fK" method="dialog" style="margin:0">
-    <h2 id="dlgKt" style="margin-bottom:12px">Kegiatan</h2>
+    <h2 id="dlgKt" style="margin-bottom:14px">Kegiatan</h2>
     <div class="grid2">
-      <div class="full"><label>Jenis kegiatan</label><select name="jenis" id="jenisK"><option value="umum">Kegiatan biasa (pendaftar dikelola panitia)</option><option value="ekskul">Ekstrakurikuler (berbayar, pendaftar dikelola Bu Laras)</option><option value="club">Club (gratis + seleksi, pendaftar dikelola Bu Laras)</option></select><div class="mut" id="jenisInfo" style="margin-top:6px"></div></div>
+      <div class="full"><label>Jenis kegiatan</label><select name="jenis" id="jenisK"><option value="umum">Kegiatan biasa</option><option value="ekskul">Ekstrakurikuler (berbayar)</option><option value="club">Club (gratis, ada seleksi)</option></select><div class="mut" id="jenisInfo" style="margin-top:6px"></div></div>
       <div class="full"><label>Nama kegiatan</label><input name="nama" maxlength="100" required placeholder="mis. Perkemahan Sabtu-Minggu"></div>
-      <div class="full"><label>Deskripsi / info untuk orang tua</label><textarea name="deskripsi" rows="3" maxlength="1000" placeholder="Tempat, jam kumpul, barang bawaan…"></textarea></div>
-       <div id="wBiaya"><label>Biaya (Rp)</label><input name="biaya" type="number" min="0" step="1000" required value="0"></div>
-      <div><label>Kuota (kosongkan jika tidak dibatasi)</label><input name="kuota" type="number" min="1"></div>
-      <div class="full" id="wTambah"><label>Data tambahan di formulir orang tua</label>
-        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin-bottom:6px"><input type="checkbox" name="tanya_kaos" style="width:auto"> Tanya ukuran kaos</label>
-        <label style="font-weight:400;display:flex;gap:8px;align-items:center"><input type="checkbox" name="tanya_kesehatan" style="width:auto"> Tanya alergi / kondisi kesehatan</label>
-        <div class="mut" style="margin-top:6px">Nama pengirim, tanggal transfer, foto bukti, dan kontak darurat selalu ada.</div></div>
-      <fieldset class="full" style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:0">
-        <legend style="font-weight:700;color:var(--navy);font-size:14px;padding:0 6px">Siapa yang boleh mendaftar</legend>
-        <div class="mut" style="margin-bottom:6px">Centang tingkat kelas yang boleh mendaftar lewat kode akses murid. Jika tidak ada yang dicentang, semua kelas boleh.</div>
-        <div id="tk" style="display:flex;gap:6px 16px;flex-wrap:wrap"></div>
-        <div id="wUmum"><label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:10px 0 0"><input type="checkbox" name="untuk_umum" style="width:auto"> Buka juga untuk umum (peserta dari sekolah lain, tanpa kode akses)</label>
-        <label style="font-weight:400;display:flex;gap:8px;align-items:center;margin:6px 0 0"><input type="checkbox" name="tampil_info" style="width:auto" checked> Tampilkan tautan pendaftaran umum di halaman Info Terbaru</label></div>
+      <div class="full"><label>Deskripsi untuk orang tua</label><textarea name="deskripsi" rows="3" maxlength="1000" placeholder="Tempat, jam kumpul, barang bawaan…"></textarea></div>
+      <div id="wBiaya"><label>Biaya (Rp)</label><input name="biaya" type="number" min="0" step="1000" required value="0" placeholder="0 = gratis"></div>
+      <div><label>Kuota (opsional)</label><input name="kuota" type="number" min="1" placeholder="Tanpa batas"></div>
+      <div class="full" id="wTambah"><label>Data tambahan di formulir</label>
+        <div class="opts">
+          <label class="cbl"><input type="checkbox" name="tanya_kaos"> Ukuran kaos</label>
+          <label class="cbl"><input type="checkbox" name="tanya_kesehatan"> Alergi / kesehatan</label>
+          <label class="cbl" id="wBidangCb"><input type="checkbox" name="tanya_bidang"> Bidang lomba</label>
+        </div>
+        <div id="wBidang" class="hidden" style="margin-top:10px"><label>Pilihan bidang lomba</label><textarea name="opsi_bidang" rows="3" placeholder="Satu bidang per baris. Kosongkan jika orang tua mengetik sendiri."></textarea></div>
+      </div>
+      <fieldset class="full fs">
+        <legend>Siapa yang boleh mendaftar</legend>
+        <div class="mut" style="margin-bottom:8px">Tidak ada yang dicentang = semua kelas boleh.</div>
+        <div id="tk" class="opts"></div>
+        <div id="wUmum" style="margin-top:12px;display:grid;gap:10px">
+          <label class="cbl"><input type="checkbox" name="untuk_umum"> Buka juga untuk umum (sekolah lain)</label>
+          <label class="cbl" id="wInfo"><input type="checkbox" name="tampil_info" checked> Tampilkan di halaman Info Terbaru</label>
+        </div>
       </fieldset>
       <div class="full" id="wRek"><label>Rekening tujuan transfer</label><textarea name="rekening" rows="2" maxlength="300" placeholder="Bank … 1234567890 a.n. …"></textarea></div>
       <div><label>Pendaftaran dibuka</label><input name="buka_daftar" type="date" required></div>
       <div><label>Pendaftaran ditutup</label><input name="tutup_daftar" type="date" required></div>
-      <div class="full"><label>Tanggal kegiatan (setelah ini kartu hilang dari halaman orang tua)</label><input name="tanggal_kegiatan" type="date" required></div>
+      <div class="full"><label>Tanggal kegiatan</label><input name="tanggal_kegiatan" type="date" required><div class="mut" style="margin-top:6px">Setelah tanggal ini, kartu hilang dari halaman orang tua.</div></div>
     </div>
     <div id="errK" class="err"></div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button type="button" class="sec" id="batalK">Batal</button><button type="submit" id="simpanK">Simpan</button></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px"><button type="button" class="sec" id="batalK">Batal</button><button type="submit" id="simpanK" style="min-width:120px">Simpan</button></div>
   </form>
 </dialog>
 
@@ -191,12 +207,13 @@ function formK(k) {
   const v = k || { biaya: 0, buka_daftar: D.today, jenis: 'umum' };
   ['nama', 'deskripsi', 'biaya', 'kuota', 'rekening', 'buka_daftar', 'tutup_daftar', 'tanggal_kegiatan'].forEach(n => f[n].value = v[n] ?? '');
   f.tanya_kaos.checked = !!v.tanya_kaos; f.tanya_kesehatan.checked = !!v.tanya_kesehatan;
+  f.tanya_bidang.checked = !!v.tanya_bidang; f.opsi_bidang.value = (v.opsi_bidang || []).join('\n');
   const tk = new Set((v.tingkat || []).map(Number)); [1, 2, 3, 4, 5, 6].forEach(n => f['tk' + n].checked = tk.has(n));
   f.untuk_umum.checked = !!v.untuk_umum; f.tampil_info.checked = v.tampil_info !== false;
-  f.jenis.value = v.jenis || 'umum'; aturJenis();
+  f.jenis.value = v.jenis || 'umum'; aturJenis(); aturUmum();
   $('#dlgK').showModal();
 }
-$('#tk').innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<label style="font-weight:400;display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" name="tk${n}" style="width:auto"> Kelas ${n}</label>`).join('');
+$('#tk').innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<label class="cbl"><input type="checkbox" name="tk${n}"> Kelas ${n}</label>`).join('');
 /* Popup kalender bawaan browser terpotong bila kolom tanggal ada di dasar dialog: beri ruang kosong lalu gulir otomatis */
 $('#fK').addEventListener('focusin', e => {
   const t = e.target, f = $('#fK');
@@ -208,26 +225,33 @@ $('#fK').addEventListener('focusin', e => {
 $('#dlgK').addEventListener('close', () => $('#fK').classList.remove('pick'));
 const INFO_JENIS = {
   umum: '',
-  ekskul: 'Orang tua mendaftar lewat tautan murid dan mengunggah bukti transfer. Bu Laras yang memeriksa dan mengonfirmasi jumlah pembayaran. Panitia tidak melihat data pendaftar.',
-  club: 'Gratis. Orang tua mendaftar lewat tautan murid dan menulis alasan anak bergabung. Bu Laras yang melakukan seleksi. Panitia tidak melihat data pendaftar.'
+  ekskul: 'Pendaftar dikelola Bu Laras. Panitia tidak melihat datanya.',
+  club: 'Pendaftar dan seleksi dikelola Bu Laras. Panitia tidak melihat datanya.'
 };
 function aturJenis() {
   const f = $('#fK'), j = f.jenis.value, ec = j !== 'umum';
   $('#jenisInfo').textContent = INFO_JENIS[j];
   $('#wUmum').classList.toggle('hidden', ec);
   if (ec) { f.untuk_umum.checked = false; f.tampil_info.checked = false; }
-  $('#wBiaya').classList.toggle('hidden', j === 'club'); $('#wRek').classList.toggle('hidden', j === 'club');
+  $('#wBiaya').classList.toggle('hidden', j === 'club');
   if (j === 'club') { f.biaya.value = 0; f.rekening.value = ''; }
   f.biaya.required = j !== 'club';
+  $('#wRek').classList.toggle('hidden', j === 'club' || !(Number(f.biaya.value) > 0));   // rekening hanya perlu untuk kegiatan berbayar
+  $('#wBidangCb').classList.toggle('hidden', ec); if (ec) f.tanya_bidang.checked = false;
+  $('#wBidang').classList.toggle('hidden', ec || !f.tanya_bidang.checked);
 }
+function aturUmum() { const f = $('#fK'); $('#wInfo').classList.toggle('hidden', !f.untuk_umum.checked); }
 $('#jenisK').onchange = aturJenis;
+$('#fK').biaya.addEventListener('input', aturJenis);
+$('#fK').tanya_bidang.addEventListener('change', aturJenis);
+$('#fK').untuk_umum.addEventListener('change', aturUmum);
 $('#tambah').onclick = () => formK(null);
 $('#batalK').onclick = () => $('#dlgK').close();
 $('#fK').onsubmit = async e => {
   e.preventDefault(); const f = e.target, b = $('#simpanK'); b.disabled = true; $('#errK').textContent = '';
   try {
     await api({ action: 'simpan', id: editId, nama: f.nama.value, deskripsi: f.deskripsi.value, biaya: Number(f.biaya.value), kuota: f.kuota.value === '' ? null : Number(f.kuota.value),
-      tanya_kaos: f.tanya_kaos.checked, tanya_kesehatan: f.tanya_kesehatan.checked,
+      tanya_kaos: f.tanya_kaos.checked, tanya_kesehatan: f.tanya_kesehatan.checked, tanya_bidang: f.tanya_bidang.checked, opsi_bidang: f.opsi_bidang.value.split('\n'),
       tingkat: [1, 2, 3, 4, 5, 6].filter(n => f['tk' + n].checked), untuk_umum: f.untuk_umum.checked, tampil_info: f.tampil_info.checked,
       rekening: f.rekening.value, buka_daftar: f.buka_daftar.value, tutup_daftar: f.tutup_daftar.value, tanggal_kegiatan: f.tanggal_kegiatan.value, jenis: f.jenis.value });
     $('#dlgK').close(); await muat();
@@ -261,9 +285,9 @@ function renderDetail() {
   const draw = () => {
     const q = $('#fq').value.trim().toLowerCase(), fs = $('#fs').value, fk = $('#fk').value;
     const rows = ps.filter(x => (!fs || x.status === fs) && (!fk || x.kelas === fk) && (!q || x.nama_anak.toLowerCase().includes(q)));
-    $('#tbl').innerHTML = rows.length ? `<div class="scroll"><table><tr><th>Anak</th><th>Status</th><th>Transfer</th>${k.tanya_kaos ? '<th>Kaos</th>' : ''}${k.tanya_kesehatan ? '<th>Kesehatan</th>' : ''}<th>Kontak darurat</th><th class="noprint"></th></tr>
+    $('#tbl').innerHTML = rows.length ? `<div class="scroll"><table><tr><th>Anak</th><th>Status</th><th>Transfer</th>${k.tanya_kaos ? '<th>Kaos</th>' : ''}${k.tanya_bidang ? '<th>Bidang lomba</th>' : ''}${k.tanya_kesehatan ? '<th>Kesehatan</th>' : ''}<th>Kontak darurat</th><th class="noprint"></th></tr>
       ${rows.map(x => `<tr><td><b>${esc(x.nama_anak)}</b><div class="mut">${x.data.umum ? 'Umum · ' + esc(x.data.asal_sekolah || '') + (x.data.kelas_peserta ? ' (kelas ' + esc(x.data.kelas_peserta) + ')' : '') : esc(x.kelas)}</div></td><td><span class="pill ${ST[x.status][1]}">${ST[x.status][0]}</span>${x.catatan_panitia ? `<div class="mut">${esc(x.catatan_panitia)}</div>` : ''}</td>
-      <td>${esc(x.nama_pengirim)}<div class="mut">${tgl(x.tanggal_transfer)}</div></td>${k.tanya_kaos ? `<td>${esc(x.data.kaos || '-')}</td>` : ''}${k.tanya_kesehatan ? `<td>${esc(x.data.kesehatan || '-')}</td>` : ''}<td>${esc(x.data.kontak || '-')}${x.data.nama_ortu ? `<div class="mut">${esc(x.data.nama_ortu)}</div>` : ''}</td>
+      <td>${(k.biaya || x.has_bukti) ? `${esc(x.nama_pengirim)}<div class="mut">${tgl(x.tanggal_transfer)}</div>` : '-'}</td>${k.tanya_kaos ? `<td>${esc(x.data.kaos || '-')}</td>` : ''}${k.tanya_bidang ? `<td>${esc(x.data.bidang || '-')}</td>` : ''}${k.tanya_kesehatan ? `<td>${esc(x.data.kesehatan || '-')}</td>` : ''}<td>${esc(x.data.kontak || '-')}${x.data.nama_ortu ? `<div class="mut">${esc(x.data.nama_ortu)}</div>` : ''}</td>
       <td class="noprint"><button class="sm ${x.status === 'menunggu' ? '' : 'sec'}" data-p="${x.id}">${x.status === 'menunggu' ? 'Periksa' : 'Lihat'}</button></td></tr>`).join('')}</table></div>` : '<p class="mut">Tidak ada data.</p>';
   };
   ['#fq', '#fs', '#fk'].forEach(q => $(q).oninput = draw); draw();
@@ -291,8 +315,8 @@ async function periksa(p, k) {
 
 function csv(k, ps) {
   const c = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const rows = [['Nama', 'Kelas', 'Asal sekolah (umum)', 'Status', 'Pengirim', 'Tanggal transfer', ...(k.tanya_kaos ? ['Ukuran kaos'] : []), ...(k.tanya_kesehatan ? ['Kesehatan'] : []), 'Kontak darurat', 'Catatan panitia', 'Waktu daftar'],
-    ...ps.map(x => [x.nama_anak, x.data.umum ? 'Umum' + (x.data.kelas_peserta ? ' kelas ' + x.data.kelas_peserta : '') : x.kelas, x.data.asal_sekolah || '', x.status, x.nama_pengirim, x.tanggal_transfer, ...(k.tanya_kaos ? [x.data.kaos] : []), ...(k.tanya_kesehatan ? [x.data.kesehatan] : []), x.data.kontak, x.catatan_panitia, x.created_at])];
+  const rows = [['Nama', 'Kelas', 'Asal sekolah (umum)', 'Status', 'Pengirim', 'Tanggal transfer', ...(k.tanya_kaos ? ['Ukuran kaos'] : []), ...(k.tanya_bidang ? ['Bidang lomba'] : []), ...(k.tanya_kesehatan ? ['Kesehatan'] : []), 'Kontak darurat', 'Catatan panitia', 'Waktu daftar'],
+    ...ps.map(x => [x.nama_anak, x.data.umum ? 'Umum' + (x.data.kelas_peserta ? ' kelas ' + x.data.kelas_peserta : '') : x.kelas, x.data.asal_sekolah || '', x.status, x.nama_pengirim, x.tanggal_transfer, ...(k.tanya_kaos ? [x.data.kaos] : []), ...(k.tanya_bidang ? [x.data.bidang] : []), ...(k.tanya_kesehatan ? [x.data.kesehatan] : []), x.data.kontak, x.catatan_panitia, x.created_at])];
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['\ufeff' + rows.map(r => r.map(c).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = 'pendaftar-' + k.nama.replace(/[^\w]+/g, '-').toLowerCase() + '.csv'; a.click(); URL.revokeObjectURL(a.href);

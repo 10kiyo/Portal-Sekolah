@@ -51,6 +51,19 @@ summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:14px;margin-t
 .kg form input,.kg form textarea{font-size:16px;letter-spacing:0;text-transform:none;padding:11px;width:100%;border-radius:12px;border:1px solid var(--line);font-family:inherit;color:var(--ink)}
 .kg form label{margin:0 0 4px;font-size:14px}.kg form .chk{display:flex;gap:8px;align-items:flex-start;font-weight:400}.kg form .chk input{width:auto;margin-top:3px}
 .kg .ok{color:var(--ok);font-weight:700}
+/* formulir pendaftaran: semua kotak seragam (48px), checkbox 22px, tombol besar */
+.kg form input:not([type=checkbox]),.kg form select{height:48px;min-height:48px;padding:0 12px;font-size:16px;font-family:inherit;line-height:1.2}
+.kg form select{width:100%;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.kg form textarea{padding:11px 12px;font-size:16px;min-height:96px}
+.kg form input:focus,.kg form select:focus,.kg form textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.kg form label{font-size:15px}.kg form label .mut{font-size:13px;font-weight:400}
+.kg form .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:15px;line-height:1.4;margin:2px 0}
+.kg form .chk input{width:22px;height:22px;min-height:22px;padding:0;margin:0;flex:none;accent-color:var(--blue)}
+.kg button{min-height:48px;padding:12px 24px;font-size:16px;border-radius:12px}
+.kg form button[type=submit]{width:100%}
+.kg .rp{margin:6px 0 12px}
+.kg .mut,.kg .box{font-size:14px}
+@media(min-width:561px){.kg form button[type=submit]{width:auto;min-width:220px}}
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
 .gal a{text-decoration:none;color:var(--mute);font-size:12px}
 .gal img{display:block;width:100%;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
@@ -117,12 +130,20 @@ async function muatKegiatan() {
     box.innerHTML = kunci + kegiatan.map(k => kartuKegiatan(k)).join('');
     box.querySelectorAll('[data-buka]').forEach(b => b.onclick = () => { const f = box.querySelector('form[data-k="' + b.dataset.buka + '"]'); f.classList.toggle('hidden'); b.textContent = f.classList.contains('hidden') ? b.dataset.label : 'Tutup formulir'; });
     box.querySelectorAll('form').forEach(f => f.onsubmit = e => { e.preventDefault(); kirim(f); });
+    box.querySelectorAll('select[name=bidang_pilih]').forEach(sl => sl.onchange = () => { const i = sl.form.bidang_lain, lain = sl.value === '__lain'; i.classList.toggle('hidden', !lain); i.required = lain; if (lain) i.focus(); });
   } catch (e) { box.innerHTML = ''; }
+}
+function bidangHtml(k) {
+  const o = k.opsi_bidang || [];
+  return o.length
+    ? `<div><label>Bidang lomba</label><select name="bidang_pilih" required><option value="">Pilih bidang…</option>${o.map(x => `<option>${esc(x)}</option>`).join('')}<option value="__lain">Lainnya (ketik sendiri)</option></select><input name="bidang_lain" class="hidden" maxlength="60" placeholder="Tulis bidang lomba" style="margin-top:8px"></div>`
+    : `<div><label>Bidang lomba</label><input name="bidang" maxlength="60" required placeholder="mis. Matematika"></div>`;
 }
 function kartuKegiatan(k) {
   const club = k.jenis === 'club', pj = k.jenis === 'umum' ? 'panitia' : 'pustakawan';
   const d = k.daftar, st = d && (club ? SPILL_CLUB : SPILL)[d.status];
   const bisa = k.fase === 'dibuka' || (d && !club && d.status === 'ditolak' && k.fase === 'ditutup');
+  const gratis = !k.biaya, opt = gratis ? ' <span class="mut">(opsional)</span>' : '', req = gratis ? '' : ' required';
   let aksi = '';
   if (club && d) aksi = `<div class="box ${d.status === 'diterima' ? 'ok' : ''}">${d.status === 'diterima' ? 'Selamat, anak diterima di club ini.' : d.status === 'ditolak' ? 'Mohon maaf, anak belum dapat diterima pada seleksi kali ini.' : 'Pendaftaran sudah kami terima dan sedang diseleksi pustakawan.'}${d.catatan_panitia ? '\n' + esc(d.catatan_panitia) : ''}</div>`;
   else if (d && d.status !== 'ditolak') aksi = `<div class="box ${d.status === 'lunas' ? 'ok' : ''}">${d.status === 'lunas' ? `Pembayaran sudah dikonfirmasi ${pj}. Terima kasih.` : `Bukti transfer sudah kami terima dan sedang diperiksa ${pj}.`}</div>`;
@@ -130,10 +151,11 @@ function kartuKegiatan(k) {
     if (d) aksi += `<div class="box" style="background:#fbeceb;color:var(--danger)"><b>Bukti belum dapat diterima.</b>\n${esc(d.catatan_panitia || 'Silakan kirim ulang bukti transfer.')}</div>`;
     if (!bisa) aksi += `<div class="mut">${FASE[k.fase] || 'Pendaftaran belum dibuka.'}</div>`;
     else aksi += `<button data-buka="${k.id}" data-label="${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}">${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}</button>
-    <form class="hidden" data-k="${k.id}">
-      ${club ? '<div><label>Alasan anak ingin bergabung club ini</label><textarea name="motivasi" rows="3" maxlength="500" required placeholder="Ceritakan singkat minat dan alasan anak"></textarea></div>' : `<div><label>Nama pengirim transfer</label><input name="nama_pengirim" maxlength="60" required></div>
-      <div><label>Tanggal transfer</label><input type="date" name="tanggal_transfer" required></div>
-      <div><label>Foto bukti transfer</label><input type="file" name="bukti" accept="image/*" required></div>`}
+    <form class="hidden" data-k="${k.id}"${gratis ? ' data-gratis="1"' : ''}>
+      ${club ? '<div><label>Alasan anak ingin bergabung club ini</label><textarea name="motivasi" rows="3" maxlength="500" required placeholder="Ceritakan singkat minat dan alasan anak"></textarea></div>' : `<div><label>Nama pengirim transfer${opt}</label><input name="nama_pengirim" maxlength="60"${req}></div>
+      <div><label>Tanggal transfer${opt}</label><input type="date" name="tanggal_transfer"${req}></div>
+      <div><label>Foto bukti transfer${opt}</label><input type="file" name="bukti" accept="image/*"${req}></div>`}
+      ${k.tanya_bidang ? bidangHtml(k) : ''}
       ${k.tanya_kaos ? '<div><label>Ukuran kaos</label><input name="kaos" maxlength="20" required placeholder="mis. M / anak 10"></div>' : ''}
       ${k.tanya_kesehatan ? '<div><label>Alergi atau kondisi kesehatan</label><textarea name="kesehatan" rows="2" maxlength="200" placeholder="Kosongkan jika tidak ada"></textarea></div>' : ''}
       <div><label>Nomor kontak darurat</label><input name="kontak" maxlength="40" inputmode="tel" required></div>
@@ -153,9 +175,10 @@ async function kirim(f) {
   const err = f.querySelector('[data-err]'), btn = f.querySelector('button[type=submit]'), fd = new FormData(f);
   err.textContent = ''; btn.disabled = true; btn.textContent = 'Mengirim…';
   try {
-    const file = fd.get('bukti'), tanpaBukti = fd.has('motivasi');
-    if (!tanpaBukti && (!file || !file.size)) throw new Error('Pilih foto bukti transfer.');
-    await post({ action: 'daftar', kegiatanId: f.dataset.k, bukti: tanpaBukti ? undefined : await kecilkan(file), setuju: f.setuju.checked, motivasi: fd.get('motivasi'),
+    const file = fd.get('bukti'), tanpaBukti = fd.has('motivasi'), ada = file && file.size, gratis = f.dataset.gratis === '1';
+    if (!tanpaBukti && !gratis && !ada) throw new Error('Pilih foto bukti transfer.');
+    const bidang = fd.has('bidang') ? fd.get('bidang') : (fd.get('bidang_pilih') === '__lain' ? fd.get('bidang_lain') : fd.get('bidang_pilih'));
+    await post({ action: 'daftar', kegiatanId: f.dataset.k, bukti: (tanpaBukti || !ada) ? undefined : await kecilkan(file), bidang, setuju: f.setuju.checked, motivasi: fd.get('motivasi'),
       nama_pengirim: fd.get('nama_pengirim'), tanggal_transfer: fd.get('tanggal_transfer'), kaos: fd.get('kaos'), kesehatan: fd.get('kesehatan'), kontak: fd.get('kontak') });
     await muatKegiatan();
   } catch (e) { err.textContent = e.message || 'Gagal mengirim.'; btn.disabled = false; btn.textContent = 'Kirim pendaftaran'; }

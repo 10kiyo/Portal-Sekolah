@@ -55,6 +55,8 @@ export async function onRequest({ request, env }) {
         kuota: b.kuota === null || b.kuota === '' || b.kuota === undefined ? null : Number(b.kuota),
         aktif: b.aktif !== false,
         tanya_kaos: b.tanya_kaos === true, tanya_kesehatan: b.tanya_kesehatan === true,
+        tanya_bidang: b.tanya_bidang === true,
+        opsi_bidang: [...new Set((Array.isArray(b.opsi_bidang) ? b.opsi_bidang : []).map(x => String(x || '').replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean))].slice(0, 30),
         // tingkat kosong/null = semua kelas; selain itu hanya murid di tingkat tersebut yang bisa mendaftar
         tingkat: [...new Set((Array.isArray(b.tingkat) ? b.tingkat : []).map(Number))].filter(n => Number.isInteger(n) && n >= 1 && n <= 6).sort(),
         untuk_umum: b.untuk_umum === true, tampil_info: b.tampil_info !== false,
@@ -62,6 +64,8 @@ export async function onRequest({ request, env }) {
       };
       // Ekskul & club hanya lewat tautan murid (kode akses): tidak ada pendaftaran umum. Club selalu gratis.
       if (k.jenis !== 'umum') { k.untuk_umum = false; k.tampil_info = false; k.tanya_kaos = k.jenis === 'ekskul' ? k.tanya_kaos : false; }
+      if (k.jenis !== 'umum') k.tanya_bidang = false;   // bidang lomba hanya untuk kegiatan biasa
+      if (!k.tanya_bidang || !k.opsi_bidang.length) k.opsi_bidang = null;
       if (k.jenis === 'club') { k.biaya = 0; k.rekening = null; }
       if (k.jenis === 'ekskul' && k.biaya > 0 && !k.rekening) return json(400, { error: 'Isi rekening tujuan transfer (rekening Bu Laras) untuk ekskul berbayar.' });
       if (!k.tingkat.length) k.tingkat = null;
@@ -75,7 +79,7 @@ export async function onRequest({ request, env }) {
       const r = id
         ? await fetch(`${c.REST}/kegiatan?id=eq.${id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(k) })
         : await fetch(`${c.REST}/kegiatan`, { method: 'POST', headers: jh, body: JSON.stringify(k) });
-      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan supabase-kegiatan.sql, supabase-kegiatan-opsi.sql, dan supabase-kegiatan-tingkat.sql sudah dijalankan, dan supabase-ekskul-club.sql sudah dijalankan.' });
+      if (!r.ok) return json(500, { error: 'Gagal menyimpan. Pastikan supabase-kegiatan.sql, supabase-kegiatan-opsi.sql, dan supabase-kegiatan-tingkat.sql sudah dijalankan, dan supabase-ekskul-club.sql sudah dijalankan, serta supabase-bidang-lomba.sql sudah dijalankan.' });
       return json(200, { ok: true });
     }
 

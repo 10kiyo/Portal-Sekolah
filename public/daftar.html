@@ -24,13 +24,16 @@ h2{margin:0;color:var(--navy);font-size:20px}
 .pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.bad{background:#fbeceb;color:var(--danger)}
 form{display:grid;gap:12px;margin-top:14px}
 label{display:block;font-weight:700;color:var(--navy);margin:0 0 4px;font-size:14px}
-input,textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:16px;color:var(--ink);background:#fff}
-input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+input,select,textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:16px;color:var(--ink);background:#fff}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.chk{display:flex;gap:8px;align-items:flex-start;font-weight:400}.chk input{width:auto;margin-top:4px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:15px;line-height:1.4}.chk input{width:22px;height:22px;padding:0;margin:0;flex:none;accent-color:var(--blue)}
+select{height:48px;padding:0 12px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:16px;color:var(--ink);background:#fff}
+input:not([type=checkbox]){height:48px;padding-top:0;padding-bottom:0}
 fieldset{border:1px solid var(--line);border-radius:12px;padding:12px;margin:0;display:grid;gap:12px}
 legend{font-weight:700;color:var(--navy);padding:0 6px;font-size:14px}
-button{border:0;cursor:pointer;font:inherit;font-weight:750;padding:12px 18px;border-radius:10px;background:var(--blue);color:#fff}
+button{border:0;cursor:pointer;font:inherit;font-weight:750;font-size:16px;min-height:48px;padding:12px 24px;border-radius:12px;background:var(--blue);color:#fff}
+#kirim{width:100%}@media(min-width:561px){#kirim{width:auto;min-width:220px}}
 button.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
 button:disabled{opacity:.6;cursor:wait}
 button:focus-visible,a:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
@@ -109,6 +112,9 @@ function formHtml(k) {
     </div>
     ${k.tanya_kaos ? '<div><label for="kaos">Ukuran kaos</label><input id="kaos" name="kaos" maxlength="20" required placeholder="mis. M / anak 10"></div>' : ''}
     ${k.tanya_kesehatan ? '<div><label for="kes">Alergi atau kondisi kesehatan</label><textarea id="kes" name="kesehatan" rows="2" maxlength="200" placeholder="Kosongkan jika tidak ada"></textarea></div>' : ''}
+    ${k.tanya_bidang ? ((k.opsi_bidang || []).length
+      ? `<div><label for="bd">Bidang lomba</label><select id="bd" name="bidang_pilih" required><option value="">Pilih bidang…</option>${k.opsi_bidang.map(x => `<option>${esc(x)}</option>`).join('')}<option value="__lain">Lainnya (ketik sendiri)</option></select><input id="bdl" name="bidang_lain" class="hidden" maxlength="60" placeholder="Tulis bidang lomba" style="margin-top:8px"></div>`
+      : '<div><label for="bd">Bidang lomba</label><input id="bd" name="bidang" maxlength="60" required placeholder="mis. Matematika"></div>') : ''}
     ${k.biaya ? `<fieldset><legend>Bukti pembayaran</legend>
       <div><label for="np">Nama pengirim transfer</label><input id="np" name="nama_pengirim" maxlength="60" required></div>
       <div class="g2"><div><label for="tt">Tanggal transfer</label><input id="tt" type="date" name="tanggal_transfer" required></div>
@@ -150,6 +156,8 @@ function bindCek() {
 
 function bindForm() {
   const f = $('#f'); if (!f) return;
+  const sl = f.querySelector('select[name=bidang_pilih]');
+  if (sl) sl.onchange = () => { const i = f.bidang_lain, lain = sl.value === '__lain'; i.classList.toggle('hidden', !lain); i.required = lain; if (lain) i.focus(); };
   f.onsubmit = async e => {
     e.preventDefault(); const err = $('#err'), btn = $('#kirim'); err.textContent = '';
     const fd = new FormData(f);
@@ -162,7 +170,8 @@ function bindForm() {
     try {
       let bukti = '';
       if (K.biaya) { const file = fd.get('bukti'); if (!file || !file.size) throw new Error('Pilih foto bukti transfer.'); bukti = await kecilkan(file); }
-      const d = await api({ action: 'daftar', setuju: f.setuju.checked, bukti, website: fd.get('website'),
+      const bidang = fd.has('bidang') ? fd.get('bidang') : (fd.get('bidang_pilih') === '__lain' ? fd.get('bidang_lain') : fd.get('bidang_pilih'));
+      const d = await api({ action: 'daftar', setuju: f.setuju.checked, bukti, bidang, website: fd.get('website'),
         nama: fd.get('nama'), asal_sekolah: fd.get('asal_sekolah'), kelas_peserta: fd.get('kelas_peserta'), nama_ortu: fd.get('nama_ortu'), kontak: fd.get('kontak'),
         kaos: fd.get('kaos'), kesehatan: fd.get('kesehatan'), nama_pengirim: fd.get('nama_pengirim'), tanggal_transfer: fd.get('tanggal_transfer') });
       sukses(d.gratis);

@@ -14,7 +14,7 @@ const publik = (k, terpakai, today) => ({
   id: k.id, nama: k.nama, deskripsi: k.deskripsi, biaya: k.biaya, rekening: k.biaya ? k.rekening : null,
   buka_daftar: k.buka_daftar, tutup_daftar: k.tutup_daftar, tanggal_kegiatan: k.tanggal_kegiatan,
   sisa: k.kuota != null ? Math.max(0, k.kuota - terpakai) : null,
-  tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan, fase: fase(k, terpakai, today)
+  tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan, tanya_bidang: !!k.tanya_bidang, opsi_bidang: Array.isArray(k.opsi_bidang) ? k.opsi_bidang : [], fase: fase(k, terpakai, today)
 });
 async function ambil(get, id) {
   if (!UUID.test(String(id || ''))) return null;
@@ -72,6 +72,8 @@ export async function onRequestPost({ request, env }) {
     if (b.setuju !== true) return json(400, { error: 'Centang persetujuan orang tua/wali terlebih dahulu.' });
     const kaos = k.tanya_kaos ? t(b.kaos, 20) : '';
     if (k.tanya_kaos && !kaos) return json(400, { error: 'Isi ukuran kaos.' });
+    const bidang = k.tanya_bidang ? t(b.bidang, 60) : '';
+    if (k.tanya_bidang && !bidang) return json(400, { error: 'Isi bidang lomba.' });
 
     // Pembayaran: wajib bila berbiaya; kegiatan gratis tidak butuh bukti.
     let nama_pengirim = nama, tanggal_transfer = today, path = null;
@@ -87,6 +89,7 @@ export async function onRequestPost({ request, env }) {
 
     const data = { umum: true, asal_sekolah: asal, kelas_peserta: t(b.kelas_peserta, 30), nama_ortu: t(b.nama_ortu, 80), kontak };
     if (k.tanya_kaos) data.kaos = kaos;
+    if (k.tanya_bidang) data.bidang = bidang;
     if (k.tanya_kesehatan) data.kesehatan = t(b.kesehatan, 200);
     const row = { nama_pengirim, tanggal_transfer, data, bukti_path: path, status: 'menunggu', catatan_panitia: null, verified_at: null, created_at: new Date().toISOString() };
     const jh = { ...c.h, 'Content-Type': 'application/json', Prefer: 'return=minimal' };

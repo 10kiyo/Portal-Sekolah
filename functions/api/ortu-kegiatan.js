@@ -52,7 +52,7 @@ export async function onRequestPost({ request, env }) {
           id: k.id, nama: k.nama, deskripsi: k.deskripsi, biaya: k.biaya, rekening: k.rekening, jenis: k.jenis || 'umum',
           buka_daftar: k.buka_daftar, tutup_daftar: k.tutup_daftar, tanggal_kegiatan: k.tanggal_kegiatan,
           sisa: k.kuota != null ? Math.max(0, k.kuota - (tp[k.id] || 0)) : null,
-          tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan, untuk: labelTingkat(k), terbatas: tingkatKegiatan(k).length > 0,
+          tanya_kaos: !!k.tanya_kaos, tanya_kesehatan: !!k.tanya_kesehatan, tanya_bidang: !!k.tanya_bidang, opsi_bidang: Array.isArray(k.opsi_bidang) ? k.opsi_bidang : [], untuk: labelTingkat(k), terbatas: tingkatKegiatan(k).length > 0,
           fase: fase(k, tp[k.id] || 0, today), daftar: mm[k.id] || null
         }))
       });
@@ -73,12 +73,17 @@ export async function onRequestPost({ request, env }) {
       if (old && (club || old.status !== 'ditolak')) return json(409, { error: 'Anak ini sudah terdaftar untuk kegiatan ini.' });
       if (!(f === 'dibuka' || (old && f === 'ditutup'))) return json(400, { error: f === 'penuh' ? 'Mohon maaf, kuota sudah penuh.' : 'Pendaftaran tidak sedang dibuka.' });
 
-      const nama_pengirim = String(b.nama_pengirim || '').trim().slice(0, 60);
-      const tanggal_transfer = String(b.tanggal_transfer || '');
+      // Kegiatan gratis (bukan ekskul/club): nama pengirim, tanggal, dan bukti transfer boleh kosong.
+      const opsiBukti = !(Number(k.biaya) > 0) && !ec, TGLRE = /^\d{4}-\d{2}-\d{2}$/;
+      let nama_pengirim = String(b.nama_pengirim || '').trim().slice(0, 60);
+      let tanggal_transfer = String(b.tanggal_transfer || '');
       const kontak = String(b.kontak || '').trim().slice(0, 40);
-      if (club ? !kontak : (!nama_pengirim || !/^\d{4}-\d{2}-\d{2}$/.test(tanggal_transfer) || !kontak)) return json(400, { error: club ? 'Isi nomor kontak darurat.' : 'Lengkapi nama pengirim, tanggal transfer, dan kontak darurat.' });
+      if (opsiBukti) { if (!nama_pengirim) nama_pengirim = String(anak.nama || '').slice(0, 60); if (!TGLRE.test(tanggal_transfer)) tanggal_transfer = today; }
+      if (club ? !kontak : (!kontak || !nama_pengirim || !TGLRE.test(tanggal_transfer))) return json(400, { error: (club || opsiBukti) ? 'Isi nomor kontak darurat.' : 'Lengkapi nama pengirim, tanggal transfer, dan kontak darurat.' });
       const kaos = k.tanya_kaos ? String(b.kaos || '').trim().slice(0, 20) : '';
       if (k.tanya_kaos && !kaos) return json(400, { error: 'Isi ukuran kaos.' });
+      const bidang = k.tanya_bidang ? String(b.bidang || '').replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+      if (k.tanya_bidang && !bidang) return json(400, { error: 'Isi bidang lomba.' });
       if (b.setuju !== true) return json(400, { error: 'Centang persetujuan orang tua terlebih dahulu.' });
       const jh0 = { ...c.h, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
 
@@ -93,6 +98,8 @@ export async function onRequestPost({ request, env }) {
       }
 
       // Bukti transfer: hanya gambar JPEG/PNG/WEBP, maksimal ~2 MB, dicek juga dari byte awal file.
+      let path = null;
+      if (b.bukti || !opsiBukti) {
       const s = String(b.bukti || ''), i = s.indexOf(','), head = s.slice(0, i), b64 = s.slice(i + 1);
       const mt = /^data:image\/(jpeg|png|webp);base64$/.exec(head);
       if (i < 0 || !mt) return json(400, { error: 'Bukti transfer harus berupa foto (JPG/PNG).' });
@@ -104,12 +111,14 @@ export async function onRequestPost({ request, env }) {
                  (mt[1] === 'webp' && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[8] === 0x57);
       if (!ok) return json(400, { error: 'Berkas bukan foto yang valid.' });
 
-      const path = `${ec ? 'ekskul/' : ''}${kid}/${crypto.randomUUID()}.${mt[1] === 'jpeg' ? 'jpg' : mt[1]}`;
+      path = `${ec ? 'ekskul/' : ''}${kid}/${crypto.randomUUID()}.${mt[1] === 'jpeg' ? 'jpg' : mt[1]}`;
       const up = await fetch(`${c.URL}/storage/v1/object/bukti/${path}`, { method: 'POST', headers: { ...c.h, 'Content-Type': `image/${mt[1]}` }, body: bytes });
       if (!up.ok) return json(500, { error: 'Gagal mengunggah bukti. Pastikan bucket "bukti" sudah dibuat (lihat SQL).' });
+      }
 
       const data = { kontak };
       if (k.tanya_kaos) data.kaos = kaos;
+      if (k.tanya_bidang) data.bidang = bidang;
       if (k.tanya_kesehatan) data.kesehatan = String(b.kesehatan || '').trim().slice(0, 200);
       const row = { nama_pengirim, tanggal_transfer, data, bukti_path: path, status: 'menunggu', verified_at: null, created_at: new Date().toISOString(), [ec ? 'catatan' : 'catatan_panitia']: null, ...(ec ? { nominal_diterima: null } : {}) };
       const jh = jh0;
@@ -117,7 +126,7 @@ export async function onRequestPost({ request, env }) {
         ? await fetch(`${c.REST}/${TB}?id=eq.${old.id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(row) })
         : await fetch(`${c.REST}/${TB}`, { method: 'POST', headers: jh, body: JSON.stringify({ ...row, kegiatan_id: kid, anak_key: anak.key, nama_anak: anak.nama, kelas: anak.kelas }) });
       if (!w.ok) {
-        await fetch(`${c.URL}/storage/v1/object/bukti/${path}`, { method: 'DELETE', headers: c.h }).catch(() => {});
+        if (path) await fetch(`${c.URL}/storage/v1/object/bukti/${path}`, { method: 'DELETE', headers: c.h }).catch(() => {});
         return json(w.status === 409 ? 409 : 500, { error: w.status === 409 ? 'Anak ini sudah terdaftar untuk kegiatan ini.' : 'Gagal menyimpan pendaftaran.' });
       }
       if (old && old.bukti_path) await fetch(`${c.URL}/storage/v1/object/bukti/${old.bukti_path}`, { method: 'DELETE', headers: c.h }).catch(() => {});
