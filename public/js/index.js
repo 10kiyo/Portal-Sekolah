@@ -1,5 +1,44 @@
-const PAGES = { spmb: 'spmb.html', profil: 'profil.html', guru: 'guru.html', fasilitas: 'fasilitas.html', lulusan: 'lulusan.html', kalender: 'kalender.html', jurnal: 'jurnal.html', ekskul: 'kegiatan-sekolah.html?j=ekskul', club: 'kegiatan-sekolah.html?j=club', unggulan: 'kegiatan-sekolah.html?j=unggulan', info: 'info.html', galeri: 'galeri.html', 'info-admin': 'info-admin.html', 'buku-tamu': 'buku-tamu.html', kelas: 'kelas.html', kegiatan: 'kegiatan.html', ortu: 'ortu.html', 'si-taqwa': 'si-taqwa.html' };
-const TITLES = { beranda: 'SDS Islam At-Taqwa Rawamangun', spmb: 'SPMB — Mau jadi siswa At-Taqwa?', profil: 'Profil Sekolah', guru: 'Guru & Staff', fasilitas: 'Fasilitas Sekolah', lulusan: 'Profil Lulusan', kalender: 'Kalender Pendidikan', jurnal: 'Jurnal Murid', ekskul: 'Ekstrakurikuler', club: 'Club', unggulan: 'Kegiatan Unggulan', info: 'Info Terbaru', galeri: 'Galeri Prestasi Siswa', 'info-admin': 'Kelola Info Terbaru', 'buku-tamu': 'Buku Tamu Sekolah', kelas: 'Administrasi Guru dan Staf', kegiatan: 'Kegiatan Sekolah (Panitia)', ortu: 'Pantau Belajar Anak', 'si-taqwa': 'SI-TAQWA — Sistem Informasi Terpadu At-Taqwa' };
+const PAGES = {
+  spmb: 'spmb.html',
+  profil: 'profil.html',
+  guru: 'guru.html',
+  fasilitas: 'fasilitas.html',
+  lulusan: 'lulusan.html',
+  kalender: 'kalender.html',
+  jurnal: 'jurnal.html',
+  ekskul: 'kegiatan-sekolah.html?j=ekskul',
+  club: 'kegiatan-sekolah.html?j=club',
+  unggulan: 'kegiatan-sekolah.html?j=unggulan',
+  info: 'info.html',
+  galeri: 'galeri.html',
+  'info-admin': 'info-admin.html',
+  'buku-tamu': 'buku-tamu.html',
+  kelas: 'kelas.html',
+  kegiatan: 'kegiatan.html',
+  ortu: 'ortu.html',
+  'si-taqwa': 'si-taqwa.html'
+};
+const TITLES = {
+  beranda: 'SDS Islam At-Taqwa Rawamangun',
+  spmb: 'SPMB — Mau jadi siswa At-Taqwa?',
+  profil: 'Profil Sekolah',
+  guru: 'Guru & Staff',
+  fasilitas: 'Fasilitas Sekolah',
+  lulusan: 'Profil Lulusan',
+  kalender: 'Kalender Pendidikan',
+  jurnal: 'Jurnal Murid',
+  ekskul: 'Ekstrakurikuler',
+  club: 'Club',
+  unggulan: 'Kegiatan Unggulan',
+  info: 'Info Terbaru',
+  galeri: 'Galeri Prestasi Siswa',
+  'info-admin': 'Kelola Info Terbaru',
+  'buku-tamu': 'Buku Tamu Sekolah',
+  kelas: 'Administrasi Guru dan Staf',
+  kegiatan: 'Kegiatan Sekolah (Panitia)',
+  ortu: 'Pantau Belajar Anak',
+  'si-taqwa': 'SI-TAQWA — Sistem Informasi Terpadu At-Taqwa'
+};
 
 
 // ===== Dropdown "Profil" dan "Kegiatan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
@@ -70,7 +109,17 @@ function route() {
   if (!next.length) return;
   document.getElementById('agdList').innerHTML = next.map(e => {
     const mulai = e.mulai < hari ? hari : e.mulai, d = p(mulai), bln = (e.mulai < hari ? hari : e.mulai).slice(0, 7);
-    return `<a class="ai" href="#kalender/${bln}"><div class="ad"><b>${d.d}</b><span>${BLS[d.m - 1]}</span></div><div class="ab"><span class="aj ${e.jenis}">${nama[e.jenis] || 'Kegiatan'}</span><b>${String(e.judul).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))}</b><span class="at">${e.mulai <= hari ? 'Sedang berlangsung · ' : ''}${label(e.mulai, e.selesai)} · ${kls(e.kelas)}</span></div></a>`;
+    const judul = String(e.judul).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+    return `<a class="ai" href="#kalender/${bln}">
+      <div class="ad"><b>${d.d}</b><span>${BLS[d.m - 1]}</span></div>
+      <div class="ab">
+        <span class="aj ${e.jenis}">${nama[e.jenis] || 'Kegiatan'}</span>
+        <b>${judul}</b>
+        <span class="at">${e.mulai <= hari ? 'Sedang berlangsung · ' : ''}${label(e.mulai, e.selesai)} · ${kls(e.kelas)}</span>
+      </div>
+    </a>`;
   }).join('');
   document.getElementById('agd').hidden = false;
 })();
@@ -113,14 +162,43 @@ fetch('/api/youtube').then(r => r.json()).then(d => {
     console.warn('Video YouTube kosong:', d.alasan || '(tanpa keterangan)');
     if (!/^UU[\w-]{22}$/.test(d.playlist || '')) return;
     // Cadangan: pemutar daftar unggahan kanal (tidak butuh feed)
-    document.getElementById('ytList').innerHTML = `<div class="v" style="grid-column:1/-1"><div class="fr"><iframe src="https://www.youtube.com/embed/videoseries?list=${d.playlist}" title="Video terbaru SDS Islam At-Taqwa" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></div>`;
+    document.getElementById('ytList').innerHTML = `
+      <div class="v" style="grid-column:1/-1">
+        <div class="fr">
+          <iframe
+            src="https://www.youtube.com/embed/videoseries?list=${d.playlist}"
+            title="Video terbaru SDS Islam At-Taqwa"
+            loading="lazy"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen>
+          </iframe>
+        </div>
+      </div>`;
     document.getElementById('video').hidden = false;
     return;
   }
-  document.getElementById('ytList').innerHTML = v.map(x => `<div class="v"><div class="fr"><button type="button" class="play" data-id="${x.id}" aria-label="Putar: ${esc(x.judul)}" style="background-image:url(https://i.ytimg.com/vi/${x.id}/hqdefault.jpg)"></button></div><div class="t"><a href="https://www.youtube.com/watch?v=${x.id}" target="_blank" rel="noopener">${esc(x.judul)}</a></div></div>`).join('');
+  document.getElementById('ytList').innerHTML = v.map(x => `
+    <div class="v">
+      <div class="fr">
+        <button type="button" class="play" data-id="${x.id}" aria-label="Putar: ${esc(x.judul)}"
+          style="background-image:url(https://i.ytimg.com/vi/${x.id}/hqdefault.jpg)">
+        </button>
+      </div>
+      <div class="t">
+        <a href="https://www.youtube.com/watch?v=${x.id}" target="_blank" rel="noopener">${esc(x.judul)}</a>
+      </div>
+    </div>`).join('');
   document.getElementById('ytList').onclick = e => {
     const b = e.target.closest('.play'); if (!b) return;
-    b.parentNode.innerHTML = `<iframe src="https://www.youtube.com/embed/${b.dataset.id}?autoplay=1&rel=0" title="Video sekolah" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+    b.parentNode.innerHTML = `
+      <iframe
+        src="https://www.youtube.com/embed/${b.dataset.id}?autoplay=1&rel=0"
+        title="Video sekolah"
+        allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>`;
   };
   document.getElementById('video').hidden = false;
 }).catch(e => console.warn('Video YouTube gagal dimuat', e));

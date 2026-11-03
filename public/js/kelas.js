@@ -309,8 +309,30 @@ async function vGaleri() {
   const { data: su } = ks.length ? await sb.storage.from('karya').createSignedUrls(ks.map(k => k.path), 3600) : { data: [] };
   const url = Object.fromEntries((su || []).map(x => [x.path, x.signedUrl])), by = {};
   ks.forEach(k => (by[k.kelas_murid.nama] = by[k.kelas_murid.nama] || []).push(k));
-  $('#view').innerHTML = `<h2>Galeri karya</h2><p class="mut">Foto diunggah dari tab Tugas & nilai. Centang "Tampil ke orang tua" hanya untuk foto yang sudah diizinkan.</p><div id="msg" class="msg"></div>`
-    + (ks.length ? Object.keys(by).sort().map(n => `<h3 style="color:var(--navy)">${esc(n)}</h3><div class="thumbs">${by[n].map(k => `<div class="thumb"><a href="${url[k.path]}" target="_blank" rel="noopener"><img loading="lazy" src="${url[k.path]}" alt=""></a><div>${esc(k.kelas_tugas?.judul)}<label class="kin" style="margin-top:4px"><input type="checkbox" data-ok="${k.id}" ${k.tampil_ortu ? 'checked' : ''} style="width:auto"> Tampil ke orang tua</label><button class="d" style="padding:3px 8px;font-size:12px" data-del="${k.id}" data-p="${esc(k.path)}">Hapus</button></div></div>`).join('')}</div>`).join('') : '<p>Belum ada foto karya.</p>');
+  const galeri = Object.keys(by).sort().map(n => `
+    <h3 style="color:var(--navy)">${esc(n)}</h3>
+    <div class="thumbs">${by[n].map(k => `
+      <div class="thumb">
+        <a href="${url[k.path]}" target="_blank" rel="noopener">
+          <img loading="lazy" src="${url[k.path]}" alt="">
+        </a>
+        <div>
+          ${esc(k.kelas_tugas?.judul)}
+          <label class="kin" style="margin-top:4px">
+            <input type="checkbox" data-ok="${k.id}" ${k.tampil_ortu ? 'checked' : ''} style="width:auto">
+            Tampil ke orang tua
+          </label>
+          <button class="d" style="padding:3px 8px;font-size:12px" data-del="${k.id}" data-p="${esc(k.path)}">
+            Hapus
+          </button>
+        </div>
+      </div>`).join('')}
+    </div>`).join('');
+  $('#view').innerHTML = `
+    <h2>Galeri karya</h2>
+    <p class="mut">Foto diunggah dari tab Tugas & nilai. Centang "Tampil ke orang tua" hanya untuk foto yang sudah diizinkan.</p>
+    <div id="msg" class="msg"></div>
+    ${ks.length ? galeri : '<p>Belum ada foto karya.</p>'}`;
   $('#view').onchange = async e => { if (e.target.dataset.ok) { await run(sb.from('kelas_karya').update({ tampil_ortu: e.target.checked }).eq('id', e.target.dataset.ok)); msg('Pengaturan tersimpan.'); } };
   $('#view').onclick = async e => { const id = e.target.dataset.del; if (id && confirm('Hapus foto ini?')) { await sb.storage.from('karya').remove([e.target.dataset.p]); await run(sb.from('kelas_karya').delete().eq('id', id)); vGaleri(); } };
 }
@@ -385,6 +407,23 @@ async function saveProfil(extra) {
 }
 async function vProfil() {
   const n = S.dnama || (S.prof && S.prof.nama) || '', ada = (k, m) => S.ajar.some(a => a.kelas_id === k && a.mapel_id === m), wali = S.prof && S.prof.wali_kelas_id;
+  const mapel = S.mapel.map(m => `
+    <span class="pill2">${esc(m.nama)}
+      <button class="x" data-rm="${m.id}" title="Ubah nama">✎</button>
+      <button class="x" data-dm="${m.id}" title="Hapus">×</button>
+    </span>`).join('') || '<span class="mut">Belum ada mapel.</span>';
+  const tabelMapel = S.mapel.length && S.kelas.length ? `
+    <table class="tmapel">
+      <tr><th>Kelas</th>${S.mapel.map(m => `<th class="cbh">${esc(m.nama)}</th>`).join('')}</tr>
+      ${S.kelas.map(k => `
+        <tr>
+          <td>${esc(k.nama)}${wali === k.id ? ' <span class="mut">(wali kelas)</span>' : ''}</td>
+          ${S.mapel.map(m => `
+            <td class="cb">
+              <input type="checkbox" data-k="${k.id}" data-m="${m.id}" ${ada(k.id, m.id) ? 'checked' : ''}>
+            </td>`).join('')}
+        </tr>`).join('')}
+    </table>` : '<p class="mut">Tambahkan mapel dan kelas dulu.</p>';
   $('#view').innerHTML = `<h2>Profil guru</h2>${n ? '' : '<p class="msg">Selamat datang! Lengkapi dulu nama, mapel, dan kelas yang kamu ajar.</p>'}
   <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="av" style="width:84px;height:84px;font-size:32px">${S.fotoUrl ? `<img src="${esc(S.fotoUrl)}" alt="">` : esc((n.trim()[0] || 'G').toUpperCase())}</div>
   <div><label for="pf">Ganti foto profil</label><input id="pf" type="file" accept="image/*"><div class="mut">Foto ini langsung tampil di halaman Guru & Staff.</div></div></div>
@@ -393,9 +432,9 @@ async function vProfil() {
   <p><button class="p" id="svP">Simpan profil</button></p><div id="msg" class="msg"></div>
   <h2 style="margin-top:22px">Mata pelajaran yang diampu</h2>
   <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="mn" placeholder="Contoh: Matematika" style="flex:1;min-width:180px"><button class="p" id="addM">Tambah mapel</button></div>
-  <p style="margin-top:12px">${S.mapel.map(m => `<span class="pill2">${esc(m.nama)}<button class="x" data-rm="${m.id}" title="Ubah nama">✎</button><button class="x" data-dm="${m.id}" title="Hapus">×</button></span>`).join('') || '<span class="mut">Belum ada mapel.</span>'}</p>
+  <p style="margin-top:12px">${mapel}</p>
   <h2 style="margin-top:22px">Kelas yang diajar</h2><p class="mut">Centang mapel yang kamu ajarkan di tiap kelas. Hanya yang dicentang muncul di pilihan Kelas dan Mata pelajaran.</p>
-  ${S.mapel.length && S.kelas.length ? `<table class="tmapel"><tr><th>Kelas</th>${S.mapel.map(m => `<th class="cbh">${esc(m.nama)}</th>`).join('')}</tr>${S.kelas.map(k => `<tr><td>${esc(k.nama)}${wali === k.id ? ' <span class="mut">(wali kelas)</span>' : ''}</td>${S.mapel.map(m => `<td class="cb"><input type="checkbox" data-k="${k.id}" data-m="${m.id}" ${ada(k.id, m.id) ? 'checked' : ''}></td>`).join('')}</tr>`).join('')}</table>` : '<p class="mut">Tambahkan mapel dan kelas dulu.</p>'}`;
+  ${tabelMapel}`;
   const again = async () => { await loadProfil(); syncMapel(); vProfil(); };
   $('#svP').onclick = async () => { await saveProfil({}); await again(); msg('Profil tersimpan.'); };
   $('#addM').onclick = async () => { const nm = $('#mn').value.trim(); if (!nm) return; await run(sb.from('kelas_mapel').insert({ nama: nm })); await again(); };

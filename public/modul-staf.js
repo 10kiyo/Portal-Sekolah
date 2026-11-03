@@ -541,7 +541,23 @@ MODUL.pinjam = async function () {
   <div id="pl"></div>`;
   const tampil = () => {
     const f = $('#ps').value, l = rows.filter(r => !f || r.status === f);
-    $('#pl').innerHTML = `<table><tr><th>Buku</th><th>Peminjam</th><th>Pinjam</th><th>Tenggat</th><th>Status</th><th></th></tr>${l.map(r => `<tr><td>${esc(r.judul)}</td><td>${esc(r.peminjam)}</td><td>${tglID(r.tgl_pinjam)}</td><td ${telat(r) ? 'style="color:var(--danger);font-weight:700"' : ''}>${tglID(r.tenggat)}</td><td>${r.status === 'kembali' ? 'Kembali ' + tglID(r.tgl_kembali) : telat(r) ? 'Terlambat' : 'Dipinjam'}</td><td>${r.status === 'dipinjam' ? `<button data-ret="${r.id}">Kembalikan</button> ` : ''}<button class="d" data-del="${r.id}">Hapus</button></td></tr>`).join('')}</table>`;
+    const baris = l.map(r => `
+      <tr>
+        <td>${esc(r.judul)}</td>
+        <td>${esc(r.peminjam)}</td>
+        <td>${tglID(r.tgl_pinjam)}</td>
+        <td ${telat(r) ? 'style="color:var(--danger);font-weight:700"' : ''}>${tglID(r.tenggat)}</td>
+        <td>${r.status === 'kembali' ? 'Kembali ' + tglID(r.tgl_kembali) : telat(r) ? 'Terlambat' : 'Dipinjam'}</td>
+        <td>
+          ${r.status === 'dipinjam' ? `<button data-ret="${r.id}">Kembalikan</button> ` : ''}
+          <button class="d" data-del="${r.id}">Hapus</button>
+        </td>
+      </tr>`).join('');
+    $('#pl').innerHTML = `
+      <table>
+        <tr><th>Buku</th><th>Peminjam</th><th>Pinjam</th><th>Tenggat</th><th>Status</th><th></th></tr>
+        ${baris}
+      </table>`;
   };
   $('#ps').onchange = tampil;
   $('#pAdd').onclick = async () => {
@@ -575,7 +591,16 @@ MODUL.transaksi = async function (bln) {
   <p>${inputBulan('tb', bln)} <button id="tCsv">Unduh CSV</button> <button id="tCetak">Cetak</button></p>
   <p><b>Pemasukan:</b> ${rp(m)} &nbsp; <b>Pengeluaran:</b> ${rp(k)} &nbsp; <b>Selisih bulan ini:</b> ${rp(m - k)}</p>
   <table><tr><th>Tanggal</th><th>Kategori</th><th>Uraian</th><th>Masuk</th><th>Keluar</th><th>Ref</th><th class="noprint"></th></tr>
-  ${rows.map(r => `<tr><td>${tglID(r.tanggal)}</td><td>${esc(r.kategori)}</td><td>${esc(r.uraian)}</td><td>${r.jenis === 'masuk' ? rp(r.jumlah) : ''}</td><td>${r.jenis === 'keluar' ? rp(r.jumlah) : ''}</td><td>${esc(r.ref)}</td><td class="noprint"><button class="d" data-del="${r.id}">Hapus</button></td></tr>`).join('') || '<tr><td colspan="7" class="mut">Belum ada transaksi bulan ini.</td></tr>'}</table>`;
+  ${rows.map(r => `
+    <tr>
+      <td>${tglID(r.tanggal)}</td>
+      <td>${esc(r.kategori)}</td>
+      <td>${esc(r.uraian)}</td>
+      <td>${r.jenis === 'masuk' ? rp(r.jumlah) : ''}</td>
+      <td>${r.jenis === 'keluar' ? rp(r.jumlah) : ''}</td>
+      <td>${esc(r.ref)}</td>
+      <td class="noprint"><button class="d" data-del="${r.id}">Hapus</button></td>
+    </tr>`).join('') || '<tr><td colspan="7" class="mut">Belum ada transaksi bulan ini.</td></tr>'}</table>`;
   $('#tb').onchange = e => e.target.value && MODUL.transaksi(e.target.value);
   $('#tAdd').onclick = async () => {
     const n = Number($('#tn').value);
@@ -626,6 +651,18 @@ const STATUS_DOK = { proposal: ['draf', 'diajukan', 'disetujui', 'ditolak', 'dic
 async function dokumen(jenis) {
   const rows = await run(sb.from('keuangan_dokumen').select('*').eq('jenis', jenis).order('tanggal', { ascending: false }).limit(1000));
   const L = jenis === 'lpj' ? 'LPJ' : 'Proposal', st = STATUS_DOK[jenis];
+  const baris = rows.map(r => `
+    <tr>
+      <td>${tglID(r.tanggal)}</td>
+      <td>${esc(r.judul)}<div class="mut">${esc(r.pengaju)}${r.catatan ? ' · ' + esc(r.catatan) : ''}</div></td>
+      ${jenis === 'lpj' ? `<td>${esc(r.terkait)}</td>` : ''}
+      <td>${r.nominal != null ? rp(r.nominal) : '-'}</td>
+      <td><select data-st="${r.id}">${opsi(st, r.status)}</select></td>
+      <td>
+        ${/^https?:\/\//i.test(r.link || '') ? `<a href="${esc(r.link)}" target="_blank" rel="noopener">Buka</a> ` : ''}
+        <button class="d" data-del="${r.id}">Hapus</button>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="6" class="mut">Belum ada ${L}.</td></tr>`;
   $('#view').innerHTML = `<h2>${L}</h2>
   <div class="grid"><div><label for="dj">Judul ${L}</label><input id="dj"></div><div><label for="dp">Pengaju / penanggung jawab</label><input id="dp"></div>
   <div><label for="dn">Nominal (Rp)</label><input id="dn" type="number" min="0" inputmode="numeric"></div><div><label for="dt">Tanggal</label><input id="dt" type="date" value="${today()}"></div>
@@ -635,11 +672,20 @@ async function dokumen(jenis) {
   <label for="dc">Catatan</label><input id="dc"><p><button class="p" id="dAdd">Simpan ${L}</button> <button id="dCsv">Unduh CSV</button></p><div id="msg" class="msg"></div>
   <p class="mut">${rows.length} dokumen, total nominal ${rp(rows.reduce((a, r) => a + Number(r.nominal || 0), 0))}.</p>
   <table><tr><th>Tanggal</th><th>Judul</th>${jenis === 'lpj' ? '<th>Proposal</th>' : ''}<th>Nominal</th><th>Status</th><th></th></tr>
-  ${rows.map(r => `<tr><td>${tglID(r.tanggal)}</td><td>${esc(r.judul)}<div class="mut">${esc(r.pengaju)}${r.catatan ? ' · ' + esc(r.catatan) : ''}</div></td>${jenis === 'lpj' ? `<td>${esc(r.terkait)}</td>` : ''}<td>${r.nominal != null ? rp(r.nominal) : '-'}</td>
-  <td><select data-st="${r.id}">${opsi(st, r.status)}</select></td><td>${/^https?:\/\//i.test(r.link || '') ? `<a href="${esc(r.link)}" target="_blank" rel="noopener">Buka</a> ` : ''}<button class="d" data-del="${r.id}">Hapus</button></td></tr>`).join('') || `<tr><td colspan="6" class="mut">Belum ada ${L}.</td></tr>`}</table>`;
+  ${baris}</table>`;
   $('#dAdd').onclick = async () => {
     if (!$('#dj').value.trim()) return msg('Isi judul.', true);
-    await run(sb.from('keuangan_dokumen').insert({ jenis, judul: $('#dj').value.trim(), pengaju: $('#dp').value.trim() || null, nominal: $('#dn').value === '' ? null : Math.round(Number($('#dn').value)), tanggal: $('#dt').value || today(), status: $('#ds').value, terkait: jenis === 'lpj' ? ($('#dk').value.trim() || null) : null, link: $('#dl').value.trim() || null, catatan: $('#dc').value.trim() || null }));
+    await run(sb.from('keuangan_dokumen').insert({
+      jenis,
+      judul: $('#dj').value.trim(),
+      pengaju: $('#dp').value.trim() || null,
+      nominal: $('#dn').value === '' ? null : Math.round(Number($('#dn').value)),
+      tanggal: $('#dt').value || today(),
+      status: $('#ds').value,
+      terkait: jenis === 'lpj' ? ($('#dk').value.trim() || null) : null,
+      link: $('#dl').value.trim() || null,
+      catatan: $('#dc').value.trim() || null
+    }));
     dokumen(jenis);
   };
   $('#dCsv').onclick = () => csv(`${jenis}.csv`, [['Tanggal', 'Judul', 'Pengaju', 'Nominal', 'Status', 'Terkait', 'Catatan'], ...rows.map(r => [r.tanggal, r.judul, r.pengaju, r.nominal, r.status, r.terkait, r.catatan])]);
@@ -686,7 +732,24 @@ MODUL.keluar = () => surat('keluar');
 MODUL.agenda = async function (bln) {
   bln = (typeof bln === 'string' && bln) || today().slice(0, 7);
   const rows = await run(sb.from('surat').select('*').gte('tanggal', bln + '-01').lte('tanggal', akhirBulan(bln)).order('tanggal').order('created_at'));
-  const tabel = j => { const l = rows.filter(r => r.jenis === j); return `<h3 style="color:var(--navy)">Surat ${j} (${l.length})</h3><table><tr><th>No</th><th>Tanggal</th><th>Nomor</th><th>${j === 'masuk' ? 'Asal' : 'Tujuan'}</th><th>Perihal</th><th>Status</th></tr>${l.map((r, i) => `<tr><td>${i + 1}</td><td>${tglID(r.tanggal)}</td><td>${esc(r.nomor)}</td><td>${esc(r.pihak)}</td><td>${esc(r.perihal)}</td><td>${esc(r.status)}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">Tidak ada.</td></tr>'}</table>`; };
+  const tabel = j => {
+    const l = rows.filter(r => r.jenis === j);
+    const baris = l.map((r, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${tglID(r.tanggal)}</td>
+        <td>${esc(r.nomor)}</td>
+        <td>${esc(r.pihak)}</td>
+        <td>${esc(r.perihal)}</td>
+        <td>${esc(r.status)}</td>
+      </tr>`).join('') || '<tr><td colspan="6" class="mut">Tidak ada.</td></tr>';
+    return `
+      <h3 style="color:var(--navy)">Surat ${j} (${l.length})</h3>
+      <table>
+        <tr><th>No</th><th>Tanggal</th><th>Nomor</th><th>${j === 'masuk' ? 'Asal' : 'Tujuan'}</th><th>Perihal</th><th>Status</th></tr>
+        ${baris}
+      </table>`;
+  };
   $('#view').innerHTML = `<h2>Agenda surat ${namaBulan(bln)}</h2><p class="noprint">${inputBulan('ab', bln)} <button id="aCetak">Cetak agenda</button></p>${tabel('masuk')}${tabel('keluar')}`;
   $('#ab').onchange = e => e.target.value && MODUL.agenda(e.target.value);
   $('#aCetak').onclick = () => {
@@ -741,12 +804,51 @@ MODUL.akun = async function () {
     const l = rows.filter(cocok);
     $('#ac').textContent = l.length === rows.length ? rows.length + ' akun' : l.length + ' dari ' + rows.length + ' akun';
     $('#al').innerHTML = l.length ? `<div class="ak-wrap"><table class="ak-tbl"><thead><tr><th>Nama & jabatan</th><th>Akun login</th><th>Peran menu</th><th>Peran tambahan</th><th>Aktif</th><th class="noprint"></th></tr></thead><tbody>
-    ${l.map(r => `<tr class="${r.aktif ? '' : 'ak-off'}"><td class="ak-nm"><b>${esc(r.nama)}</b><span>${esc(r.jabatan || '-')}</span></td>
-    <td class="ak-ac" data-l="Akun login"><b>${esc(r.username)}</b><span>PIN ${lihat ? '<b style="display:inline;color:var(--ink)">' + esc(r.pin) + '</b>' : '••••••'}</span></td>
-    <td data-l="Peran menu"><select data-peran="${r.id}" class="noprint">${opsiPeran(r.peran === 'admin' ? [...PERAN, 'admin'] : PERAN, r.peran)}</select><span class="print-only">${esc(PERAN_LABEL[r.peran] || r.peran)}</span></td>
-    <td data-l="Peran tambahan"><span class="noprint">${(r.peran_tambahan || []).filter(x => x !== r.peran).map(x => `<label class="ak-chip on" title="Klik untuk mencabut"><input type="checkbox" data-tam="${r.id}" data-role="${x}" checked><span>${PERAN_LABEL[x] || x} ×</span></label>`).join('')}${PERAN.filter(x => x !== 'staf' && x !== r.peran && !(r.peran_tambahan || []).includes(x)).length ? `<select class="ak-add1" data-tamadd="${r.id}" aria-label="Tambah peran untuk ${esc(r.nama)}"><option value="">+ Tambah</option>${PERAN.filter(x => x !== 'staf' && x !== r.peran && !(r.peran_tambahan || []).includes(x)).map(x => `<option value="${x}">${PERAN_LABEL[x]}</option>`).join('')}</select>` : ''}</span><span class="print-only">${esc((r.peran_tambahan || []).map(x => PERAN_LABEL[x] || x).join(', ') || '-')}</span></td>
-    <td class="ak-keep" data-l="Aktif"><label class="ak-sw noprint" title="${r.aktif ? 'Akun aktif' : 'Akun nonaktif'}"><input type="checkbox" data-aktif="${r.id}" ${r.aktif ? 'checked' : ''}><i></i></label><span class="print-only">${r.aktif ? 'ya' : 'tidak'}</span></td>
-    <td class="noprint ak-keep" data-l="Aksi"><select data-aksi="${r.id}" aria-label="Aksi untuk ${esc(r.nama)}"><option value="">Aksi…</option><option value="nm">Ubah nama</option><option value="jab">Ubah jabatan</option><option value="pin">Reset PIN</option></select></td></tr>`).join('')}</tbody></table></div>` : '<p class="mut">Tidak ada akun yang cocok.</p>';
+    ${l.map(r => {
+      const semuaTambahan = r.peran_tambahan || [];
+      const tambahan = semuaTambahan.filter(x => x !== r.peran);
+      const dapatTambah = PERAN.filter(x => x !== 'staf' && x !== r.peran && !semuaTambahan.includes(x));
+      const opsiTambahan = dapatTambah.length ? `
+        <select class="ak-add1" data-tamadd="${r.id}" aria-label="Tambah peran untuk ${esc(r.nama)}">
+          <option value="">+ Tambah</option>
+          ${dapatTambah.map(x => `<option value="${x}">${PERAN_LABEL[x]}</option>`).join('')}
+        </select>` : '';
+      return `
+        <tr class="${r.aktif ? '' : 'ak-off'}">
+          <td class="ak-nm"><b>${esc(r.nama)}</b><span>${esc(r.jabatan || '-')}</span></td>
+          <td class="ak-ac" data-l="Akun login">
+            <b>${esc(r.username)}</b>
+            <span>PIN ${lihat ? '<b style="display:inline;color:var(--ink)">' + esc(r.pin) + '</b>' : '••••••'}</span>
+          </td>
+          <td data-l="Peran menu">
+            <select data-peran="${r.id}" class="noprint">${opsiPeran(r.peran === 'admin' ? [...PERAN, 'admin'] : PERAN, r.peran)}</select>
+            <span class="print-only">${esc(PERAN_LABEL[r.peran] || r.peran)}</span>
+          </td>
+          <td data-l="Peran tambahan">
+            <span class="noprint">
+              ${tambahan.map(x => `
+                <label class="ak-chip on" title="Klik untuk mencabut">
+                  <input type="checkbox" data-tam="${r.id}" data-role="${x}" checked>
+                  <span>${PERAN_LABEL[x] || x} ×</span>
+                </label>`).join('')}
+              ${opsiTambahan}
+            </span>
+            <span class="print-only">${esc(semuaTambahan.map(x => PERAN_LABEL[x] || x).join(', ') || '-')}</span>
+          </td>
+          <td class="ak-keep" data-l="Aktif">
+            <label class="ak-sw noprint" title="${r.aktif ? 'Akun aktif' : 'Akun nonaktif'}">
+              <input type="checkbox" data-aktif="${r.id}" ${r.aktif ? 'checked' : ''}><i></i>
+            </label>
+            <span class="print-only">${r.aktif ? 'ya' : 'tidak'}</span>
+          </td>
+          <td class="noprint ak-keep" data-l="Aksi">
+            <select data-aksi="${r.id}" aria-label="Aksi untuk ${esc(r.nama)}">
+              <option value="">Aksi…</option><option value="nm">Ubah nama</option>
+              <option value="jab">Ubah jabatan</option><option value="pin">Reset PIN</option>
+            </select>
+          </td>
+        </tr>`;
+    }).join('')}</tbody></table></div>` : '<p class="mut">Tidak ada akun yang cocok.</p>';
   };
   $('#view').innerHTML = `<h2>Akun guru & staf</h2>
   <p class="mut">Username dan PIN dibuat otomatis. Akun login aktif saat orangnya pertama kali masuk. Peran menentukan menu yang tampil di akunnya.</p>
@@ -891,8 +993,29 @@ MODUL.data = async function () {
   const tabel = () => {
     const k = $('#dk').value, q = $('#dq').value.trim().toLowerCase(), st = $('#ds').value;
     const l = semuaM.filter(x => (!k || x.kelas === k) && (!q || x.nama.toLowerCase().includes(q)) && (st === 'semua' || (st === 'nonaktif') === !x.aktif));
-    $('#dl').innerHTML = `<p class="mut">${l.length} murid</p><table><tr><th>No</th><th>Nama</th><th>Panggilan</th><th>L/P</th><th>Kelas</th><th>Tempat lahir</th><th>Tanggal lahir</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>${l.map((x, i) => `<tr${x.aktif ? '' : ' style="opacity:.6"'}><td>${i + 1}</td><td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td><td>${esc(x.p.nama_panggilan || '')}</td><td>${esc(x.p.jenis_kelamin || '')}</td><td>${esc(x.kelas)}</td><td>${esc(x.p.tempat_lahir || '')}</td><td>${x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : ''}</td><td>${esc(x.p.nis || '')}</td><td>${esc(x.p.nisn || '')}</td><td>${x.aktif ? 'Aktif' : 'Nonaktif'}</td>
-      <td class="noprint"><button data-ed="${esc(x.id)}">Ubah</button> <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td colspan="11" class="mut">Tidak ada data.</td></tr>'}</table>`;
+    const baris = l.map((x, i) => `
+      <tr${x.aktif ? '' : ' style="opacity:.6"'}>
+        <td>${i + 1}</td>
+        <td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td>
+        <td>${esc(x.p.nama_panggilan || '')}</td>
+        <td>${esc(x.p.jenis_kelamin || '')}</td>
+        <td>${esc(x.kelas)}</td>
+        <td>${esc(x.p.tempat_lahir || '')}</td>
+        <td>${x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : ''}</td>
+        <td>${esc(x.p.nis || '')}</td>
+        <td>${esc(x.p.nisn || '')}</td>
+        <td>${x.aktif ? 'Aktif' : 'Nonaktif'}</td>
+        <td class="noprint">
+          <button data-ed="${esc(x.id)}">Ubah</button>
+          <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="11" class="mut">Tidak ada data.</td></tr>';
+    $('#dl').innerHTML = `
+      <p class="mut">${l.length} murid</p>
+      <table>
+        <tr><th>No</th><th>Nama</th><th>Panggilan</th><th>L/P</th><th>Kelas</th><th>Tempat lahir</th><th>Tanggal lahir</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>
+        ${baris}
+      </table>`;
     return l;
   };
   const selesai = async (t) => { await MODUL.data(); msg(t + ' Daftar murid di akun guru ikut berubah otomatis dalam sekitar satu menit. Nilai & presensi yang sudah ada tidak berubah.'); };
