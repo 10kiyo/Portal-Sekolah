@@ -1,0 +1,6 @@
+## Konvensi Proyek
+
+- **Stack:** Next.js, Supabase, dan Tailwind CSS.
+- **Struktur:** halaman di `src/app`, komponen UI di `src/components`, dan migrasi database di `supabase`.
+- **TypeScript:** gunakan mode strict dan tipe yang eksplisit.
+- **Database:** jangan mengubah skema tanpa konfirmasi terlebih dahulu.

@@ -1,6 +1,14 @@
+# Dependencies (WAJIB DIBUANG DARI GIT)
 node_modules/
+
+# Cloudflare Wrangler Build Cache
 .wrangler/
+
+# Temporary / Environment Keys
 .env
+.env.local
 .dev.vars
+
+# System OS files
 .DS_Store
-dist/
+Thumbs.db
