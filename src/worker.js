@@ -22,6 +22,7 @@ import * as adminJurnal from '../functions/api/admin-jurnal.js';
 import * as bukuTamuPengaturan from '../functions/api/buku-tamu-pengaturan.js';
 import * as daftarTamu from '../functions/api/daftar-tamu.js';
 import * as spmbDaftar from '../functions/api/spmb-daftar.js';
+import * as spmbBayar from '../functions/api/spmb-bayar.js';
 import * as adminSpmb from '../functions/api/admin-spmb.js';
 import { cfg, dbGet } from '../functions/_lib/util.js';
 
@@ -48,6 +49,7 @@ const routes = {
   '/api/buku-tamu-pengaturan': bukuTamuPengaturan,
   '/api/daftar-tamu': daftarTamu,
   '/api/spmb-daftar': spmbDaftar,
+  '/api/spmb-bayar': spmbBayar,
   '/api/admin-spmb': adminSpmb
 };
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
