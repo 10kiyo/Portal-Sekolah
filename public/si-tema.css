@@ -1,16 +1,32 @@
-/* ============================================================
-   Tema bersama: menyamakan tipografi semua halaman dengan Beranda (index.html).
-   Dipasang di akhir <head> setiap halaman selain index.html.
-   Warna dasar sudah sama di semua halaman (--navy #102a43, --blue #1677c8, emas #f5b335).
-   Aturan di sini hanya elemen dasar, jadi gaya khusus per halaman tetap berlaku.
-   ============================================================ */
-:root { --gold: #f5b335; --hero: #0b1f33; --si-header-card-gap: 12px; --si-login-offset: clamp(24px, 8vh, 72px); }
+/* Tema dasar bersama untuk semua halaman selain index.html.
+   Layout dan komponen khusus halaman tetap diatur oleh stylesheet masing-masing. */
+:root {
+  --navy: #102a43;
+  --blue: #1677c8;
+  --soft: #eef6fc;
+  --ink: #243b53;
+  --line: #cbd8e6;
+  --ok: #19724d;
+  --danger: #bc3d33;
+  --mute: #627d98;
+  --gold: #f5b335;
+  --hero: #0b1f33;
+  --si-focus-ring: #1677c850;
+  --si-header-card-gap: 12px;
+  --si-login-offset: clamp(24px, 8vh, 72px);
+}
+*, *::before, *::after { box-sizing: border-box; }
 html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-button, input, select, textarea { font-family: inherit; }          /* sebelumnya sebagian tombol memakai Arial */
-h1, h2, h3 { font-family: inherit; font-weight: 800; }              /* Beranda memakai bobot 800 */
+body { color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+button, input, select, textarea { font-family: inherit; }
+h1, h2, h3 { font-family: inherit; font-weight: 800; }
 h1 { letter-spacing: -.04em; }
 h2 { letter-spacing: -.03em; }
 h3 { letter-spacing: -.02em; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--si-focus-ring);
+  outline-offset: 2px;
+}
 
 /* ============================================================
    Kepala halaman seragam (logo + judul + keterangan), dipakai di halaman
