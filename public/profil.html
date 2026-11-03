@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profil Sekolah</title>
+<link rel="icon" type="image/png" href="favicon-terang.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3" media="(prefers-color-scheme: light)">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(960px,calc(100% - 24px));margin:0 auto;padding:24px 0 40px}
+.hero{text-align:center;padding:clamp(8px,3vw,24px) 0}
+.hero img{width:104px;height:104px;object-fit:contain;background:none;filter:drop-shadow(0 4px 10px #0768001f)}
+h1{margin:16px 0 8px;color:var(--navy);font-size:clamp(26px,5.5vw,40px);letter-spacing:-.04em;line-height:1.1}
+.tag{margin:0;color:var(--blue);font-weight:700;font-size:clamp(15px,2.4vw,19px)}
+h2{margin:0 0 12px;color:var(--navy);font-size:clamp(19px,3vw,23px);letter-spacing:-.02em}
+h3{margin:0 0 4px;color:var(--navy);font-size:16px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:20px;padding:clamp(16px,3.5vw,26px);box-shadow:0 12px 30px #102a4310;margin-top:16px}
+.card p{line-height:1.7;margin:0 0 10px;overflow-wrap:anywhere}.card p:last-child{margin-bottom:0}
+/* ===== VISI & MISI (warna mengikuti Beranda: navy #102a43, biru #1677c8, emas #f5b335) ===== */
+.vm{margin-top:clamp(20px,4vw,40px)}
+.vm .jd{text-align:center}
+.vm .jd h2{margin:0;color:var(--navy);font-size:clamp(27px,4vw,42px);font-weight:800;letter-spacing:-.035em;line-height:1.12}
+.vm .jd h2 .amp{position:relative;display:inline-block;font-weight:500;margin:0 .12em}
+.vm .jd h2 .amp::after{content:"";position:absolute;left:12%;right:12%;bottom:-.14em;height:.09em;border-radius:99px;background:#f5b335}
+.vm .jd p{margin:clamp(10px,1.6vw,14px) 0 0;color:var(--blue);font-weight:800;font-size:clamp(14px,2vw,18px);letter-spacing:.02em;text-transform:uppercase}
+.vmc{--tl:#102a43;--tr:#1f5a8c;position:relative;display:grid;grid-template-columns:clamp(110px,16vw,190px) 1fr;column-gap:clamp(12px,3vw,40px);align-items:center;margin-top:clamp(18px,3.5vw,30px);padding:clamp(22px,4.5vw,48px) clamp(18px,4vw,52px);color:#fff;border-radius:clamp(20px,2.8vw,28px);overflow:hidden;background:radial-gradient(circle at 18% 6%,#ffffff1a 0 7%,#0000 7.4%),radial-gradient(circle at 62% 10%,#ffffff12 0 9%,#0000 9.4%),radial-gradient(120% 140% at 100% 100%,var(--tr),#0000 62%),var(--tl);box-shadow:0 14px 26px #102a4338}
+.vmc.visi-c{align-items:center}
+.vmc.misi-c{align-items:start}
+.vmc .lb{align-self:start;padding-top:2px}
+.vmc .lb b{display:block;color:#f5b335;font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.02em;line-height:1;text-align:center}
+.vmc .lb i{display:flex;align-items:center;gap:6px;margin-top:clamp(12px,2vw,20px)}
+.vmc .lb i::before{content:"";flex:none;width:18px;height:4px;background:radial-gradient(circle,#fff 0 2px,#0000 2.5px) 0 50%/6px 4px repeat-x}
+.vmc .lb i::after{content:"";flex:1;height:5px;border-radius:99px;background:#fff}
+.vmc .vs{margin:0;text-align:center;font-style:italic;font-weight:500;font-size:clamp(16px,2.2vw,23px);line-height:1.55;letter-spacing:.01em}
+.vmc ol{list-style:none;margin:0;padding:0;counter-reset:m}
+.vmc ol li{counter-increment:m;position:relative;padding:clamp(9px,1.6vw,14px) 0 clamp(9px,1.6vw,14px) 2.1em;border-bottom:1.5px solid #ffffff26;font-size:clamp(15px,1.9vw,19px);line-height:1.55;overflow-wrap:anywhere}
+.vmc ol li:last-child{border-bottom:0}
+.vmc ol li::before{content:counter(m) ".";position:absolute;left:0;top:clamp(9px,1.6vw,14px);width:1.8em}
+@media(max-width:560px){.vmc{grid-template-columns:1fr;row-gap:16px}.vmc .lb b{text-align:left}.vmc .lb i{max-width:150px}.vmc .vs{text-align:left}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.grid>div{border:1px solid #dbe8f2;border-radius:14px;padding:14px 16px;background:#fff}
+.grid p{font-size:14px;color:var(--mute);margin:0;line-height:1.6}
+.tags{display:flex;gap:8px;flex-wrap:wrap}.tags span{padding:7px 14px;border-radius:99px;background:var(--soft);color:var(--navy);font-weight:700;font-size:14px}
+/* ===== Bagian penunjang profil (Sejarah, Program, Fasilitas, Ekskul, Club): kerangka sama dengan Visi & Misi, tampilan terang ===== */
+.card.sp{display:grid;grid-template-columns:clamp(110px,16vw,190px) 1fr;column-gap:clamp(12px,3vw,40px);align-items:start;margin-top:clamp(18px,3.5vw,30px);padding:clamp(22px,4.5vw,48px) clamp(18px,4vw,52px);border-radius:clamp(20px,2.8vw,28px);box-shadow:0 14px 26px #102a4318}
+.sp .lb h2{margin:0;color:var(--navy);font-size:clamp(17px,2.1vw,22px);font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.sp .lb i{display:flex;align-items:center;gap:6px;margin-top:clamp(10px,1.6vw,16px)}
+.sp .lb i::before{content:"";flex:none;width:18px;height:4px;background:radial-gradient(circle,var(--navy) 0 2px,#0000 2.5px) 0 50%/6px 4px repeat-x}
+.sp .lb i::after{content:"";flex:1;height:5px;border-radius:99px;background:#f5b335}
+.sp .bd{min-width:0;font-size:clamp(15px,1.9vw,19px);color:var(--ink)}
+.sp .bd p{line-height:1.7;margin:0 0 12px}.sp .bd p:last-child{margin-bottom:0}
+.sp .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.sp .grid>div{background:var(--soft);border:0;border-radius:16px;padding:14px 16px}
+.sp .grid h3{font-size:16px}.sp .grid p{font-size:14.5px}
+.sp .tags span{background:var(--soft);border:1px solid #dbe8f2;font-size:15px;padding:8px 16px}
+@media(max-width:560px){.card.sp{grid-template-columns:1fr;row-gap:14px}.sp .lb i{max-width:150px}}
+.idf{flex:none;background:var(--navy);color:#d9e6f2;border-radius:26px 26px 0 0;padding:clamp(26px,4vw,44px) clamp(18px,5vw,64px);box-shadow:0 -10px 40px #102a4318}
+.idf .in{max-width:1100px;margin:0 auto}
+.idf .copy{margin-top:28px;padding-top:18px;border-top:1px solid #ffffff22;font-size:13px;color:#9db4c9}
+.idf .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(22px,3vw,32px)}
+.idf h3{margin:0 0 14px;color:#8fcbff;font-size:18px;letter-spacing:-.01em}
+.idf .logo{display:flex;align-items:center;gap:12px}
+.idf .logo img{width:56px;height:56px;background:#fff;border-radius:14px;padding:5px;object-fit:contain}
+.idf .logo b{display:block;color:#fff;font-size:18px;letter-spacing:-.02em}
+.idf .logo span{font-size:13px;color:#9db4c9}
+.idf p{margin:0;line-height:1.7;font-size:15px}
+.idf .desc{margin-top:16px;color:#c3d4e4}
+.idf .lbl{display:block;margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.08em;color:#8fcbff;text-transform:uppercase}
+.idf .blk{margin-bottom:16px}.idf .blk b{display:block;color:#fff;margin-bottom:3px}
+.idf a{color:#fff}
+.idf .badge{display:block;margin-top:18px;padding:12px 14px;border:1px solid #ffffff30;border-radius:14px;background:#ffffff0d;font-size:14px}
+.idf .badge b{display:block;color:#8fcbff}.idf .badge a{font-size:13px;color:#c3d4e4}
+.idf .soc{display:flex;gap:10px;margin-top:18px}
+.idf .soc a{width:42px;height:42px;display:grid;place-items:center;border:1px solid #ffffff30;border-radius:50%;background:#ffffff0d;transition:.18s}
+.idf .soc a:hover{background:#ffffff26;transform:translateY(-2px)}
+.idf .soc svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.idf iframe.map{width:100%;height:190px;border:0;border-radius:16px;background:#1d3d5a;display:block}
+.idf .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.idf .pills a{text-decoration:none;font-weight:700;font-size:14px;padding:8px 14px;border:1px solid #ffffff30;border-radius:99px;background:#ffffff0d}
+.idf .pills a:hover{background:#ffffff26}
+.idf a:focus-visible{outline:3px solid #8fcbff80;outline-offset:2px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btns a{text-decoration:none;font-weight:700;font-size:14px;padding:10px 16px;border-radius:10px;background:var(--navy);color:#fff}
+.btns a.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}
+.vids{display:grid;gap:14px}.vids.dua{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.vid .t{font-weight:700;color:var(--navy);margin-bottom:8px}
+.vid .fr{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000}
+.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.emb .wrap{padding-top:12px}
+</style>
+<script src="data-sekolah.js"></script>
+<link rel="stylesheet" href="si-tema.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa">
+    <h1>SDS Islam At-Taqwa Rawamangun</h1>
+    <p class="tag" id="tagline"></p>
+  </div>
+  <div id="isi"></div>
+</div>
+<footer class="idf" id="foot" aria-label="Identitas Sekolah"></footer>
+
+<script src="js/umum.js"></script>
+<script>
+/* ============================================================
+   ISI PROFIL SEKOLAH — edit data di bawah ini saja.
+   Bagian yang dibiarkan kosong ("" atau []) otomatis tidak ditampilkan.
+   Teks biasa saja (tanpa HTML). Untuk paragraf baru, pisahkan dengan baris kosong
+   pada 'sejarah' (gunakan \n\n).
+   ============================================================ */
+const D = window.DATA_SEKOLAH;
+const PROFIL = {
+  tagline: 'Belajar Nyaman, Perilaku Islami, Insan Bertaqwa',
+
+  identitas: {
+    'Nama Sekolah': 'SDS Islam At-Taqwa Rawamangun',
+    'NPSN': '20109114',
+    'Jenjang / Status': 'Sekolah Dasar (Swasta)',
+    'Akreditasi': `${D.akreditasiPredikat} (skor ${D.akreditasiNilai}, BAN)`,
+    'Tahun Berdiri': String(D.tahunBerdiri),
+    'Kepala Sekolah': 'Ibu Nurbaiti, S.Pd.',
+    'Jam Layanan': 'Senin – Jumat, 07:00 – 16:00'
+  },
+
+  // Video YouTube: tempel tautan biasa (watch, youtu.be, atau shorts). Boleh lebih dari satu.
+  video: [
+    { judul: 'Profil SDS Islam At-Taqwa', url: 'https://www.youtube.com/watch?v=t3m4Y3jgqwE&t=14s' }
+  ],
+
+  visi: 'Terwujudnya pendidikan Islam At-Taqwa yang berkualitas dalam membentuk sumber daya insani yang beriman, bertaqwa dan berakhlak mulia, cerdas, sehat rohani dan jasmani serta berperilaku Islami menuju ridha Allah SWT',
+
+  misi: [
+    'Melaksanakan pendidikan yang seimbang antara perkembangan daya pikir, daya qalbu (moral Islami) daya estetika dan kinestetika (keseimbangan pengembangan otak kiri dan otak kanan)',
+    'Menjadikan insan yang mempunyai kepribadian Islami yang cerdas sehat, terampil, kreatif, mandiri serta memiliki kepekaan sosial yang tinggi',
+    'Menjadikan suatu lembaga pendidikan Islami dengan prinsip belajar sepanjang hayat mengacu kepada 4 pilar pendidikan universal yaitu learning to know, learning to do, learning to be, learning to live together dan mempunyai life skill',
+    'Menyediakan lingkungan bermain yang sehat, udara yang bersih, hijau dan indah'
+  ],
+
+  // Teks panjang memakai tanda ` (backtick) di awal dan akhir agar boleh beberapa baris.
+  // Paragraf baru = satu baris kosong.
+  sejarah: `SDS ISLAM AT-TAQWA atau nama lengkapnya Sekolah Dasar Islam At-Taqwa Kampus Rawamangun merupakan salah satu Sekolah Dasar Islam Swasta Unggulan di DKI Jakarta (dengan akreditasi ${D.akreditasiPredikat} Unggul nilainya ${D.akreditasiNilai}). Sekolah ini terletak di Jl. Daksinapati Raya No.2 Komp. UI/UNJ Rawamangun Jakarta, Jakarta Timur, Indonesia.
+
+Didirikan pada tahun ${D.tahunBerdiri}, berawal dari 10 murid lulusan TK yang tak mau pindah dari At-Taqwa. Hingga tahun ajaran ${D.tahunAjaran}, sekolah ini telah meluluskan sebanyak ${D.angkatan} angkatan dengan total kelulusan mencapai ${D.totalLulusan} murid. Alumni SDS Islam At-Taqwa tersebar di berbagai SMPN dan SMP swasta favorit, di antaranya SMPN 115, 216, 255, 99, dan 92. Selain SMPN, alumni juga tersebar di SMP Labschool, Al-Azhar, berbagai Pondok Pesantren, bahkan hingga ke luar negeri.
+
+Akreditasi pertama memperoleh predikat ${D.akreditasiPredikat} dengan nilai ${D.akreditasiNilaiPertama}, dan akreditasi kedua (perpanjangan 2010) memperoleh ${D.akreditasiPredikat} dengan nilai ${D.akreditasiNilaiKedua} dari skala 100. Pada tahun ${D.akreditasiTahunTerbaru}, Badan Akreditasi Nasional kembali memberikan akreditasi ${D.akreditasiPredikat} dengan nilai ${D.akreditasiNilai}, alhamdulillah. Kontribusi ini adalah untuk pembangunan anak bangsa dengan biaya terjangkau dan kendali mutu dari waktu ke waktu. SD Islam At-Taqwa Kampus Rawamangun terus konsisten menjaga mutu pendidikan dengan mempertahankan ${D.rombelPerTingkat} rombel paralel per tingkatnya.
+
+JW/Komite Sekolah selalu berupaya mendukung setiap perkembangan dan rencana yang membawa kebaikan bersama. Saat ini SDM guru dan pegawai lebih dari ${D.guruPegawaiMin} orang. Rata-rata jumlah peserta didik per kelas adalah ${D.muridPerKelas} orang, dan rata-rata Pendidik serta Tenaga Kependidikan merupakan Sarjana dari Univ. Negeri Jakarta/IKIP, UPI Bandung, IPB, Uhamka, UIN/IAIN, serta PTN/PTS terakreditasi lainnya. Sebagian guru sedang menempuh studi S2 dan beberapa di antaranya sudah bergelar Magister. Mohon doa dan memohon dukungannya.`,
+
+  program: [                                   // contoh: { judul: 'Tahfidz Qur\'an', isi: 'Pembiasaan menghafal ...' },
+  ],
+
+  fasilitas: [                                 // contoh: { judul: 'Masjid', isi: 'Untuk salat berjamaah ...' },
+  ],
+
+  ekskul: D.ekskul,
+
+  club: D.club
+};
+
+/* ---------------- Kode tampilan (tidak perlu diubah) ---------------- */
+const paras = t => esc(t).split(/\n\s*\n/).map(p => `<p>${p.trim()}</p>`).join('');
+if (self !== top) document.body.classList.add('emb');
+document.getElementById('tagline').textContent = PROFIL.tagline;
+
+const P = PROFIL, out = [];
+const I = P.identitas;
+const extra = ['Jenjang / Status', 'Tahun Berdiri', 'Kepala Sekolah'].filter(k => I[k]);
+document.getElementById('foot').innerHTML = (`<div class="in"><div class="cols">
+  <div>
+    <div class="logo"><img src="logo-at-taqwa.png" alt=""><div><b>SDS Islam At-Taqwa</b><span>Rawamangun, Jakarta Timur</span></div></div>
+    <p class="desc">${esc(P.tagline)}</p>
+    <div class="badge"><b>Izin &amp; Akreditasi</b>NPSN: ${esc(I['NPSN'])} · Akreditasi: ${esc(I['Akreditasi'])}<br><a href="https://ban-pdm.id/satuanpendidikan/20109114" target="_blank" rel="noopener">Cek Akreditasi →</a></div>
+    <div class="soc">
+      <a href="https://www.instagram.com/sdi_attaqwa/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/></svg></a>
+      <a href="https://bit.ly/facebook-attaqwa" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M14.5 21v-8h2.7l.5-3.2h-3.2V7.9c0-.9.4-1.6 1.7-1.6h1.6V3.5c-.3 0-1.3-.2-2.4-.2-2.4 0-4 1.4-4 4.1v2.4H8.3V13H11v8z"/></svg></a>
+      <a href="https://www.youtube.com/@sdiattaqwa2688" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24"><rect x="2.8" y="5.8" width="18.4" height="12.4" rx="3.6"/><path d="M10 9.4v5.2l4.6-2.6z"/></svg></a>
+    </div>
+  </div>
+  <div>
+    <h3>Hubungi Kami</h3>
+    <div class="blk"><span class="lbl">WhatsApp</span><a href="https://wa.me/6281220706200" target="_blank" rel="noopener">+62-812-2070-6200</a></div>
+    <div class="blk"><span class="lbl">Email</span><a href="mailto:info@attaqwa.sch.id">info@attaqwa.sch.id</a></div>
+    ${I['Jam Layanan'] ? `<div class="blk"><span class="lbl">Jam layanan</span><p>${esc(I['Jam Layanan'])}</p></div>` : ''}
+  </div>
+  <div>
+    <h3>Alamat Sekolah</h3>
+    <div class="blk"><b>SDS Islam At-Taqwa Rawamangun</b><p>Jl. Daksinapati Raya No. 2, Komp. UI/UNJ, RT.11/RW.14, Rawamangun, Kec. Pulogadung, Jakarta Timur, 13220</p></div>
+    ${extra.map(k => `<div class="blk"><span class="lbl">${esc(k)}</span><p>${esc(I[k])}</p></div>`).join('')}
+  </div>
+  <div>
+    <h3>Lokasi Sekolah</h3>
+    <iframe class="map" title="Peta lokasi sekolah" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=SDS+Islam+At-Taqwa+Rawamangun,+Jl.+Daksinapati+Raya+No.+2,+Jakarta+Timur&hl=id&z=16&output=embed" allowfullscreen></iframe>
+    <div class="pills"><a href="https://www.google.com/maps/search/?api=1&query=SDS+Islam+At-Taqwa+Rawamangun" target="_blank" rel="noopener">Buka di Google Maps</a></div>
+  </div>
+</div>
+<div class="copy">© ${new Date().getFullYear()} SDS Islam At-Taqwa Rawamangun. Seluruh layanan digital ini disiapkan untuk mendukung orang tua, guru, dan tamu sekolah.</div></div>`);
+
+const ytId = u => {
+  try {
+    const x = new URL(u), p = x.pathname.split('/');
+    const id = x.hostname.includes('youtu.be') ? p[1] : ['embed', 'shorts', 'live', 'v'].includes(p[1]) ? p[2] : x.searchParams.get('v');
+    return /^[\w-]{11}$/.test(id || '') ? id : null;
+  } catch (e) { return null; }
+};
+const vids = P.video.map(v => ({ judul: v.judul, id: ytId(v.url) })).filter(v => v.id);
+if (vids.length) out.push(`<section class="card"><h2>Video Profil Sekolah</h2><div class="vids ${vids.length > 1 ? 'dua' : ''}">${vids.map(v => `<div class="vid">${v.judul ? `<div class="t">${esc(v.judul)}</div>` : ''}<div class="fr"><iframe src="https://www.youtube-nocookie.com/embed/${v.id}" title="${esc(v.judul || 'Video sekolah')}" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></div>`).join('')}</div></section>`);
+if (P.visi || P.misi.length) out.push(`<section class="vm" aria-labelledby="vmJudul"><div class="jd"><h2 id="vmJudul">VISI <span class="amp">&amp;</span> MISI</h2><p>${esc(I['Nama Sekolah'] || 'Sekolah')}</p></div>${P.visi ? `<div class="vmc visi-c"><div class="lb"><b>VISI</b><i aria-hidden="true"></i></div><p class="vs">&ldquo;${esc(P.visi)}&rdquo;</p></div>` : ''}${P.misi.length ? `<div class="vmc misi-c"><div class="lb"><b>MISI</b><i aria-hidden="true"></i></div><ol>${P.misi.map(m => `<li>${esc(m)}</li>`).join('')}</ol></div>` : ''}</section>`);
+if (P.sejarah) out.push(`<section class="card sp"><div class="lb"><h2>Sejarah Singkat</h2><i aria-hidden="true"></i></div><div class="bd">${paras(P.sejarah)}</div></section>`);
+if (P.program.length) out.push(`<section class="card sp"><div class="lb"><h2>Program Unggulan</h2><i aria-hidden="true"></i></div><div class="bd"><div class="grid">${P.program.map(x => `<div><h3>${esc(x.judul)}</h3><p>${esc(x.isi)}</p></div>`).join('')}</div></div></section>`);
+if (P.fasilitas.length) out.push(`<section class="card sp"><div class="lb"><h2>Fasilitas</h2><i aria-hidden="true"></i></div><div class="bd"><div class="grid">${P.fasilitas.map(x => `<div><h3>${esc(x.judul)}</h3><p>${esc(x.isi)}</p></div>`).join('')}</div></div></section>`);
+if (P.ekskul.length) out.push(`<section class="card sp"><div class="lb"><h2>Ekstrakurikuler</h2><i aria-hidden="true"></i></div><div class="bd"><div class="tags">${P.ekskul.map(x => `<span>${esc(x)}</span>`).join('')}</div></div></section>`);
+if ((P.club || []).length) out.push(`<section class="card sp"><div class="lb"><h2>Club</h2><i aria-hidden="true"></i></div><div class="bd"><div class="tags">${P.club.map(x => `<span>${esc(x)}</span>`).join('')}</div></div></section>`);
+document.getElementById('isi').innerHTML = out.join('');
+</script>
+</body>
+</html>

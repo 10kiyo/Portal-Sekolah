@@ -1,0 +1,18 @@
+{
+  "name": "portal-sekolah",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Portal SDI At-Taqwa: situs sekolah, buku tamu, administrasi kelas, dan layanan orang tua (Cloudflare Workers + Supabase).",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test",
+    "cek": "node scripts/cek-frontend.mjs",
+    "verifikasi": "npm run cek && npm test"
+  },
+  "devDependencies": {
+    "wrangler": "^4.45.0"
+  },
+  "engines": { "node": ">=20" }
+}

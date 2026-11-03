@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Buku Tamu Sekolah</title>
+
+  <link rel="icon" type="image/png" href="favicon-terang.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3" media="(prefers-color-scheme: light)">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/konfigurasi.js"></script>
+
+  <link rel="stylesheet" href="css/buku-tamu.css">
+<link rel="stylesheet" href="si-tema.css">
+<link rel="stylesheet" href="si-latar.css">
+</head>
+
+<body>
+  <main class="wrap" id="guestView">
+    <header class="si-head">
+      <div class="logo"><img src="logo-at-taqwa.png" alt="Logo Sekolah Islam At-Taqwa" /></div>
+      <h1>Buku Tamu Sekolah</h1>
+      <p id="guestHelp">Silakan cari nama Anda untuk konfirmasi kehadiran.</p>
+      <div class="print-title">Rekap Kehadiran Buku Tamu Sekolah</div>
+      <div class="event-info">
+        <span><b>Acara:</b> <span id="eventName"></span></span>
+        <span><b>Tempat:</b> <span id="eventPlace"></span></span>
+        <span><b>Tanggal:</b> <span id="eventDate"></span></span>
+      </div>
+      <hr class="print-divider" />
+    </header>
+    
+    <section class="card">
+      <div id="tutupBox" class="closed hidden" role="status">
+        <h2>Buku tamu sedang ditutup</h2>
+        <p id="tutupPesan"></p>
+      </div>
+      <div id="searchArea">
+        <label for="search">Nama tamu</label>
+        <div class="search-box"><input id="search" autocomplete="off" placeholder="Ketik minimal 2 huruf nama..." autofocus /></div>
+        <p class="hint">Pilih nama Anda dari hasil pencarian yang muncul.</p>
+        <div id="matches" class="matches" aria-live="polite"></div>
+      </div>
+      
+      <div id="guest" class="guest hidden">
+        <div class="guest-head"><div><h2 id="guestName"></h2><p id="guestIntro" class="hint"></p></div><span id="status" class="tag">Belum dikonfirmasi</span></div>
+        <dl><dt>Undangan</dt><dd id="guestInvitation"></dd><dt>Instansi / Kelas</dt><dd id="guestOrigin"></dd><dt>Nomor WhatsApp</dt><dd id="guestPhone"></dd></dl>
+        <form id="attendanceForm" class="attend">
+          <h3>Konfirmasi Kehadiran</h3>
+          <div class="choices"><label class="choice"><input type="radio" name="attendance" value="Hadir" checked /> Hadir</label><label class="choice"><input type="radio" name="attendance" value="Tidak hadir" /> Tidak hadir</label></div>
+          <div id="signatureSection"><label>Tanda tangan</label><div id="signatureBox"><canvas id="signature"></canvas></div><p class="signature-help">Tanda tangani di area ini menggunakan jari atau mouse.</p></div>
+          <div class="actions"><button type="button" id="clearSignature" class="secondary">Hapus tanda tangan</button><button class="primary" type="submit">Simpan konfirmasi</button></div>
+        </form>
+        <div id="notice" class="notice hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <main id="adminRoot" class="hidden"><div class="awrap">
+
+<section id="login" class="card login">
+  <div class="si-head">
+    <img src="logo-at-taqwa.png" alt="">
+    <h1>Panel Admin</h1>
+    <p>Buku Tamu Sekolah</p>
+  </div>
+  <form id="loginForm">
+    <div><label for="pin">PIN admin</label><input id="pin" type="password" autocomplete="current-password" required /></div>
+    <p id="loginErr" class="err"></p>
+    <button class="primary" type="submit">Masuk</button>
+    <button class="secondary" id="backGuest" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Kembali ke buku tamu</button>
+  </form>
+</section>
+
+<div id="app" class="hidden">
+  <div class="top noprint">
+    <img src="logo-at-taqwa.png" alt="Logo" />
+    <div><h1>Panel Admin</h1><p class="sub" id="evLine"></p></div>
+    <div class="bar">
+      <button class="secondary" id="toPanitia" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Panel Panitia</button>
+      <button class="secondary" id="reload" type="button">Muat ulang</button>
+      <button class="secondary" id="csv" type="button">Ekspor CSV</button>
+      <button class="primary" id="print" type="button">Cetak rekap</button>
+      <button class="secondary" id="logout" type="button">Keluar</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sTotal">0</b><span>Total undangan</span></div>
+    <div class="stat ok"><b id="sHadir">0</b><span>Hadir</span></div>
+    <div class="stat no"><b id="sTidak">0</b><span>Tidak hadir</span></div>
+    <div class="stat"><b id="sBelum">0</b><span>Belum konfirmasi</span></div>
+  </div>
+
+  <section class="card">
+    <div class="tabs noprint">
+      <button type="button" class="on" data-mode="rekap">Rekap</button>
+      <button type="button" data-mode="bagi">Pembagian</button>
+      <button type="button" data-mode="doorprize">Doorprize</button>
+    </div>
+    <div class="filters noprint">
+      <div><label for="fType">Jenis undangan</label><select id="fType"><option value="">Semua</option></select></div>
+      <div><label for="fStatus">Status</label><select id="fStatus"><option value="">Semua</option><option>Hadir</option><option>Tidak hadir</option><option>Belum konfirmasi</option></select></div>
+      <div><label for="fOrg">Kelas / Instansi</label><select id="fOrg"><option value="">Semua</option></select></div>
+      <div><label for="fSearch">Cari nama</label><input id="fSearch" placeholder="Ketik nama tamu…" /></div>
+    </div>
+
+    <div class="ph"><div class="kop"><img src="logo-at-taqwa.png" alt=""><div><div class="k1">SDS Islam At-Taqwa Rawamangun</div><b id="phTitle">Rekap Kehadiran Buku Tamu Sekolah</b></div></div><div id="phInfo"></div><div id="phFilter"></div><div id="phSum"></div></div>
+    <div id="door" class="door hidden noprint"><p class="state" id="doorInfo"></p><div class="drawbox" id="drawBox">—</div><div class="bar2"><button class="primary" id="drawBtn" type="button">Undi pemenang</button><button class="secondary hidden" id="saveWin" type="button">Simpan pemenang</button></div></div>
+    <details id="itemBox" class="box noprint hidden">
+      <summary>
+        <span class="st"><b>Kelola item pembagian</b><small>Tambah, ganti nama, atau hapus item yang dibagikan</small></span>
+        <span class="cnt" id="itemCount">0 item</span>
+        <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1677c8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+      </summary>
+      <div class="bd">
+        <div id="itemList"></div>
+        <form id="itemAdd" class="iadd"><input id="itemNew" placeholder="Item baru, mis. Sertifikat" maxlength="40"><button class="primary" type="submit">Tambah</button></form>
+      </div>
+    </details>
+    <p class="state" id="prog"></p>
+    <p class="state" id="state" style="margin-top:14px"></p>
+    <div id="list"></div>
+    <div class="ttd"><div><p>Mengetahui,<br>Kepala Sekolah</p>( ................................ )</div><div><p>Jakarta, ................................<br>Ketua Panitia</p>( ................................ )</div></div>
+  </section>
+</div>
+</div></main>
+
+  <script src="js/buku-tamu.js"></script>
+
+  <script src="js/buku-tamu-admin.js"></script>
+</body>
+</html>

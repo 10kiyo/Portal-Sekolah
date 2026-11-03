@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pantau Belajar Anak</title>
+<link rel="icon" type="image/png" href="favicon-terang.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3" media="(prefers-color-scheme: light)">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--danger:#bc3d33;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(720px,calc(100% - 24px));margin:0 auto;padding:28px 0 48px}
+header{margin-bottom:14px}
+.emb .wrap{padding-top:16px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:12px;overflow:auto}
+label{display:block;font-weight:700;color:var(--navy);margin:0 0 6px}
+input{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+input::placeholder{letter-spacing:0;text-transform:none;font-size:15px}
+input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+button{border:0;cursor:pointer;font:inherit;font-weight:750;padding:12px 18px;border-radius:10px;background:var(--blue);color:#fff}
+button.ghost{background:#fff;color:var(--navy);border:1px solid var(--line);padding:8px 12px;font-size:14px}
+button:disabled{opacity:.6;cursor:wait}
+.err{margin-top:10px;color:var(--danger);font-weight:650}
+.hidden{display:none!important}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h2{margin:0;color:var(--navy);font-size:20px}
+h3{margin:0 0 8px;color:var(--navy);font-size:16px}
+.mut{color:var(--mute);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+.stats button{background:var(--soft);color:var(--ink);font-weight:400;padding:8px;border-radius:12px;text-align:center}
+.stats button:not(:disabled):hover{box-shadow:0 0 0 2px #1677c860}
+.stats button.on{box-shadow:0 0 0 2px var(--blue)}
+.stats button:disabled{cursor:default;opacity:.75}
+.stats div{background:var(--soft);border-radius:12px;padding:8px;text-align:center}
+.stats b{display:block;font-size:20px;color:var(--navy)}
+.stats span{font-size:12px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:1px solid #e6eef5;text-align:left;vertical-align:top}
+th{color:var(--mute);font-size:12px}
+summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:14px;margin-top:8px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
+.pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.bad{background:#fbeceb;color:var(--danger)}
+.kg h3{margin:0}.kg .row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.kg .box{background:var(--soft);border-radius:12px;padding:10px 12px;margin:10px 0;white-space:pre-wrap;font-size:14px}
+.kg .rp{font-size:20px;font-weight:800;color:var(--navy)}
+.kg form{margin-top:12px;display:grid;gap:10px}
+.kg form input,.kg form textarea{font-size:16px;letter-spacing:0;text-transform:none;padding:11px;width:100%;border-radius:12px;border:1px solid var(--line);font-family:inherit;color:var(--ink)}
+.kg form label{margin:0 0 4px;font-size:14px}.kg form .chk{display:flex;gap:8px;align-items:flex-start;font-weight:400}.kg form .chk input{width:auto;margin-top:3px}
+.kg .ok{color:var(--ok);font-weight:700}
+/* formulir pendaftaran: semua kotak seragam (48px), checkbox 22px, tombol besar */
+.kg form input:not([type=checkbox]),.kg form select{height:48px;min-height:48px;padding:0 12px;font-size:16px;font-family:inherit;line-height:1.2}
+.kg form select{width:100%;border-radius:12px;border:1px solid var(--line);color:var(--ink);box-sizing:border-box;-webkit-appearance:none;appearance:none;padding-right:34px;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.kg form textarea{padding:11px 12px;font-size:16px;min-height:96px}
+.kg form input:focus,.kg form select:focus,.kg form textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.kg form label{font-size:15px}.kg form label .mut{font-size:13px;font-weight:400}
+.kg form .chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:15px;line-height:1.4;margin:2px 0}
+.kg form .chk input{width:22px;height:22px;min-height:22px;padding:0;margin:0;flex:none;accent-color:var(--blue)}
+.kg button{min-height:48px;padding:12px 24px;font-size:16px;border-radius:12px}
+.kg form button[type=submit]{width:100%}
+.kg .rp{margin:6px 0 12px}
+.kg .mut,.kg .box{font-size:14px}
+@media(min-width:561px){.kg form button[type=submit]{width:auto;min-width:220px}}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.gal a{text-decoration:none;color:var(--mute);font-size:12px}
+.gal img{display:block;width:100%;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+</style>
+<link rel="stylesheet" href="si-tema.css">
+<link rel="stylesheet" href="si-latar.css">
+</head>
+<body>
+<div class="wrap">
+<header class="si-head">
+  <img src="logo-at-taqwa.png" alt="">
+  <h1>Pantau Belajar Anak</h1>
+  <p>Kehadiran, tugas, dan nilai</p>
+</header>
+
+<div class="card" id="form">
+  <label for="kode">Kode akses anak</label>
+  <input id="kode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Masukkan kode dari guru">
+  <p style="margin:12px 0 0"><button id="cari">Lihat data</button></p>
+  <div id="err" class="err"></div>
+</div>
+
+<div id="hasil" class="hidden"></div>
+</div>
+<script src="js/umum.js"></script>
+<script>
+const tgl = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+const NS = { H: 'Hadir', I: 'Izin', S: 'Sakit', A: 'Alpa' };
+if (self !== top) document.body.classList.add('emb');
+let kodeAktif = '';
+const FOKUS = new URLSearchParams(location.search).get('k') || '';   // tautan khusus satu kegiatan: ortu.html?k=<id>
+const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+const FASE = { dibuka: '', penuh: 'Kuota sudah penuh.', ditutup: 'Pendaftaran sudah ditutup.' };
+const SPILL = { menunggu: ['warn', 'Menunggu verifikasi'], lunas: ['ok', 'Lunas'], diterima: ['ok', 'Diterima'], ditolak: ['bad', 'Perlu diperbaiki'] };
+const SPILL_CLUB = { menunggu: ['warn', 'Menunggu seleksi'], diterima: ['ok', 'Diterima'], ditolak: ['bad', 'Belum diterima'] };
+
+async function post(body) {
+  const r = await fetch('/api/ortu-kegiatan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kode: kodeAktif, ...body }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Terjadi kesalahan.');
+  return d;
+}
+// Foto dikecilkan di browser agar unggahan dari HP cepat dan hemat kuota.
+async function kecilkan(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+    const sk = Math.min(1, 1600 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+    cv.width = Math.round(img.width * sk); cv.height = Math.round(img.height * sk);
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    let q = .8, out = cv.toDataURL('image/jpeg', q);
+    while (out.length > 2500000 && q > .35) { q -= .15; out = cv.toDataURL('image/jpeg', q); }
+    return out;
+  } finally { URL.revokeObjectURL(url); }
+}
+async function muatKegiatan() {
+  const box = $('#kg'); if (!box) return;
+  try {
+    const { kegiatan: semua, terkunci } = await post({ action: 'list', id: FOKUS });
+    const kegiatan = FOKUS ? [...semua.filter(k => k.id === FOKUS), ...semua.filter(k => k.id !== FOKUS)] : semua;
+    const kunci = terkunci ? `<div class="card kg"><div class="row"><h3>${esc(terkunci.nama)}</h3><span class="pill bad">Bukan untuk kelas ini</span></div>
+      <div class="box">Pendaftaran kegiatan ini khusus untuk <b>${esc(terkunci.untuk)}</b>. Anak ini terdaftar di kelas yang berbeda, sehingga pendaftaran tidak bisa dilakukan dari kode akses ini.</div></div>` : '';
+    box.innerHTML = kunci + kegiatan.map(k => kartuKegiatan(k)).join('');
+    box.querySelectorAll('[data-buka]').forEach(b => b.onclick = () => { const f = box.querySelector('form[data-k="' + b.dataset.buka + '"]'); f.classList.toggle('hidden'); b.textContent = f.classList.contains('hidden') ? b.dataset.label : 'Tutup formulir'; });
+    box.querySelectorAll('form').forEach(f => f.onsubmit = e => { e.preventDefault(); kirim(f); });
+    box.querySelectorAll('select[name=bidang_pilih]').forEach(sl => sl.onchange = () => { const i = sl.form.bidang_lain, lain = sl.value === '__lain'; i.classList.toggle('hidden', !lain); i.required = lain; if (lain) i.focus(); });
+  } catch (e) { box.innerHTML = ''; }
+}
+function bidangHtml(k) {
+  const o = k.opsi_bidang || [];
+  return o.length
+    ? `<div><label>Bidang lomba</label><select name="bidang_pilih" required><option value="">Pilih bidang…</option>${o.map(x => `<option>${esc(x)}</option>`).join('')}<option value="__lain">Lainnya (ketik sendiri)</option></select><input name="bidang_lain" class="hidden" maxlength="60" placeholder="Tulis bidang lomba" style="margin-top:8px"></div>`
+    : `<div><label>Bidang lomba</label><input name="bidang" maxlength="60" required placeholder="mis. Matematika"></div>`;
+}
+function kartuKegiatan(k) {
+  const club = k.jenis === 'club', pj = k.jenis === 'umum' ? 'panitia' : 'pustakawan';
+  const d = k.daftar, st = d && (club ? SPILL_CLUB : SPILL)[d.status];
+  const bisa = k.fase === 'dibuka' || (d && !club && d.status === 'ditolak' && k.fase === 'ditutup');
+  const gratis = !k.biaya, opt = gratis ? ' <span class="mut">(opsional)</span>' : '', req = gratis ? '' : ' required';
+  let aksi = '';
+  if (club && d) aksi = `<div class="box ${d.status === 'diterima' ? 'ok' : ''}">${d.status === 'diterima' ? 'Selamat, anak diterima di club ini.' : d.status === 'ditolak' ? 'Mohon maaf, anak belum dapat diterima pada seleksi kali ini.' : 'Pendaftaran sudah kami terima dan sedang diseleksi pustakawan.'}${d.catatan_panitia ? '\n' + esc(d.catatan_panitia) : ''}</div>`;
+  else if (d && d.status !== 'ditolak') aksi = `<div class="box ${d.status === 'lunas' ? 'ok' : ''}">${d.status === 'lunas' ? `Pembayaran sudah dikonfirmasi ${pj}. Terima kasih.` : `Bukti transfer sudah kami terima dan sedang diperiksa ${pj}.`}</div>`;
+  else {
+    if (d) aksi += `<div class="box" style="background:#fbeceb;color:var(--danger)"><b>Bukti belum dapat diterima.</b>\n${esc(d.catatan_panitia || 'Silakan kirim ulang bukti transfer.')}</div>`;
+    if (!bisa) aksi += `<div class="mut">${FASE[k.fase] || 'Pendaftaran belum dibuka.'}</div>`;
+    else aksi += `<button data-buka="${k.id}" data-label="${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}">${d ? 'Kirim ulang bukti' : 'Daftar sekarang'}</button>
+    <form class="hidden" data-k="${k.id}"${gratis ? ' data-gratis="1"' : ''}>
+      ${club ? '<div><label>Alasan anak ingin bergabung club ini</label><textarea name="motivasi" rows="3" maxlength="500" required placeholder="Ceritakan singkat minat dan alasan anak"></textarea></div>' : `<div><label>Nama pengirim transfer${opt}</label><input name="nama_pengirim" maxlength="60"${req}></div>
+      <div><label>Tanggal transfer${opt}</label><input type="date" name="tanggal_transfer"${req}></div>
+      <div><label>Foto bukti transfer${opt}</label><input type="file" name="bukti" accept="image/*"${req}></div>`}
+      ${k.tanya_bidang ? bidangHtml(k) : ''}
+      ${k.tanya_kaos ? '<div><label>Ukuran kaos</label><input name="kaos" maxlength="20" required placeholder="mis. M / anak 10"></div>' : ''}
+      ${k.tanya_kesehatan ? '<div><label>Alergi atau kondisi kesehatan</label><textarea name="kesehatan" rows="2" maxlength="200" placeholder="Kosongkan jika tidak ada"></textarea></div>' : ''}
+      <div><label>Nomor kontak darurat</label><input name="kontak" maxlength="40" inputmode="tel" required></div>
+      <label class="chk"><input type="checkbox" name="setuju" required> <span>Saya orang tua/wali dan mengizinkan anak mengikuti kegiatan ini.</span></label>
+      ${club ? '<div class="mut">Club ini memakai seleksi. Hasil seleksi akan tampil di kartu ini.</div>' : ''}
+      <div><button type="submit">Kirim pendaftaran</button></div><div class="err" data-err></div>
+    </form>`;
+  }
+  return `<div class="card kg"><div class="row"><h3>${esc(k.nama)}</h3>${st ? `<span class="pill ${st[0]}">${st[1]}</span>` : ''}</div>
+    <div class="mut">Kegiatan: ${tgl(k.tanggal_kegiatan)} · Daftar sampai ${tgl(k.tutup_daftar)}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}${k.terbatas ? ' · Untuk ' + esc(k.untuk) : ''}</div>
+    ${k.deskripsi ? `<div class="box">${esc(k.deskripsi)}</div>` : ''}
+    ${club ? '<span class="pill blue">Club · ada seleksi</span>' : ''}<div class="rp">${k.biaya ? rp(k.biaya) : 'Gratis'}</div>
+    ${k.biaya && k.rekening ? `<div class="box">Transfer ke:\n${esc(k.rekening)}</div>` : ''}
+    ${aksi}</div>`;
+}
+async function kirim(f) {
+  const err = f.querySelector('[data-err]'), btn = f.querySelector('button[type=submit]'), fd = new FormData(f);
+  err.textContent = ''; btn.disabled = true; btn.textContent = 'Mengirim…';
+  try {
+    const file = fd.get('bukti'), tanpaBukti = fd.has('motivasi'), ada = file && file.size, gratis = f.dataset.gratis === '1';
+    if (!tanpaBukti && !gratis && !ada) throw new Error('Pilih foto bukti transfer.');
+    const bidang = fd.has('bidang') ? fd.get('bidang') : (fd.get('bidang_pilih') === '__lain' ? fd.get('bidang_lain') : fd.get('bidang_pilih'));
+    await post({ action: 'daftar', kegiatanId: f.dataset.k, bukti: (tanpaBukti || !ada) ? undefined : await kecilkan(file), bidang, setuju: f.setuju.checked, motivasi: fd.get('motivasi'),
+      nama_pengirim: fd.get('nama_pengirim'), tanggal_transfer: fd.get('tanggal_transfer'), kaos: fd.get('kaos'), kesehatan: fd.get('kesehatan'), kontak: fd.get('kontak') });
+    await muatKegiatan();
+  } catch (e) { err.textContent = e.message || 'Gagal mengirim.'; btn.disabled = false; btn.textContent = 'Kirim pendaftaran'; }
+}
+
+async function cari() {
+  const kode = $('#kode').value.trim(); if (!kode) return;
+  $('#err').textContent = ''; const b = $('#cari'); b.disabled = true;
+  try {
+    const r = await fetch('/api/ortu-lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kode }) });
+    const d = await r.json();
+    if (!r.ok) { $('#err').textContent = d.error || 'Gagal memuat data.'; return; }
+    kodeAktif = kode; tampil(d); muatKegiatan();
+  } catch (e) { $('#err').textContent = 'Tidak bisa terhubung. Periksa koneksi internet.'; }
+  finally { b.disabled = false; }
+}
+
+const KATD = { terlambat: ['Terlambat', 'warn'], atribut: ['Atribut', 'warn'], pelanggaran: ['Pelanggaran', 'bad'], prestasi: ['Prestasi', 'ok'] };
+function disiplinKartu(x) {
+  const n = k => x.riwayat.filter(r => r.kategori === k).length;
+  if (!x.riwayat.length && !x.tindak.length) return `<div class="card"><h3>Kedisiplinan <span class="mut" style="font-weight:600">· semester ${esc(x.semester)}</span></h3><div class="mut">Belum ada catatan kedisiplinan semester ini.</div></div>`;
+  return `<div class="card"><h3>Kedisiplinan <span class="mut" style="font-weight:600">· semester ${esc(x.semester)}</span></h3>
+    <div class="stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">${[['terlambat', 'Terlambat'], ['atribut', 'Atribut'], ['pelanggaran', 'Pelanggaran'], ['prestasi', 'Prestasi']].map(([k, l]) => `<div><b>${n(k)}</b><span>${l}</span></div>`).join('')}</div>
+    <div class="mut" style="margin-bottom:8px">Poin pelanggaran semester ini: <b>${x.poin}</b>${x.prestasi ? ' · poin prestasi: <b>+' + x.prestasi + '</b>' : ''}</div>
+    ${x.tindak.length ? `<div style="margin-bottom:8px">${x.tindak.map(t => `<span class="pill bad">${esc(t.tingkat)} · ${tgl(t.tanggal)}</span>`).join(' ')}</div>` : ''}
+    <details><summary>Lihat rincian (${x.riwayat.length})</summary><table style="margin-top:6px"><tr><th>Tanggal</th><th>Jenis</th><th>Poin</th></tr>${x.riwayat.map(r => `<tr><td>${tgl(r.tanggal)}</td><td><span class="pill ${KATD[r.kategori][1]}">${KATD[r.kategori][0]}</span> ${esc(r.jenis)}</td><td>${r.kategori === 'prestasi' ? '+' : ''}${r.poin}</td></tr>`).join('')}</table></details>
+    <div class="mut" style="margin-top:8px">Untuk pertanyaan atau konsultasi, silakan hubungi guru BK.</div></div>`;
+}
+function tampil(d) {
+  const c = { H: 0, I: 0, S: 0, A: 0 }; d.kehadiran.forEach(k => c[k.status]++);
+  const total = d.kehadiran.length, kelas = /^kelas/i.test(d.kelas || '') ? d.kelas : 'Kelas ' + (d.kelas || '-');
+  const grup = ts => {
+    const by = {}; ts.forEach(t => (by[(t.mapel || 'Lainnya') + '|' + (t.guru || '')] = by[(t.mapel || 'Lainnya') + '|' + (t.guru || '')] || []).push(t));
+    return Object.keys(by).sort().map(k => {
+      const [m, g] = k.split('|'), l = by[k], ns = l.filter(t => t.nilai != null).map(t => Number(t.nilai)), avg = ns.length ? Math.round(ns.reduce((x, y) => x + y, 0) / ns.length) : null;
+      return `<div class="card"><div class="top"><h3 style="margin:0">${esc(m)}</h3><span class="mut">${esc(g)}${avg !== null ? ' · rata-rata nilai <b>' + avg + '</b>' : ''}</span></div>
+      <table style="margin-top:8px"><tr><th>Tugas</th><th>Tenggat</th><th>Status</th><th>Nilai</th></tr>${l.map(t => `<tr><td><b>${esc(t.judul)}</b>${t.catatan ? `<div class="mut">Catatan guru: ${esc(t.catatan)}</div>` : ''}</td><td>${t.tenggat ? tgl(t.tenggat) : '-'}</td><td>${pill(t.status)}</td><td><b>${t.nilai ?? '-'}</b></td></tr>`).join('')}</table></div>`;
+    }).join('');
+  };
+  const pill = s => `<span class="pill ${s === 'dinilai' ? 'ok' : s === 'dikumpulkan' ? 'warn' : ''}">${s}</span>`;
+  $('#hasil').innerHTML = `
+  <div class="card top"><div><h2>${esc(d.nama)}</h2><div class="mut">${esc(kelas)}</div></div><button class="ghost" id="lagi">Ganti kode</button></div>
+  <div id="kg"></div>
+  <div class="card"><h3>Kehadiran${d.walas ? ' <span class="mut" style="font-weight:600">· dicatat wali kelas ' + esc(d.walas) + '</span>' : ''}</h3>
+    <div class="stats">${['H', 'I', 'S', 'A'].map(k => `<button data-st="${k}" ${c[k] ? '' : 'disabled'}><b>${c[k]}</b><span>${NS[k]}</span></button>`).join('')}</div>
+    <div class="mut">${total ? 'Hadir ' + Math.round(c.H / total * 100) + '% dari ' + total + ' pertemuan. Ketuk angka untuk melihat tanggalnya.' : (d.adaWalas ? 'Belum ada data kehadiran.' : 'Rekap kehadiran dari wali kelas belum tersedia.')}</div>
+    <div id="tglbox" class="hidden" style="margin-top:10px"></div>
+  </div>
+  ${d.disiplin ? disiplinKartu(d.disiplin) : ''}
+  ${d.karya && d.karya.length ? `<div class="card"><h3>Karya anak</h3><div class="gal">${d.karya.map(k => `<a href="${esc(k.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(k.url)}" alt="Karya: ${esc(k.judul)}"><span>${esc(k.judul)}</span></a>`).join('')}</div></div>` : ''}
+  ${d.tugas.length ? grup(d.tugas) : '<div class="card"><h3>Tugas dan nilai</h3><div class="mut">Belum ada tugas.</div></div>'}`;
+  document.querySelectorAll('.stats button').forEach(b => b.onclick = () => {
+    const k = b.dataset.st, box = $('#tglbox'), buka = b.classList.contains('on');
+    document.querySelectorAll('.stats button').forEach(x => x.classList.remove('on'));
+    if (buka) { box.classList.add('hidden'); return; }
+    b.classList.add('on');
+    const ds = [...new Set(d.kehadiran.filter(x => x.status === k).map(x => x.tanggal))].sort().reverse();
+    box.innerHTML = `<div class="mut" style="margin-bottom:6px">Tanggal ${NS[k].toLowerCase()}:</div>` + ds.map(x => `<span class="pill">${tgl(x)}</span>`).join(' ');
+    box.classList.remove('hidden');
+  });
+  $('#form').classList.add('hidden'); $('#hasil').classList.remove('hidden');
+  $('#lagi').onclick = () => { $('#hasil').classList.add('hidden'); $('#hasil').innerHTML = ''; $('#form').classList.remove('hidden'); $('#kode').value = ''; $('#kode').focus(); };
+}
+$('#cari').onclick = cari;
+$('#kode').onkeydown = e => { if (e.key === 'Enter') cari(); };
+</script>
+</body>
+</html>

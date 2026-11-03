@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administrasi Guru dan Staf</title>
+<link rel="icon" type="image/png" href="favicon-terang.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3" media="(prefers-color-scheme: light)">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/konfigurasi.js"></script>
+<script src="js/umum.js"></script>
+<link rel="stylesheet" href="css/kelas.css">
+<link rel="stylesheet" href="si-tema.css">
+<link rel="stylesheet" href="si-latar.css">
+</head>
+<body>
+<div class="wrap">
+
+<div id="login" class="card si-login hidden">
+  <div class="si-head">
+    <img src="logo-at-taqwa.png" alt="">
+    <h1>Administrasi Guru dan Staf</h1>
+    <p>Masuk dengan username dan PIN dari sekolah.</p>
+  </div>
+  <div id="fUser" style="text-align:left">
+    <label for="un">Username</label><input id="un" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="contoh: nama.depan">
+    <label for="pinIn" style="margin-top:10px">PIN</label><input id="pinIn" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="6 angka">
+  </div>
+  <p><button class="p" id="btnLogin">Masuk</button></p>
+  <div id="loginMsg" class="msg err"></div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="bar" id="topbar">
+    <button id="btnMenu" class="ic" title="Tampilkan / sembunyikan menu" aria-label="Menu" aria-expanded="true">&#9776;</button>
+    <div id="btnProf" class="prof"><span id="av" class="av">G</span><span><small>Selamat datang,</small><b id="hello">Guru</b></span></div>
+    <div class="nav">
+      <button id="btnOut">Keluar</button>
+    </div>
+  </div>
+  <div class="shell" id="shell" data-open="1">
+    <aside id="side"><div id="sideHead"><b id="sideNama">Guru</b><span id="sideJab"></span></div><nav id="menu"></nav><div id="sideFoot"><button id="btnHome" type="button">&larr; Beranda sekolah</button></div></aside>
+    <div class="scrim" id="scrim"></div>
+    <main class="main">
+      <div class="card" id="kelasCard" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px"><label for="kelasSel">Kelas</label><select id="kelasSel"></select></div>
+        <div style="flex:1;min-width:200px"><label for="mapelSel">Mata pelajaran</label><select id="mapelSel"></select></div>
+        <div style="flex-basis:100%;display:flex;gap:10px;flex-wrap:wrap">
+          <button id="btnImp">Tarik Daftar Murid dari Database</button>
+          <button id="btnSync">Sinkronkan Murid</button>
+          <button id="btnDel" class="d">Hapus kelas ini</button>
+        </div>
+        <div class="mut" id="syncMsg" style="flex-basis:100%"></div>
+      </div>
+      <div id="view" class="card"></div>
+    </main>
+  </div>
+</div>
+
+</div>
+<script src="modul-staf.js"></script>
+<script src="modul-surat.js"></script>
+<script src="modul-bk.js"></script>
+<script src="js/kelas.js"></script>
+</body>
+</html>

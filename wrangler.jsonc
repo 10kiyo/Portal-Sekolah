@@ -1,0 +1,22 @@
+{
+	// Konfigurasi Cloudflare Workers (dengan file statis). Dibaca oleh "npx wrangler deploy".
+	"name": "portal-sekolah",
+	"main": "src/worker.js",
+	"compatibility_date": "2025-10-01",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	// Pembatas percobaan (login guru, kode akses orang tua, pendaftaran umum) yang tahan antar instance.
+	// Tanpa "id": Wrangler (>= 4.45) membuat namespace KV otomatis pada "npm run deploy" pertama dan menautkannya.
+	// Bila deploy lewat integrasi GitHub (Workers Builds), buat sekali dengan "npx wrangler kv namespace create PEMBATAS_KV"
+	// lalu tambahkan "id": "<id yang muncul>" di bawah.
+	"kv_namespaces": [
+		{
+			"binding": "PEMBATAS_KV",
+			"id": "d734d5aac3e04e71847136372bd71b25"
+		}
+	],
+	// Pertahankan variabel yang diisi lewat dashboard saat deploy ulang.
+	"keep_vars": true
+}

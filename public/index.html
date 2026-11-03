@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDS Islam At-Taqwa Rawamangun</title>
+<link rel="icon" type="image/png" href="favicon-terang.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="css/index.css">
+<script src="data-sekolah.js"></script>
+<script src="data-kalender.js"></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="ct">
+    <a href="https://wa.me/6281220706200" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5h3l1.4 4-2 1.3a11 11 0 0 0 5.2 5.2l1.3-2 4 1.4v3a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/></svg>+62-812-2070-6200</a>
+    <a class="em" href="mailto:info@attaqwa.sch.id"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="m4 8 8 5.5L20 8"/></svg>info@attaqwa.sch.id</a>
+  </div>
+  <a class="cta" id="cta" href="#spmb">Mau jadi siswa At-Taqwa?</a>
+</div>
+<nav>
+  <a class="brand" href="#beranda"><img src="logo-at-taqwa.png" alt=""><span>SDS Islam At-Taqwa</span></a>
+  <div class="menu">
+    <a href="#beranda" data-r="beranda">Beranda</a>
+    <button type="button" class="dd" id="ddBtnP" aria-haspopup="true" aria-expanded="false" aria-controls="ddpP">Profil <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" class="dd" id="ddBtnK" aria-haspopup="true" aria-expanded="false" aria-controls="ddpK">Kegiatan <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a href="#info" data-r="info">Info Terbaru</a>
+    <a href="#si-taqwa" class="si" data-r="si-taqwa">SI-TAQWA</a>
+  </div>
+<div class="ddp" id="ddpK" hidden>
+  <a href="#jurnal" data-r="jurnal">Jurnal Murid</a>
+  <a href="#ekskul" data-r="ekskul">Ekstrakurikuler</a>
+  <a href="#club" data-r="club">Club</a>
+  <a href="#unggulan" data-r="unggulan">Kegiatan Unggulan</a>
+</div>
+<div class="ddp" id="ddpP" hidden>
+  <a href="#profil" data-r="profil">Profil Sekolah</a>
+  <a href="#guru" data-r="guru">Guru &amp; Staff</a>
+  <a href="#fasilitas" data-r="fasilitas">Fasilitas</a>
+  <a href="#lulusan" data-r="lulusan">Profil Lulusan</a>
+  <a href="#kalender" data-r="kalender">Kalender Pendidikan</a>
+</div>
+</nav>
+
+<div id="lb" role="dialog" aria-modal="true" aria-label="Foto prestasi" hidden><button id="lbX" aria-label="Tutup">×</button><button id="lbP" aria-label="Foto sebelumnya">‹</button><button id="lbN" aria-label="Foto berikutnya">›</button><img id="lbI" alt=""><div class="lbt" id="lbT"></div></div>
+<main>
+  <section id="beranda">
+    <!-- ===== HERO: ubah teks/angka di blok ini. Foto: public/foto-sekolah.jpg ===== -->
+    <header class="hx">
+      <div class="ph" role="img" aria-label="Gedung dan lapangan SDS Islam At-Taqwa Rawamangun"></div>
+      <div class="in"><div class="txt">
+        <div class="eb"><img src="logo-at-taqwa.png" alt=""><span>Komplek UI/UNJ Rawamangun · Jakarta Timur</span></div>
+        <h1>SDS Islam At&#8209;Taqwa <span>Rawamangun</span></h1>
+        <p class="tg">Belajar Nyaman, Perilaku Islami, Insan Bertaqwa</p>
+        <p class="ds">Sekolah dasar Islam swasta di Jakarta Timur yang menumbuhkan siswa beriman, cerdas, sehat, dan berakhlak mulia.</p>
+        <div class="bt"><a class="p" href="#profil">Kenali Sekolah Kami <i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></i></a><a class="s" href="#spmb">Info SPMB</a></div>
+        <div class="st">
+          <div><b data-s="akreditasiPredikat">A</b><span>Akreditasi BAN (<data data-s="akreditasiNilai">98</data>)</span></div>
+          <div><b><i class="cnt" data-s="lulusanBeranda" data-to="700">700</i>+</b><span>Lulusan (alumni)</span></div>
+          <div><b><i class="cnt" data-s="muridAktifBeranda" data-to="450">450</i>+</b><span>Murid aktif</span></div>
+          <div><b><i class="cnt" data-s="guruTendikBeranda" data-to="50">50</i>+</b><span>Guru &amp; tenaga kependidikan</span></div>
+          <div><b><i class="cnt" data-s="jumlahEkskul" data-to="14">14</i></b><span>Ekstrakurikuler</span></div>
+          <div><b><i class="cnt" data-s="jumlahClub" data-to="8">8</i></b><span>Club</span></div>
+        </div>
+      </div></div>
+      <div class="mq" aria-hidden="true"><div class="trk" id="hxMq"></div></div>
+    </header>
+
+    <!-- ===== VISI & KEPALA SEKOLAH. Teks sambutan: blok SAMBUTAN di script bawah. Foto: public/foto-kepsek.jpg (tinggi foto mengikuti tinggi kolom teks) ===== -->
+    <section class="vs" id="sambutan">
+      <div class="fp"><img src="foto-kepsek.jpg" alt="Ibu Nurbaiti, S.Pd., Kepala Sekolah SDS Islam At-Taqwa Rawamangun" onerror="this.parentNode.remove();document.getElementById('sambutan').classList.add('nofoto')"><div class="cp"><b>Ibu Nurbaiti, S.Pd.</b>Kepala Sekolah</div></div>
+      <div>
+        <div class="eb2"><img src="logo-at-taqwa.png" alt="">Visi Kami</div>
+        <h2>Membentuk insan yang <em>beriman</em>, <em>cerdas</em>, dan berakhlak mulia.</h2>
+        <p class="vi">Terwujudnya pendidikan Islam At-Taqwa yang berkualitas dalam membentuk sumber daya insani yang beriman, bertaqwa dan berakhlak mulia, cerdas, sehat rohani dan jasmani serta berperilaku Islami menuju ridha Allah SWT.</p>
+        <div class="cd">
+          <div><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0-3 11.2V17h6v-2.8A6 6 0 0 0 12 3zM9.5 21h5"/></svg></i><p style="margin:0"><b>Otak kiri &amp; kanan seimbang</b><span>Daya pikir, qalbu, estetika, dan kinestetika tumbuh bersama.</span></p></div>
+          <div><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.600-7 10-7 10z"/></svg></i><p style="margin:0"><b>Kepribadian Islami</b><span>Cerdas, sehat, terampil, kreatif, mandiri, dan peka sosial.</span></p></div>
+          <div><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.500A2.500 2.500 0 0 1 6.500 3H20v15H6.500A2.500 2.500 0 0 0 4 20.500zM4 20.500A2.500 2.500 0 0 0 6.500 23H20"/></svg></i><p style="margin:0"><b>Belajar sepanjang hayat</b><span>Berpegang pada empat pilar pendidikan dan bekal life skill.</span></p></div>
+          <div><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V11M12 11c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.500-5-6-5 0 3.500 2.500 5 6 5z"/></svg></i><p style="margin:0"><b>Lingkungan sehat &amp; hijau</b><span>Tempat bermain dengan udara bersih, hijau, dan indah.</span></p></div>
+        </div>
+        <div class="qt"><h3 id="sbJudul"></h3><div id="sbIsi"></div><div class="by" id="sbBy"></div></div>
+      </div>
+    </section>
+
+    <section class="agd" id="agd" hidden>
+      <div class="lh"><h2>Agenda terdekat</h2><a href="#kalender">Kalender pendidikan →</a></div>
+      <div class="agr" id="agdList"></div>
+    </section>
+
+    <div class="latest" id="latest" hidden>
+      <div class="lh"><h2>Info terbaru dari sekolah</h2></div>
+      <div class="row" id="latestList"></div>
+      <div class="more"><a href="#info">Lihat lebih lengkap →</a></div>
+    </div>
+
+    <section class="sec" id="video" hidden>
+      <div class="lh"><h2>Video terbaru</h2><a href="https://www.youtube.com/@sdiattaqwa2688" target="_blank" rel="noopener">Kanal YouTube →</a></div>
+      <div class="yt" id="ytList"></div>
+    </section>
+
+    <section class="sec" id="prestasi" hidden>
+      <div class="lh"><h2>Prestasi siswa</h2><a href="#galeri" id="prAll">Lihat semua →</a></div>
+      <div class="pr" id="prList"></div>
+    </section>
+
+    <!-- ===== FOOTER: sama dengan halaman Profil Sekolah. Isinya diedit di footer-sekolah.js ===== -->
+    <footer id="foot" class="idf" aria-label="Identitas Sekolah"></footer>
+    <script src="footer-sekolah.js"></script>
+  </section>
+  <iframe id="f-spmb" title="SPMB" hidden></iframe>
+  <iframe id="f-profil" title="Profil Sekolah" hidden></iframe>
+  <iframe id="f-guru" title="Guru dan Staff" hidden></iframe>
+  <iframe id="f-fasilitas" title="Fasilitas Sekolah" hidden></iframe>
+  <iframe id="f-lulusan" title="Profil Lulusan" hidden></iframe>
+  <iframe id="f-kalender" title="Kalender Pendidikan" hidden></iframe>
+  <iframe id="f-jurnal" title="Jurnal Murid" hidden></iframe>
+  <iframe id="f-ekskul" title="Ekstrakurikuler" hidden></iframe>
+  <iframe id="f-club" title="Club" hidden></iframe>
+  <iframe id="f-unggulan" title="Kegiatan Unggulan" hidden></iframe>
+  <iframe id="f-info" title="Info Terbaru" allow="web-share; clipboard-write" hidden></iframe>
+  <iframe id="f-galeri" title="Galeri Prestasi Siswa" hidden></iframe>
+  <iframe id="f-info-admin" title="Kelola Info Terbaru" hidden></iframe>
+  <iframe id="f-buku-tamu" title="Buku Tamu Sekolah" hidden></iframe>
+  <iframe id="f-kelas" title="Administrasi Guru dan Staf" hidden></iframe>
+  <iframe id="f-kegiatan" title="Kegiatan Sekolah (Panitia)" hidden></iframe>
+  <iframe id="f-si-taqwa" title="SI-TAQWA" hidden></iframe>
+  <iframe id="f-ortu" title="Pantau Belajar Anak" hidden></iframe>
+</main>
+
+<script src="js/umum.js"></script>
+<script src="js/index.js"></script>
+</body>
+</html>

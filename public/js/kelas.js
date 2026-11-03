@@ -1,0 +1,484 @@
+const sb = supabase.createClient(SITAQWA.SUPABASE_URL, SITAQWA.SUPABASE_KEY);
+const today = () => new Date(Date.now() - new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+const HARI = ['','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
+const KELAS_TABS = ['murid', 'pertemuan', 'rekap', 'tugas', 'galeri', 'jadwal'];
+const GRUP = {
+  guru: ['Kelas', [['murid', 'Murid'], ['pertemuan', 'Pertemuan & presensi'], ['rekap', 'Rekap kehadiran'], ['tugas', 'Tugas & nilai'], ['galeri', 'Galeri karya'], ['jadwal', 'Jadwal mengajar'], ['rubrik', 'Rubrik penilaian']]],
+  pustakawan: ['Perpustakaan & kesiswaan', [['kartu', 'Kartu pelajar'], ['ekskul', 'Ekskul & club'], ['pinjam', 'Peminjaman buku']]],
+  keuangan: ['Keuangan', [['transaksi', 'Kas masuk & keluar'], ['laporan', 'Laporan keuangan'], ['proposal', 'Proposal'], ['lpj', 'LPJ']]],
+  persuratan: ['Persuratan', [['buatsurat', 'Buat surat'], ['masuk', 'Surat masuk'], ['keluar', 'Surat keluar'], ['agenda', 'Agenda surat']]],
+  sarpras: ['Sarana & prasarana', [['fasilitas', 'Kelola fasilitas']]],
+  info: ['Info & Galeri', [['infoadmin', 'Kelola Info & Galeri']]],
+  bk: ['Bimbingan Konseling', [['bkberanda', 'Ringkasan'], ['bkcatat', 'Catat kedisiplinan'], ['bkrekap', 'Rekap & poin siswa'], ['bktindak', 'Tindak lanjut & SP'], ['bkkonsel', 'Konseling (rahasia)'], ['bkortu', 'Orang tua & surat'], ['bkkelas', 'Kelas saya'], ['bkatur', 'Pengaturan']]],
+  operator: ['Operator sekolah', [['tugasop', 'Daftar pekerjaan'], ['akun', 'Akun guru & staf'], ['data', 'Data murid']]]
+};
+// Peran -> kelompok menu. "admin" melihat semuanya; "staf" (satpam, kebersihan, dll) hanya Profil.
+// Peran utama + peran tambahan digabung (mis. guru wali kelas yang juga Waka SarPras melihat menu Kelas dan Sarana & prasarana).
+// Panel Kelola Info & Galeri (iframe info-admin.html?staf=1) meminta token akun guru yang sedang login lewat pesan ini.
+addEventListener('message', async e => {
+  if (e.origin !== location.origin || !e.data || !e.data.infoMinta || !e.source) return;
+  const { data } = await sb.auth.getSession();
+  e.source.postMessage({ infoToken: data && data.session ? data.session.access_token : '' }, location.origin);
+});
+const menuPeran = (p, tam = []) => p === 'admin' ? Object.values(GRUP) : [...new Set([p, ...tam])].map(x => GRUP[x]).filter(Boolean);
+let S = { peran: 'guru', peranTambahan: [], jabatan: '', dnama: '', username: '', kelas: [], kid: null, tab: 'murid', tugas: null, mid: '', mapel: [], ajar: [], prof: null, fotoUrl: '', rid: 0 };
+const mn = () => (S.mapel.find(m => m.id === S.mid) || {}).nama || '';
+
+function msg(t, err) { const m = $('#msg'); if (m) { m.textContent = t; m.className = 'msg' + (err ? ' err' : ''); } }
+// Jika pengguna sudah pindah menu saat data masih dimuat, hasil lama dibuang (mencegah tampilan tertukar).
+async function run(q) { const id = S.rid; const { data, error } = await q; if (id !== S.rid) return new Promise(() => {}); if (error) { msg(error.message, true); throw error; } return data; }
+
+/* ---------- login ---------- */
+async function boot() {
+  const { data } = await sb.auth.getSession();
+  data.session ? start() : ($('#login').classList.remove('hidden'), $('#app').classList.add('hidden'), kabar(false));
+}
+$('#btnLogin').onclick = async () => {
+  const bad = t => { $('#loginMsg').textContent = t; };
+  bad(''); $('#btnLogin').disabled = true;
+  try {
+    let email, password;
+    {
+      const username = $('#un').value.trim(); let pin = $('#pinIn').value.trim();
+      if (/^\d{1,5}$/.test(pin)) pin = pin.padStart(6, '0');   // PIN selalu 6 angka; 0 di depan yang hilang dikembalikan
+      if (!username || !pin) return bad('Isi username dan PIN.');
+      let r, d = {};
+      try { r = await fetch('/api/guru-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, pin }) }); d = await r.json().catch(() => ({})); }
+      catch (e) { return bad('Tidak bisa terhubung. Periksa koneksi internet.'); }
+      if (!r.ok) return bad(d.error || 'Username atau PIN salah.');
+      email = d.email; password = pin;
+    }
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) return bad('Username atau PIN salah.');
+    $('#pinIn').value = ''; $('#login').classList.add('hidden'); start();
+  } finally { $('#btnLogin').disabled = false; }
+};
+$('#un').onkeydown = e => { if (e.key === 'Enter') $('#btnLogin').click(); };
+$('#pinIn').onkeydown = e => { if (e.key === 'Enter') $('#btnLogin').click(); };
+$('#btnOut').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+/* ---------- kelas ---------- */
+async function start() {
+  $('#app').classList.remove('hidden'); document.body.classList.add('in-app'); kabar(true);
+  await loadProfil();
+  await loadPeran();
+  if (!(S.prof && S.prof.nama)) await isiNamaDariDaftar();
+  buildMenu();
+  const adaKelas = ['guru', 'admin'].includes(S.peran);
+  S.tab = adaKelas ? 'murid' : (menuPeran(S.peran, S.peranTambahan)[0] || [0, [['profil']]])[1][0][0];
+  if (adaKelas) { await loadKelas(); syncMurid(false); } else show();
+  if (!(S.prof && S.prof.nama)) { S.tab = 'profil'; show(); }
+}
+async function loadPeran() {
+  try {
+    const u = (await sb.auth.getUser()).data.user;
+    const { data } = await sb.from('guru_staf').select('nama,jabatan,kelompok,peran,peran_tambahan,username,foto').eq('auth_user_id', u.id).maybeSingle();
+    if (data) { S.peran = data.peran || 'guru'; S.peranTambahan = data.peran_tambahan || [];
+      // Jabatan Sarana/Prasarana SELALU membawa menu Kelola fasilitas, apa pun isi kolom peran/peran_tambahan.
+      // Bila "sarpras" terlanjur jadi peran utama pada guru/pimpinan, kembalikan ke guru (wali kelas) dan jadikan tambahan.
+      const sarpras = /sarpras|sarana|prasarana/i.test(data.jabatan || '');
+      if (S.peran === 'sarpras' && ['guru', 'pimpinan'].includes(data.kelompok)) { S.peran = 'guru'; S.peranTambahan = [...S.peranTambahan, 'sarpras']; }
+      if (sarpras && S.peran !== 'admin' && S.peran !== 'sarpras' && !S.peranTambahan.includes('sarpras')) S.peranTambahan = [...S.peranTambahan, 'sarpras'];
+      // Jabatan BK / Bimbingan / Konseling SELALU membawa menu Bimbingan Konseling (peran tambahan bk), supaya guru BK yang juga mengajar tetap punya menu Kelas.
+      if (/(^|[^a-z])bk([^a-z]|$)|bimbingan|konseling/i.test(data.jabatan || '') && S.peran !== 'admin' && S.peran !== 'bk' && !S.peranTambahan.includes('bk')) S.peranTambahan = [...S.peranTambahan, 'bk']; S.jabatan = data.jabatan || ''; S.dnama = data.nama || ''; S.username = data.username || ''; S.fotoGuru = /^https:\/\//.test(data.foto || '') ? data.foto : ''; }
+  } catch (e) {}
+  $('#sideNama').textContent = S.dnama || (S.prof && S.prof.nama) || 'Pengguna';
+  $('#sideJab').textContent = S.jabatan || ({ guru: 'Guru', admin: 'Admin' }[S.peran] || 'Staf');
+}
+function buildMenu() {
+  const grup = [...menuPeran(S.peran, S.peranTambahan), ['Akun', [['profil', 'Profil saya']]]];
+  $('#menu').innerHTML = grup.map(([judul, items]) => `<h4>${esc(judul)}</h4>` + items.map(([k, l]) => `<button data-t="${k}">${esc(l)}</button>`).join('')).join('');
+}
+$('#menu').onclick = e => {
+  const t = e.target.dataset.t; if (!t) return;
+  S.tab = t; S.tugas = null; show();
+  if (matchMedia('(max-width:860px)').matches) setMenu(false);
+};
+function kabar(v) { try { if (parent !== window) parent.postMessage({ adminMode: v }, location.origin); } catch (e) {} }
+$('#btnHome').onclick = () => { if (parent !== window) { try { parent.location.hash = '#beranda'; return; } catch (e) {} } location.href = 'index.html'; };
+function setMenu(open) { document.body.dataset.menu = open ? '1' : '0'; $('#shell').dataset.open = open ? '1' : '0'; $('#btnMenu').setAttribute('aria-expanded', open); try { localStorage.setItem('menuAdminTerbuka', open ? '1' : '0'); } catch (e) {} }
+$('#btnMenu').onclick = () => setMenu($('#shell').dataset.open !== '1');
+$('#scrim').onclick = () => setMenu(false);
+(() => { let o = !matchMedia('(max-width:860px)').matches; try { const v = localStorage.getItem('menuAdminTerbuka'); if (v && o) o = v === '1'; } catch (e) {} $('#shell').dataset.open = o ? '1' : '0'; document.body.dataset.menu = o ? '1' : '0'; })();
+async function loadKelas(pick) {
+  S.kelas = await run(sb.from('kelas_kelas').select('*').order('nama'));
+  S.kid = pick || (S.kelas.find(k => k.id === S.kid) || S.kelas[0] || {}).id || null;
+  $('#kelasSel').innerHTML = S.kelas.map(k => `<option value="${k.id}" ${k.id === S.kid ? 'selected' : ''}>${esc(k.nama)}</option>`).join('');
+  syncMapel(); show();
+}
+$('#kelasSel').onchange = e => { S.kid = e.target.value; S.tugas = null; S.mid = ''; syncMapel(); show(); };
+$('#mapelSel').onchange = e => { S.mid = e.target.value; S.tugas = null; show(); };
+function syncMapel() {
+  const ids = S.ajar.filter(a => a.kelas_id === S.kid).map(a => a.mapel_id), ms = S.mapel.filter(m => ids.includes(m.id));
+  if (!ms.find(m => m.id === S.mid)) S.mid = (ms[0] || {}).id || '';
+  $('#mapelSel').innerHTML = ms.length ? ms.map(m => `<option value="${m.id}" ${m.id === S.mid ? 'selected' : ''}>${esc(m.nama)}</option>`).join('') : '<option value="">Belum ada mapel (atur di Profil)</option>';
+}
+
+function show() {
+  S.rid++; $('#view').onclick = null; $('#view').onchange = null;
+  document.querySelectorAll('#menu button').forEach(b => b.classList.toggle('on', b.dataset.t === S.tab));
+  $('#kelasCard').style.display = (['guru', 'admin'].includes(S.peran) && KELAS_TABS.includes(S.tab)) ? 'flex' : 'none';
+  if (S.tab === 'profil') return ['guru', 'admin'].includes(S.peran) ? vProfil() : jalan(MODUL.profilStaf);
+  if (MODUL[S.tab]) return jalan(MODUL[S.tab]);
+  if (!S.kid) { $('#view').innerHTML = '<p>Belum ada kelas. Klik <b>Tarik Daftar Murid dari Database</b> untuk membuat kelas dan murid secara otomatis.</p>'; $('#kelasCard').style.display = 'flex'; return; }
+  if (['pertemuan', 'rekap', 'tugas'].includes(S.tab) && !S.mid) { $('#view').innerHTML = '<p>Belum ada mata pelajaran untuk kelas ini. Buka <b>Profil saya</b> di menu kiri, tambahkan mapel, lalu centang kelas yang kamu ajar.</p>'; return; }
+  if (S.tab === 'murid' && bisaSync()) syncMurid(false);
+  ({ murid: vMurid, pertemuan: vPertemuan, rekap: vRekap, tugas: vTugas, rubrik: vRubrik, galeri: vGaleri, jadwal: vJadwal })[S.tab]();
+}
+// Menjalankan modul staf; bila gagal (mis. tabel belum dibuat) tampilkan pesan yang jelas.
+function jalan(f) {
+  $('#view').innerHTML = '<p class="mut">Memuat...</p>';
+  Promise.resolve().then(() => f()).catch(e => { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan 03-peran.sql sudah dijalankan di Supabase.</p>`; });
+}
+const murid = () => run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid).eq('aktif', true).order('nama'));
+
+/* ---------- murid ---------- */
+async function vMurid() {
+  const ms = await murid();
+  $('#view').innerHTML = `<h2>Data murid (${ms.length})</h2>
+  <table><tr><th>Nama</th><th>Kode akses</th></tr>
+  ${ms.map(m => `<tr><td>${esc(m.nama)}</td><td><b>${esc(m.kode_akses)}</b></td></tr>`).join('') || '<tr><td colspan="2" class="mut">Belum ada murid di kelas ini.</td></tr>'}</table>`;
+}
+
+/* ---------- pertemuan: jurnal + presensi ---------- */
+async function vPertemuan(tgl) {
+  tgl = tgl || today();
+  const [ms, p] = await Promise.all([murid(), run(sb.from('kelas_pertemuan').select('*').eq('kelas_id', S.kid).eq('mapel_id', S.mid).eq('tanggal', tgl).maybeSingle())]);
+  const pr = p ? await run(sb.from('kelas_presensi').select('murid_id,status').eq('pertemuan_id', p.id)) : [];
+  const cur = Object.fromEntries(pr.map(x => [x.murid_id, x.status]));
+  $('#view').innerHTML = `<h2>Pertemuan, jurnal, dan presensi: ${esc(mn())}</h2>
+  <p class="mut">${S.prof && S.prof.wali_kelas_id === S.kid ? 'Kamu wali kelas ini: presensimu tampil di halaman orang tua.' : 'Presensi ini tersimpan untuk rekapmu, tetapi tidak ditampilkan ke orang tua (hanya presensi wali kelas yang tampil).'}</p>
+  <div class="grid"><div><label for="tgl">Tanggal</label><input id="tgl" type="date" value="${tgl}"></div>
+  <div><label for="mat">Materi</label><input id="mat" value="${esc(p?.materi)}"></div>
+  <div><label for="alt">Alat dan bahan</label><input id="alt" value="${esc(p?.alat_bahan)}"></div></div>
+  <label for="jur">Jurnal pembelajaran</label><textarea id="jur">${esc(p?.jurnal)}</textarea>
+  <h2 style="margin-top:18px">Presensi</h2>
+  <table>${ms.map(m => `<tr><td>${esc(m.nama)}</td><td class="st">${['H','I','S','A'].map(s => `<label><input type="radio" name="s${m.id}" value="${s}" ${(cur[m.id] || 'H') === s ? 'checked' : ''}>${s}</label>`).join('')}</td></tr>`).join('')}</table>
+  <p class="mut">H hadir, I izin, S sakit, A alpa.</p>
+  <p><button class="p" id="save">Simpan pertemuan</button></p><div id="msg" class="msg"></div>`;
+  $('#tgl').onchange = e => vPertemuan(e.target.value);
+  $('#save').onclick = async () => {
+    const r = await run(sb.from('kelas_pertemuan').upsert({ kelas_id: S.kid, mapel_id: S.mid, tanggal: $('#tgl').value, materi: $('#mat').value, alat_bahan: $('#alt').value, jurnal: $('#jur').value }, { onConflict: 'kelas_id,mapel_id,tanggal' }).select().single());
+    const rows = ms.map(m => ({ pertemuan_id: r.id, murid_id: m.id, status: document.querySelector(`input[name="s${m.id}"]:checked`).value }));
+    if (rows.length) await run(sb.from('kelas_presensi').upsert(rows, { onConflict: 'pertemuan_id,murid_id' }));
+    msg('Tersimpan.');
+  };
+}
+
+/* ---------- rekap ---------- */
+async function vRekap() {
+  const [ms, pr] = await Promise.all([murid(), run(sb.from('kelas_presensi').select('murid_id,status,kelas_pertemuan!inner(kelas_id)').eq('kelas_pertemuan.kelas_id', S.kid).eq('kelas_pertemuan.mapel_id', S.mid))]);
+  const c = {}; ms.forEach(m => c[m.id] = { H: 0, I: 0, S: 0, A: 0 }); pr.forEach(x => c[x.murid_id] && c[x.murid_id][x.status]++);
+  $('#view').innerHTML = `<h2>Rekap kehadiran: ${esc(mn())}</h2><p><button id="csvR">Unduh CSV</button> <button onclick="print()">Cetak</button></p><table><tr><th>Nama</th><th>H</th><th>I</th><th>S</th><th>A</th><th>Persen hadir</th></tr>
+  ${ms.map(m => { const r = c[m.id], t = r.H + r.I + r.S + r.A; return `<tr><td>${esc(m.nama)}</td><td>${r.H}</td><td>${r.I}</td><td>${r.S}</td><td>${r.A}</td><td>${t ? Math.round(r.H / t * 100) + '%' : '-'}</td></tr>`; }).join('')}</table>`;
+  $('#csvR').onclick = () => csv('rekap-kehadiran.csv', [['Nama','Hadir','Izin','Sakit','Alpa'], ...ms.map(m => [m.nama, c[m.id].H, c[m.id].I, c[m.id].S, c[m.id].A])]);
+}
+
+/* ---------- tugas & nilai ---------- */
+async function vTugas() {
+  if (S.tugas) return vNilai();
+  const [ts, rs] = await Promise.all([run(sb.from('kelas_tugas').select('*').eq('kelas_id', S.kid).eq('mapel_id', S.mid).order('tenggat', { ascending: false })), run(sb.from('kelas_rubrik').select('id,nama').order('nama'))]);
+  $('#view').innerHTML = `<h2>Tugas: ${esc(mn())}</h2>
+  <div class="grid"><div><label for="tj">Judul tugas</label><input id="tj"></div><div><label for="tt">Tenggat</label><input id="tt" type="date"></div>
+  <div><label for="tr">Rubrik penilaian</label><select id="tr"><option value="">Nilai angka biasa</option>${rs.map(r => `<option value="${r.id}">${esc(r.nama)}</option>`).join('')}</select></div></div>
+  <label for="ti">Instruksi</label><textarea id="ti"></textarea>
+  <p><button class="p" id="addT">Tambah tugas</button> <button id="csvN">Unduh rekap nilai (CSV)</button></p><div id="msg" class="msg"></div>
+  <table><tr><th>Judul</th><th>Tenggat</th><th></th></tr>
+  ${ts.map(t => `<tr><td>${esc(t.judul)}</td><td>${esc(t.tenggat || '-')}</td><td><button data-open="${t.id}">Nilai</button> <button class="d" data-del="${t.id}">Hapus</button></td></tr>`).join('')}</table>`;
+  $('#addT').onclick = async () => {
+    if (!$('#tj').value.trim()) return msg('Isi judul tugas.', true);
+    await run(sb.from('kelas_tugas').insert({ kelas_id: S.kid, mapel_id: S.mid, judul: $('#tj').value.trim(), instruksi: $('#ti').value, tenggat: $('#tt').value || null, rubrik_id: $('#tr').value || null })); vTugas();
+  };
+  $('#csvN').onclick = async () => {
+    const ms = await murid();
+    const ns = ts.length ? await run(sb.from('kelas_nilai').select('tugas_id,murid_id,nilai').in('tugas_id', ts.map(t => t.id))) : [];
+    const v = (m, t) => (ns.find(n => n.murid_id === m.id && n.tugas_id === t.id) || {}).nilai;
+    csv('rekap-nilai.csv', [['Nama', ...ts.map(t => t.judul)], ...ms.map(m => [m.nama, ...ts.map(t => v(m, t))])]);
+  };
+  $('#view').onclick = async e => {
+    if (e.target.dataset.open) { S.tugas = ts.find(t => t.id === e.target.dataset.open); vNilai(); }
+    if (e.target.dataset.del && confirm('Hapus tugas ini beserta nilainya?')) { await run(sb.from('kelas_tugas').delete().eq('id', e.target.dataset.del)); vTugas(); }
+  };
+}
+async function vNilai() {
+  const [ms, ns, ks, rub] = await Promise.all([murid(), run(sb.from('kelas_nilai').select('*').eq('tugas_id', S.tugas.id)), run(sb.from('kelas_karya').select('murid_id').eq('tugas_id', S.tugas.id)),
+    S.tugas.rubrik_id ? run(sb.from('kelas_rubrik').select('*').eq('id', S.tugas.rubrik_id).maybeSingle()) : null]);
+  const n = Object.fromEntries(ns.map(x => [x.murid_id, x])), kr = rub ? rub.kriteria : null;
+  const foto = id => ks.filter(k => k.murid_id === id).length;
+  $('#view').innerHTML = `<p><button id="back">Kembali ke daftar tugas</button></p><h2>${esc(S.tugas.judul)}</h2>
+  <p class="mut">${rub ? 'Rubrik: ' + esc(rub.nama) + '. Nilai akhir dihitung otomatis (0 sampai 100).' : 'Nilai angka 0 sampai 100.'} Foto karya yang diunggah muncul di tab Galeri.</p>
+  <table><tr><th>Nama</th><th>Status</th><th>Nilai</th><th>Catatan</th><th>Foto karya</th></tr>
+  ${ms.map(m => { const x = n[m.id] || {}; return `<tr data-m="${m.id}"><td>${esc(m.nama)}</td>
+  <td><select class="s">${['belum', 'dikumpulkan', 'dinilai'].map(s => `<option ${(x.status || 'belum') === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
+  <td>${kr ? kr.map((k, i) => `<label class="kin">${esc(k.nama)} (maks ${k.maks})<input class="k" type="number" min="0" max="${k.maks}" style="width:90px" value="${(x.skor || [])[i] ?? ''}"></label>`).join('') : `<input class="n" type="number" min="0" max="100" style="width:80px" value="${x.nilai ?? ''}">`}</td>
+  <td><input class="c" value="${esc(x.catatan)}"></td>
+  <td><input class="up" type="file" accept="image/*" multiple><div class="mut">${foto(m.id)} foto</div></td></tr>`; }).join('')}</table>
+  <p><button class="p" id="saveN">Simpan nilai</button></p><div id="msg" class="msg"></div>`;
+  $('#back').onclick = () => { S.tugas = null; vTugas(); };
+  document.querySelectorAll('.up').forEach(inp => inp.onchange = async () => {
+    if (!inp.files.length) return; msg('Mengunggah foto...');
+    await upload(S.tugas.id, inp.closest('tr').dataset.m, inp.files); msg('Foto terunggah.'); setTimeout(vNilai, 700);
+  });
+  $('#saveN').onclick = async () => {
+    const rows = [...document.querySelectorAll('tr[data-m]')].map(tr => {
+      let nilai, skor = null;
+      if (kr) {
+        const v = [...tr.querySelectorAll('.k')].map(i => i.value === '' ? null : Number(i.value));
+        if (v.some(x => x !== null)) { skor = v.map(x => x ?? 0); nilai = Math.round(skor.reduce((a, b) => a + b, 0) / kr.reduce((a, k) => a + Number(k.maks), 0) * 100); } else nilai = null;
+      } else nilai = tr.querySelector('.n').value === '' ? null : Number(tr.querySelector('.n').value);
+      return { tugas_id: S.tugas.id, murid_id: tr.dataset.m, status: tr.querySelector('.s').value, nilai, skor, catatan: tr.querySelector('.c').value || null };
+    });
+    await run(sb.from('kelas_nilai').upsert(rows, { onConflict: 'tugas_id,murid_id' })); msg('Nilai tersimpan.');
+  };
+}
+
+/* ---------- jadwal ---------- */
+async function vJadwal() {
+  const js = await run(sb.from('kelas_jadwal').select('*').order('hari').order('jam_mulai'));
+  const kn = id => (S.kelas.find(k => k.id === id) || {}).nama || '-', mname = id => (S.mapel.find(m => m.id === id) || {}).nama || '-';
+  $('#view').innerHTML = `<h2>Jadwal mengajar</h2>` + (S.mid ? `<p class="mut">Menambah jadwal untuk <b>${esc(kn(S.kid))}</b>, <b>${esc(mn())}</b>.</p>
+  <div class="grid"><div><label for="jh">Hari</label><select id="jh">${HARI.slice(1).map((h, i) => `<option value="${i + 1}">${h}</option>`).join('')}</select></div>
+  <div><label for="jm">Mulai</label><input id="jm" type="time"></div><div><label for="js">Selesai</label><input id="js" type="time"></div>
+  <div><label for="jr">Ruang</label><input id="jr"></div></div><p><button class="p" id="addJ">Tambah jadwal</button></p>` : '<p class="mut">Pilih kelas dan mapel di atas untuk menambah jadwal.</p>')
+  + `<div id="msg" class="msg"></div><table><tr><th>Hari</th><th>Jam</th><th>Kelas</th><th>Mapel</th><th>Ruang</th><th></th></tr>
+  ${js.map(j => `<tr><td>${HARI[j.hari]}</td><td>${String(j.jam_mulai).slice(0, 5)}${j.jam_selesai ? ' - ' + String(j.jam_selesai).slice(0, 5) : ''}</td><td>${esc(kn(j.kelas_id))}</td><td>${esc(mname(j.mapel_id))}</td><td>${esc(j.ruang)}</td><td><button class="d" data-del="${j.id}">Hapus</button></td></tr>`).join('')}</table>`;
+  if (S.mid) $('#addJ').onclick = async () => {
+    if (!$('#jm').value) return msg('Isi jam mulai.', true);
+    await run(sb.from('kelas_jadwal').insert({ kelas_id: S.kid, mapel_id: S.mid, hari: +$('#jh').value, jam_mulai: $('#jm').value, jam_selesai: $('#js').value || null, ruang: $('#jr').value || null })); vJadwal();
+  };
+  $('#view').onclick = async e => { if (e.target.dataset.del) { await run(sb.from('kelas_jadwal').delete().eq('id', e.target.dataset.del)); vJadwal(); } };
+}
+
+/* ---------- rubrik ---------- */
+async function vRubrik() {
+  const rs = await run(sb.from('kelas_rubrik').select('*').order('nama'));
+  $('#view').innerHTML = `<h2>Rubrik penilaian</h2>
+  <label for="rn">Nama rubrik</label><input id="rn" placeholder="Contoh: Lukis cat air">
+  <label for="rk" style="margin-top:10px">Kriteria, satu per baris: nama, skor maksimal</label>
+  <textarea id="rk" placeholder="Komposisi, 25&#10;Teknik, 25&#10;Kreativitas, 30&#10;Kerapian, 20"></textarea>
+  <p><button class="p" id="addR">Simpan rubrik</button></p><div id="msg" class="msg"></div>
+  <table><tr><th>Rubrik</th><th>Kriteria</th><th></th></tr>${rs.map(r => `<tr><td>${esc(r.nama)}</td><td class="mut">${r.kriteria.map(k => esc(k.nama) + ' (' + k.maks + ')').join(', ')}</td><td><button class="d" data-del="${r.id}">Hapus</button></td></tr>`).join('')}</table>`;
+  $('#addR').onclick = async () => {
+    const kriteria = $('#rk').value.split('\n').map(l => l.split(',')).map(([n, m]) => ({ nama: (n || '').trim(), maks: Number(m) || 100 })).filter(k => k.nama);
+    if (!$('#rn').value.trim() || !kriteria.length) return msg('Isi nama rubrik dan minimal satu kriteria.', true);
+    await run(sb.from('kelas_rubrik').insert({ nama: $('#rn').value.trim(), kriteria })); vRubrik();
+  };
+  $('#view').onclick = async e => { if (e.target.dataset.del && confirm('Hapus rubrik ini? Tugas yang memakainya kembali ke nilai angka biasa.')) { await run(sb.from('kelas_rubrik').delete().eq('id', e.target.dataset.del)); vRubrik(); } };
+}
+
+/* ---------- foto karya & galeri ---------- */
+function resize(file, max = 1600) {
+  return new Promise(res => { const i = new Image(); i.onload = () => { const k = Math.min(1, max / Math.max(i.width, i.height)), c = document.createElement('canvas'); c.width = Math.round(i.width * k); c.height = Math.round(i.height * k); c.getContext('2d').drawImage(i, 0, 0, c.width, c.height); c.toBlob(res, 'image/jpeg', .8); }; i.src = URL.createObjectURL(file); });
+}
+function resizeProfil(file, size = 600) {   // foto profil: buang tepi putih/transparan, lalu potong persegi (fokus ke bagian atas/wajah)
+  return new Promise((res, rej) => { const i = new Image(); i.onerror = () => rej(new Error('Gambar tidak bisa dibaca'));
+    i.onload = () => {
+      const w = i.naturalWidth, h = i.naturalHeight, c0 = document.createElement('canvas'); c0.width = w; c0.height = h;
+      const x0 = c0.getContext('2d', { willReadFrequently: true }); x0.fillStyle = '#fff'; x0.fillRect(0, 0, w, h); x0.drawImage(i, 0, 0);
+      const d = x0.getImageData(0, 0, w, h).data, st = 2;
+      const pth = (x, y) => { const q = (y * w + x) * 4; return d[q] > 232 && d[q + 1] > 232 && d[q + 2] > 232; };
+      const baris = y => { let n = 0, t = 0; for (let x = 0; x < w; x += st) { t++; if (pth(x, y)) n++; } return n / t > .97; };
+      const kolom = x => { let n = 0, t = 0; for (let y = 0; y < h; y += st) { t++; if (pth(x, y)) n++; } return n / t > .97; };
+      let t = 0, b = h - 1, l = 0, r = w - 1;
+      while (t < h * .35 && baris(t)) t++;  while (h - 1 - b < h * .35 && baris(b)) b--;
+      while (l < w * .35 && kolom(l)) l++;  while (w - 1 - r < w * .35 && kolom(r)) r--;
+      const cw = r - l + 1, ch = b - t + 1, sisi = Math.min(cw, ch), sx = l + (cw - sisi) / 2, sy = t + (ch - sisi) * .2;
+      const o = Math.min(size, Math.round(sisi)), c = document.createElement('canvas'); c.width = c.height = o;
+      const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, o, o); cx.drawImage(i, sx, sy, sisi, sisi, 0, 0, o, o);
+      c.toBlob(res, 'image/jpeg', .85);
+    }; i.src = URL.createObjectURL(file); });
+}
+async function upload(tugasId, muridId, files) {
+  const u = (await sb.auth.getUser()).data.user.id;
+  for (const f of files) {
+    const path = `${u}/${tugasId}/${muridId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+    const { error } = await sb.storage.from('karya').upload(path, await resize(f), { contentType: 'image/jpeg' });
+    if (error) { msg(error.message, true); return; }
+    await run(sb.from('kelas_karya').insert({ tugas_id: tugasId, murid_id: muridId, path }));
+  }
+}
+async function vGaleri() {
+  const ks = await run(sb.from('kelas_karya').select('id,path,tampil_ortu,kelas_murid!inner(nama,kelas_id),kelas_tugas(judul)').eq('kelas_murid.kelas_id', S.kid).order('created_at', { ascending: false }));
+  const { data: su } = ks.length ? await sb.storage.from('karya').createSignedUrls(ks.map(k => k.path), 3600) : { data: [] };
+  const url = Object.fromEntries((su || []).map(x => [x.path, x.signedUrl])), by = {};
+  ks.forEach(k => (by[k.kelas_murid.nama] = by[k.kelas_murid.nama] || []).push(k));
+  $('#view').innerHTML = `<h2>Galeri karya</h2><p class="mut">Foto diunggah dari tab Tugas & nilai. Centang "Tampil ke orang tua" hanya untuk foto yang sudah diizinkan.</p><div id="msg" class="msg"></div>`
+    + (ks.length ? Object.keys(by).sort().map(n => `<h3 style="color:var(--navy)">${esc(n)}</h3><div class="thumbs">${by[n].map(k => `<div class="thumb"><a href="${url[k.path]}" target="_blank" rel="noopener"><img loading="lazy" src="${url[k.path]}" alt=""></a><div>${esc(k.kelas_tugas?.judul)}<label class="kin" style="margin-top:4px"><input type="checkbox" data-ok="${k.id}" ${k.tampil_ortu ? 'checked' : ''} style="width:auto"> Tampil ke orang tua</label><button class="d" style="padding:3px 8px;font-size:12px" data-del="${k.id}" data-p="${esc(k.path)}">Hapus</button></div></div>`).join('')}</div>`).join('') : '<p>Belum ada foto karya.</p>');
+  $('#view').onchange = async e => { if (e.target.dataset.ok) { await run(sb.from('kelas_karya').update({ tampil_ortu: e.target.checked }).eq('id', e.target.dataset.ok)); msg('Pengaturan tersimpan.'); } };
+  $('#view').onclick = async e => { const id = e.target.dataset.del; if (id && confirm('Hapus foto ini?')) { await sb.storage.from('karya').remove([e.target.dataset.p]); await run(sb.from('kelas_karya').delete().eq('id', id)); vGaleri(); } };
+}
+
+/* ---------- impor murid dari database tamu ---------- */
+// Daftar murid/tamu dari database. Memakai fungsi murid_gabungan() (daftar tamu + perubahan operator, 06-kegiatan-tingkat.sql);
+// bila fungsinya belum ada, memakai daftar_tamu_gabungan apa adanya seperti sebelumnya.
+let _pakaiGabungan = true;
+async function allGuests() {
+  for (;;) {
+    let out = [], from = 0, gagal = null;
+    for (;;) {
+      const q = _pakaiGabungan ? sb.rpc('murid_gabungan') : sb.from('daftar_tamu_gabungan').select('guest_id,guest_name,jenis_undangan,instansi_kelas');
+      const { data, error } = await q.order('guest_id').range(from, from + 999);
+      if (error) { gagal = error; break; }
+      out = out.concat(data); if (data.length < 1000) break; from += 1000;
+    }
+    if (!gagal) return out;
+    if (_pakaiGabungan && !out.length) { _pakaiGabungan = false; continue; }   // fungsi belum dibuat: pakai tabel lama
+    throw gagal;
+  }
+}
+async function vImport() {
+  $('#view').innerHTML = '<p>Memuat daftar murid...</p>';
+  let g; try { g = await allGuests(); } catch (e) { $('#view').innerHTML = `<p class="msg err">Tidak bisa membaca daftar_tamu_gabungan: ${esc(e.message)}</p><p class="mut">Jalankan baris "grant select ... to authenticated" di supabase-kelas-3.sql, lalu coba lagi.</p>`; return; }
+  if (!g.length) { $('#view').innerHTML = '<p class="msg err">Data kosong. Kalau datanya ada di Supabase, jalankan baris "grant select ... to authenticated" di supabase-kelas-3.sql.</p>'; return; }
+  // Data murid selalu berasal dari undangan Orang Tua/Wali Siswa, jadi jenis undangan tidak perlu dipilih lagi.
+  const semuaJenis = [...new Set(g.map(x => x.jenis_undangan).filter(Boolean))];
+  let jenisMurid = semuaJenis.filter(j => /orang\s*tua|wali|siswa|murid|anak/i.test(j));
+  if (!jenisMurid.length) jenisMurid = semuaJenis.filter(j => !/guru|karyawan|jw|khusus/i.test(j));
+  $('#view').innerHTML = `<h2>Tarik Daftar Murid dari Database</h2>
+  <label>Tingkat kelas yang kamu ajar</label>
+  <p>${[1, 2, 3, 4, 5, 6].map(n => `<label class="cbl"><input type="checkbox" class="t" value="${n}" ${[1, 4, 5, 6].includes(n) ? 'checked' : ''}>Kelas ${n}</label>`).join('')}</p>
+  <div id="pre" style="margin:12px 0"></div>
+  <p><button class="p" id="doImp">Impor murid</button></p><div id="msg" class="msg"></div>
+  <p class="mut">Nama yang sudah pernah diimpor dilewati. Kelas (mis. 1A) dibuat otomatis. Kode akses dibuat untuk tiap murid.</p>`;
+  const compute = () => {
+    const js = jenisMurid, ts = [...document.querySelectorAll('.t:checked')].map(i => i.value), by = {};
+    g.forEach(x => { const k = String(x.instansi_kelas || '').trim(), t = (k.match(/\d+/) || [])[0]; if (k && t && ts.includes(t) && js.includes(x.jenis_undangan) && x.guest_name) (by[k] = by[k] || []).push(x); });
+    return by;
+  };
+  const render = () => { const by = compute(), ks = Object.keys(by).sort(); $('#pre').innerHTML = ks.length ? `<b>${ks.reduce((a, k) => a + by[k].length, 0)} murid di ${ks.length} kelas:</b><div class="mut">${ks.map(k => `${esc(k)} (${by[k].length})`).join(', ')}</div>` : '<span class="mut">Tidak ada data yang cocok. Periksa pilihan tingkat kelas.</span>'; };
+  $('#view').onchange = render; $('#view').onclick = null; render();
+  $('#doImp').onclick = async () => {
+    const by = compute(), names = Object.keys(by).sort(); if (!names.length) return;
+    $('#doImp').disabled = true; msg('Mengimpor...');
+    try {
+      const have = Object.fromEntries(S.kelas.map(k => [k.nama, k.id])), missing = names.filter(n => !have[n]);
+      if (missing.length) (await run(sb.from('kelas_kelas').insert(missing.map(nama => ({ nama }))).select())).forEach(k => have[k.nama] = k.id);
+      const u = (await sb.auth.getUser()).data.user.id;
+      const rows = names.flatMap(n => by[n].map(x => ({ guru_id: u, kelas_id: have[n], nama: String(x.guest_name).trim(), guest_id: String(x.guest_id) })));
+      for (let i = 0; i < rows.length; i += 500) await run(sb.from('kelas_murid').upsert(rows.slice(i, i + 500), { onConflict: 'guru_id,guest_id', ignoreDuplicates: true }));
+      S.tab = 'murid'; await loadKelas(have[names[0]]); alert(`Selesai. ${rows.length} murid dari ${names.length} kelas diproses.`);
+    } catch (e) { $('#doImp').disabled = false; }
+  };
+}
+
+/* ---------- profil, mapel, kelas yang diajar ---------- */
+async function loadProfil() {
+  const [p, ms, aj] = await Promise.all([sb.from('kelas_profil').select('*').maybeSingle(), sb.from('kelas_mapel').select('*').order('nama'), sb.from('kelas_ajar').select('*')]);
+  S.prof = p.data; S.mapel = ms.data || []; S.ajar = aj.data || []; S.fotoUrl = '';
+  if (S.fotoGuru) S.fotoUrl = S.fotoGuru;   // foto dari guru sendiri (sama dengan yang tampil di halaman Guru & Staff)
+  else if (S.prof && S.prof.foto_path) { const { data } = await sb.storage.from('karya').createSignedUrl(S.prof.foto_path, 3600); S.fotoUrl = (data || {}).signedUrl || ''; }
+  const n = S.dnama || (S.prof && S.prof.nama) || '';   // nama dari operator (daftar guru & staf)
+  $('#hello').textContent = n || 'Guru'; if ($('#sideNama')) $('#sideNama').textContent = n || 'Pengguna';
+  $('#av').innerHTML = S.fotoUrl ? `<img src="${esc(S.fotoUrl)}" alt="">` : esc((n.trim()[0] || 'G').toUpperCase());
+}
+async function saveProfil(extra) {
+  const u = (await sb.auth.getUser()).data.user.id;
+  await run(sb.from('kelas_profil').upsert({ guru_id: u, nama: S.dnama || $('#pn').value.trim(), wali_kelas_id: $('#pw2').value || null, foto_path: S.prof?.foto_path || null, ...extra }, { onConflict: 'guru_id' }));
+  await loadProfil();
+}
+async function vProfil() {
+  const n = S.dnama || (S.prof && S.prof.nama) || '', ada = (k, m) => S.ajar.some(a => a.kelas_id === k && a.mapel_id === m), wali = S.prof && S.prof.wali_kelas_id;
+  $('#view').innerHTML = `<h2>Profil guru</h2>${n ? '' : '<p class="msg">Selamat datang! Lengkapi dulu nama, mapel, dan kelas yang kamu ajar.</p>'}
+  <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:14px"><div class="av" style="width:84px;height:84px;font-size:32px">${S.fotoUrl ? `<img src="${esc(S.fotoUrl)}" alt="">` : esc((n.trim()[0] || 'G').toUpperCase())}</div>
+  <div><label for="pf">Ganti foto profil</label><input id="pf" type="file" accept="image/*"><div class="mut">Foto ini langsung tampil di halaman Guru & Staff.</div></div></div>
+  <div class="grid"><div><label for="pn">Nama ${S.dnama ? '(diatur operator sekolah)' : '(tampil di sapaan)'}</label><input id="pn" value="${esc(n)}" placeholder="Contoh: Ibu Ranti" ${S.dnama ? 'readonly' : ''}></div>
+  <div><label for="pw2">Wali kelas (presensimu tampil ke orang tua)</label><select id="pw2"><option value="">Bukan wali kelas</option>${S.kelas.map(k => `<option value="${k.id}" ${wali === k.id ? 'selected' : ''}>${esc(k.nama)}</option>`).join('')}</select></div></div>
+  <p><button class="p" id="svP">Simpan profil</button></p><div id="msg" class="msg"></div>
+  <h2 style="margin-top:22px">Mata pelajaran yang diampu</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="mn" placeholder="Contoh: Matematika" style="flex:1;min-width:180px"><button class="p" id="addM">Tambah mapel</button></div>
+  <p style="margin-top:12px">${S.mapel.map(m => `<span class="pill2">${esc(m.nama)}<button class="x" data-rm="${m.id}" title="Ubah nama">✎</button><button class="x" data-dm="${m.id}" title="Hapus">×</button></span>`).join('') || '<span class="mut">Belum ada mapel.</span>'}</p>
+  <h2 style="margin-top:22px">Kelas yang diajar</h2><p class="mut">Centang mapel yang kamu ajarkan di tiap kelas. Hanya yang dicentang muncul di pilihan Kelas dan Mata pelajaran.</p>
+  ${S.mapel.length && S.kelas.length ? `<table class="tmapel"><tr><th>Kelas</th>${S.mapel.map(m => `<th class="cbh">${esc(m.nama)}</th>`).join('')}</tr>${S.kelas.map(k => `<tr><td>${esc(k.nama)}${wali === k.id ? ' <span class="mut">(wali kelas)</span>' : ''}</td>${S.mapel.map(m => `<td class="cb"><input type="checkbox" data-k="${k.id}" data-m="${m.id}" ${ada(k.id, m.id) ? 'checked' : ''}></td>`).join('')}</tr>`).join('')}</table>` : '<p class="mut">Tambahkan mapel dan kelas dulu.</p>'}`;
+  const again = async () => { await loadProfil(); syncMapel(); vProfil(); };
+  $('#svP').onclick = async () => { await saveProfil({}); await again(); msg('Profil tersimpan.'); };
+  $('#addM').onclick = async () => { const nm = $('#mn').value.trim(); if (!nm) return; await run(sb.from('kelas_mapel').insert({ nama: nm })); await again(); };
+  $('#view').onchange = async e => {
+    const t = e.target;
+    if (t.id === 'pf' && t.files[0]) {
+      try { await unggahFotoGuru(t.files[0]); } catch (err) { return msg('Foto gagal diunggah: ' + (err.message || err) + '. Pastikan 04-foto-guru.sql sudah dijalankan.', true); }
+      await again(); msg('Foto diganti dan langsung tampil di halaman Guru & Staff.');
+    } else if (t.dataset.k) {
+      await run(t.checked ? sb.from('kelas_ajar').insert({ kelas_id: t.dataset.k, mapel_id: t.dataset.m }) : sb.from('kelas_ajar').delete().eq('kelas_id', t.dataset.k).eq('mapel_id', t.dataset.m));
+      await loadProfil(); syncMapel(); msg('Tersimpan.');
+    }
+  };
+  $('#view').onclick = async e => {
+    const d = e.target.dataset;
+    if (d.rm) { const m = S.mapel.find(x => x.id === d.rm), nm = prompt('Nama baru mata pelajaran:', m.nama); if (nm && nm.trim()) { await run(sb.from('kelas_mapel').update({ nama: nm.trim() }).eq('id', d.rm)); await again(); } }
+    if (d.dm && confirm('Hapus mata pelajaran ini?')) { try { await run(sb.from('kelas_mapel').delete().eq('id', d.dm)); await again(); } catch (err) { msg('Mapel ini sudah dipakai di pertemuan, tugas, atau jadwal, jadi tidak bisa dihapus.', true); } }
+  };
+}
+
+/* ---------- nama profil otomatis dari daftar guru & staf (tabel guru_staf) ---------- */
+async function isiNamaDariDaftar() {
+  try {
+    if (!S.dnama) return;
+    const u = (await sb.auth.getUser()).data.user; if (!u) return;
+    await sb.from('kelas_profil').upsert({ guru_id: u.id, nama: S.dnama }, { onConflict: 'guru_id' }); await loadProfil();
+  } catch (e) {}
+}
+
+/* ---------- sinkron otomatis murid dengan database (daftar_tamu_gabungan) ----------
+   Berlaku untuk kelas yang sudah kamu tarik: murid baru ditambahkan, nama/kelas yang berubah diperbarui,
+   murid yang sudah tidak ada di database dinonaktifkan (nilai & presensi tetap tersimpan). Tidak membuat kelas baru. */
+let syncing = false, lastSync = 0;
+async function syncMurid(manual) {
+  if (syncing || (!manual && Date.now() - lastSync < 15000)) return; syncing = true;
+  const info = t => { const e = $('#syncMsg'); if (e) e.textContent = t; };
+  try {
+    const u = (await sb.auth.getUser()).data.user; if (!u) return;
+    let have = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await sb.from('kelas_murid').select('id,nama,kelas_id,guest_id,aktif').not('guest_id', 'is', null).order('id').range(from, from + 999);
+      if (error) throw error; have = have.concat(data); if (data.length < 1000) break;
+    }
+    if (!have.length) { if (manual) info('Belum ada murid dari database. Klik "Tarik Daftar Murid dari Database" dulu.'); return; }
+    const g = await allGuests();
+    if (!g.length) return;
+    const byId = new Map(g.map(x => [String(x.guest_id), x]));
+    const jenis = new Set(have.map(h => (byId.get(String(h.guest_id)) || {}).jenis_undangan).filter(Boolean));
+    if (!jenis.size) return;
+    const kid = Object.fromEntries(S.kelas.map(k => [String(k.nama).trim(), k.id])), target = new Map();
+    g.forEach(x => {
+      const k = String(x.instansi_kelas || '').trim(), nm = String(x.guest_name || '').trim().replace(/\s+/g, ' ');
+      if (nm && kid[k] && jenis.has(x.jenis_undangan)) target.set(String(x.guest_id), { kelas_id: kid[k], nama: nm });
+    });
+    const haveBy = new Map(have.map(h => [String(h.guest_id), h])), up = []; let baru = 0, ubah = 0;
+    target.forEach((t, id) => {
+      const h = haveBy.get(id), row = { guru_id: u.id, kelas_id: t.kelas_id, nama: t.nama, guest_id: id, aktif: true };
+      if (!h || !h.aktif) { up.push(row); baru++; }
+      else if (String(h.nama).trim() !== t.nama || h.kelas_id !== t.kelas_id) { up.push(row); ubah++; }
+    });
+    const off = have.filter(h => h.aktif && !target.has(String(h.guest_id))).map(h => h.id);
+    const terlaluBanyak = off.length > Math.max(5, have.length * 0.3);      // pengaman bila data database terbaca tidak lengkap
+    for (let i = 0; i < up.length; i += 500) { const { error } = await sb.from('kelas_murid').upsert(up.slice(i, i + 500), { onConflict: 'guru_id,guest_id' }); if (error) throw error; }
+    if (!terlaluBanyak) for (let i = 0; i < off.length; i += 100) { const { error } = await sb.from('kelas_murid').update({ aktif: false }).in('id', off.slice(i, i + 100)); if (error) throw error; }
+    const nonaktif = terlaluBanyak ? 0 : off.length, parts = [];
+    if (baru) parts.push(`${baru} murid ditambahkan/diaktifkan`); if (ubah) parts.push(`${ubah} diperbarui`); if (nonaktif) parts.push(`${nonaktif} dinonaktifkan (tidak ada lagi di database)`);
+    if (terlaluBanyak && manual) parts.push(`${off.length} murid tidak ditemukan di database, belum dinonaktifkan otomatis karena jumlahnya banyak`);
+    info(parts.length ? 'Sinkron dengan database: ' + parts.join(', ') + '.' : (manual ? 'Murid sudah sesuai dengan database.' : ''));
+    if ((baru || ubah || nonaktif) && S.tab === 'murid' && S.kid) show();
+  } catch (e) {
+    if (manual) info('Gagal sinkron: ' + (e.message || e));
+  } finally { syncing = false; lastSync = Date.now(); }
+}
+// Murid yang ditambah/dinonaktifkan operator ikut berubah otomatis di daftar guru (saat halaman dibuka lagi, dan tiap 1 menit selama terbuka).
+const bisaSync = () => !document.hidden && S.kelas.length && ['guru', 'admin'].includes(S.peran);
+document.addEventListener('visibilitychange', () => { if (bisaSync() && Date.now() - lastSync > 20 * 1000) syncMurid(false); });
+setInterval(() => { if (bisaSync()) syncMurid(false); }, 60 * 1000);
+
+/* ---------- ekspor CSV (bisa dibuka di Excel) ---------- */
+function csv(name, rows) {
+  const t = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv' })); a.download = name; a.click();
+}
+
+$('#btnImp').onclick = () => vImport();
+$('#btnSync').onclick = () => syncMurid(true);
+$('#btnDel').onclick = async () => {
+  const k = S.kelas.find(x => x.id === S.kid); if (!k) return;
+  const { count } = await sb.from('kelas_murid').select('id', { count: 'exact', head: true }).eq('kelas_id', k.id);
+  if (!confirm(`Hapus kelas "${k.nama}" beserta ${count || 0} murid, presensi, tugas, dan nilainya?\nTindakan ini tidak bisa dibatalkan.`)) return;
+  await run(sb.from('kelas_kelas').delete().eq('id', k.id)); S.kid = null; S.tugas = null; loadKelas();
+};
+boot();

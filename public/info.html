@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Info Terbaru</title>
+<link rel="icon" type="image/png" href="favicon-terang.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3" media="(prefers-color-scheme: light)">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{flex:1;width:min(900px,calc(100% - 24px));margin:0 auto;padding:24px 0 48px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.adm{flex:none;display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.adm:hover{filter:brightness(1.2)}.adm:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+h1{margin:0;color:var(--navy);font-size:clamp(24px,5vw,32px);letter-spacing:-.03em}
+h2{margin:0;color:var(--navy);font-size:18px}
+.mut{color:var(--mute);font-size:14px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:14px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.bar input{flex:1 1 200px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);font:inherit;background:#fff}
+.bar input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chips button{font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
+.pill.pengumuman{background:#e3f0fb;color:var(--blue)}.pill.agenda{background:#fdf0e3;color:#a65f00}
+.pill.surat{background:#f1e9fb;color:#6b3fa0}.pill.kegiatan{background:#eaf5ee;color:var(--ok)}.pill.prestasi{background:#fff4d6;color:#8a5a00}
+.pin{color:#a65f00;font-weight:700;font-size:12px}
+.agenda{display:grid;gap:8px;margin-top:10px}
+.ag{display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;background:var(--soft)}
+.ag .d{flex:none;width:52px;text-align:center;background:var(--navy);color:#fff;border-radius:10px;padding:6px 0;line-height:1.1}
+.ag .d b{display:block;font-size:20px}.ag .d span{font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.ag .t{font-weight:700;color:var(--navy)}.ag .s{font-size:13px;color:var(--mute)}
+.post h3{margin:8px 0 4px;color:var(--navy);font-size:19px;letter-spacing:-.02em}
+.post .meta{font-size:13px;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.post .isi{margin-top:10px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.post .isi.cut{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.post a{color:var(--blue)}
+.more{margin-top:6px;background:none;border:0;color:var(--blue);font:inherit;font-weight:700;cursor:pointer;padding:0}
+.lamp{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:9px 14px;border-radius:10px;background:var(--navy);color:#fff!important;text-decoration:none;font-weight:700;font-size:14px}
+.lamp-img{max-width:100%;max-height:420px;display:block;margin-top:12px;border-radius:12px;border:1px solid var(--line)}
+.empty{text-align:center;color:var(--mute);padding:28px 0}
+.foot{margin-top:24px;text-align:center;font-size:13px}.foot a{color:var(--mute)}
+.post.hl{border-color:var(--blue);box-shadow:0 0 0 4px #1677c826,0 12px 30px #102a4310}
+.emb .wrap{padding-top:12px}
+.share{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #e6eef5;font-size:13px;color:var(--mute)}
+.sh{font:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--navy);text-decoration:none}
+.sh:hover{background:var(--soft)}.sh:focus-visible{outline:3px solid #1677c850}
+.sh.wa{background:#1fa855;border-color:#1fa855;color:#fff}.sh.wa:hover{filter:brightness(1.08);background:#1fa855}
+.solo .adm{display:none}
+.pd{display:grid;gap:10px;margin-top:10px}
+.pdi{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--soft);border:1px solid #d6e6f3}
+.pdi .t{font-weight:700;color:var(--navy)}.pdi .s{font-size:13px;color:var(--mute);margin-top:2px}
+.pdi .go{flex:none;padding:9px 16px;border-radius:10px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.pdi .go:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+.solo #pdWrap{display:none}
+.per{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.per h2{font-size:19px}.per .mut{margin-top:2px}
+.pbtn{font:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--navy)}
+.pbtn:hover{background:var(--soft)}.pbtn:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+.pbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+#arsip h3{margin:14px 0 8px;color:var(--navy);font-size:16px}#arsip h3:first-of-type{margin-top:4px}
+.bln{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.bln button{font:inherit;cursor:pointer;padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--navy);font-weight:700;font-size:14px;text-align:left}
+.bln button:hover{background:var(--soft)}.bln button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.bln small{display:block;font-weight:400;font-size:12px;opacity:.75}
+.solo .per,.solo #arsip{display:none}
+/* Spanduk judul: logo + judul + subjudul, menggelap & membesar saat disorot mouse */
+.bn{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,28px);padding:clamp(16px,3vw,26px) clamp(14px,4vw,40px);border-radius:clamp(18px,2.8vw,28px);background:linear-gradient(145deg,#1d3d5a,#102a43);color:#fff;overflow:hidden;box-shadow:0 12px 30px #102a4333;transition:background .35s}
+.bn .lg{flex:none;display:grid;place-items:center;width:clamp(78px,14vw,130px);filter:brightness(2) saturate(.6);transition:transform .35s,filter .35s}   /* logo transparan, hijau dicerahkan agar terbaca di latar navy */
+.bn .lg img{width:100%;height:auto;display:block}
+.bn .tx{min-width:0;text-align:center;transition:transform .35s}
+.bn h1{margin:0;color:#fff;font-family:inherit;text-transform:uppercase;font-weight:800;font-size:clamp(26px,5.6vw,52px);letter-spacing:-.03em;line-height:1.05;transition:color .35s}
+.bn p{margin:6px 0 0;color:#dbe7f2;font-family:inherit;font-size:clamp(12px,2vw,18px);font-weight:400;line-height:1.35;transition:color .35s}
+@media(hover:hover){.bn:hover{background:linear-gradient(145deg,#0e2336,#08141f)}.bn:hover .lg{transform:scale(1.1);filter:brightness(1.5) saturate(.45)}.bn:hover .tx{transform:scale(1.04)}.bn:hover h1,.bn:hover p{color:#aab4be}}
+@media(prefers-reduced-motion:reduce){.bn,.bn .lg,.bn .tx,.bn h1,.bn p{transition:none}.bn:hover .lg,.bn:hover .tx{transform:none}}
+/* Pop-up foto (sama seperti di Fasilitas Sekolah) */
+.lamp-img{cursor:zoom-in}
+
+/* Pratinjau PDF: halaman 1 tampil di kartu, klik untuk membaca seluruh dokumen */
+.pdfp{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.pdfp .pph{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--soft);border-bottom:1px solid var(--line);font-size:14px;color:var(--navy)}
+.pdfp .tag{flex:none;padding:2px 8px;border-radius:6px;background:#bc3d33;color:#fff;font-size:11px;font-weight:800;letter-spacing:.04em}
+.pdfp .nm{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdfp .jml{flex:none;color:var(--mute);font-size:13px;white-space:nowrap}
+.pgb{position:relative;display:block;width:100%;max-height:340px;padding:0;border:0;overflow:hidden;background:#e6eef6;cursor:zoom-in;font:inherit}
+.pgb canvas{display:block;width:100%;height:auto;opacity:0;transition:opacity .25s}
+.pgb.siap canvas{opacity:1}
+.pgb .ph0{position:absolute;inset:0;display:grid;place-items:center;padding:24px;color:var(--mute);font-size:14px;text-align:center}
+.pgb.siap .ph0{display:none}
+.pgb.siap::after{content:"";position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(to bottom,#fff0,#e6eef6e6 75%,#e6eef6);pointer-events:none}
+.pgb .lihat{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:1;display:none;padding:9px 16px;border-radius:99px;background:var(--navy);color:#fff;font-weight:700;font-size:14px;white-space:nowrap;box-shadow:0 8px 20px #102a4340}
+.pgb.siap .lihat{display:block}
+.pgb:hover .lihat{background:#0e65ae}
+.pgb:focus-visible{outline:3px solid #1677c850;outline-offset:-3px}
+.pgb.gagal{max-height:none;cursor:default}
+.pgb.gagal canvas{display:none}
+.pgb.gagal .ph0{position:static;padding:18px}
+dialog.pdfv{width:min(900px,calc(100% - 24px))}
+dialog.pdfv[open]{display:flex;flex-direction:column;height:calc(100vh - 24px);height:calc(100dvh - 24px);overflow:hidden}
+.pdfv .dh{padding-bottom:12px}
+.pdfv .sub{margin-top:3px;font-size:13px;color:var(--mute)}
+.pdfv .pdfbody{flex:1;min-height:0;overflow:auto;padding:12px;background:#e6eef6;-webkit-overflow-scrolling:touch}
+.pdfv .pgv{position:relative;width:100%;max-width:860px;margin:0 auto 12px;background:#fff;box-shadow:0 4px 14px #102a4326}
+.pdfv .pgv canvas{display:block;width:100%;height:100%}
+.pdfv .pdfmsg{padding:24px;text-align:center;color:var(--mute)}
+.pdfv .ft2{border-top:1px solid #dbe8f2}
+dialog.pv{border:0;border-radius:18px;padding:0;width:min(760px,calc(100% - 24px));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;box-shadow:0 20px 60px #102a4350;color:var(--ink)}
+dialog.pv::backdrop{background:#102a4380}
+.pv .dh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:18px 20px 0}
+.pv .dh h3{margin:0;color:var(--navy);font-size:21px;line-height:1.25;letter-spacing:-.02em}
+.pv .x{border:0;background:var(--soft);color:var(--navy);font-size:22px;line-height:1;width:36px;height:36px;border-radius:50%;cursor:pointer;flex:none}
+.pv .x:hover{filter:brightness(.95)}.pv .x:focus-visible{outline:3px solid #1677c850}
+.pv .big{margin:14px 20px 0;border-radius:14px;overflow:hidden;background:#e6eef6;text-align:center}
+.pv .big img{display:block;margin:0 auto;max-width:100%;max-height:calc(100vh - 170px);max-height:calc(100dvh - 170px);width:auto;height:auto}
+.pv .ft2{padding:12px 20px 18px;font-size:13px}.pv .ft2 a{color:var(--blue);font-weight:700}
+.ico{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.18em}.pin,.pbtn,.meta{align-items:center}.pin,.pbtn{display:inline-flex;gap:5px}
+.kalbar{margin-top:14px}.kal{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;background:#fff;border:1px solid var(--line);color:var(--navy);font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 6px 16px #102a4310}.kal:hover{background:var(--soft)}.kal:focus-visible{outline:3px solid #1677c850;outline-offset:2px}.kal span{font-weight:400;color:var(--mute)}.solo .kalbar{display:none}
+</style>
+<link rel="stylesheet" href="si-tema.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="bn">
+    <span class="lg"><img src="logo-sitaqwa.png" alt="Logo SDS Islam At-Taqwa"></span>
+    <div class="tx"><h1>Info At-Taqwa</h1>
+    <p>Pengumuman, agenda kegiatan, dan surat untuk orang tua</p></div>
+  </header>
+
+  <div class="kalbar"><a class="kal" href="/#kalender" target="_top"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.6"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg> Kalender Pendidikan <span id="kalTA"></span></a></div>
+
+  <div class="card" id="pdWrap" hidden>
+    <h2>Pendaftaran terbuka untuk umum</h2>
+    <div class="mut" style="margin-top:2px">Peserta dari sekolah lain bisa mendaftar langsung, tanpa kode akses murid.</div>
+    <div class="pd" id="pd"></div>
+  </div>
+
+  <div class="card" id="agWrap" hidden>
+    <h2>Agenda mendatang</h2>
+    <div class="agenda" id="agenda"></div>
+  </div>
+
+  <div class="bar"><input id="q" type="search" placeholder="Cari info…" aria-label="Cari info"></div>
+  <div class="per" id="per"></div>
+  <div class="card" id="arsip" hidden></div>
+  <div class="chips" id="chips"></div>
+
+  <div id="list"><div class="card empty">Memuat…</div></div>
+
+</div>
+
+<dialog class="pv" id="pvDlg" aria-labelledby="pvT">
+  <div class="dh"><h3 id="pvT"></h3><button class="x" id="pvX" type="button" aria-label="Tutup">×</button></div>
+  <div class="big"><img id="pvImg" alt=""></div>
+  <div class="ft2"><a id="pvOpen" href="#" target="_blank" rel="noopener">Buka ukuran penuh di tab baru</a></div>
+</dialog>
+<dialog class="pv pdfv" id="pdfDlg" aria-labelledby="pdfT">
+  <div class="dh"><div><h3 id="pdfT"></h3><div class="sub" id="pdfSub"></div></div><button class="x" id="pdfX" type="button" aria-label="Tutup">×</button></div>
+  <div class="pdfbody" id="pdfPages"></div>
+  <div class="ft2"><a id="pdfOpen" href="#" target="_blank" rel="noopener">Buka PDF di tab baru / unduh</a></div>
+</dialog>
+<script src="js/umum.js"></script>
+<script>
+// Foto lampiran dibuka sebagai pop-up (bukan halaman baru). Klik tengah / Ctrl / Cmd tetap membuka tab baru.
+document.addEventListener('click', e => {
+  const a = e.target.closest('a.pvl'); if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  const im = a.querySelector('img');
+  document.getElementById('pvT').textContent = a.dataset.judul || '';
+  const big = document.getElementById('pvImg'); big.src = a.href; big.alt = im ? im.alt : '';
+  document.getElementById('pvOpen').href = a.href;
+  document.getElementById('pvDlg').showModal();
+});
+document.getElementById('pvX').onclick = () => document.getElementById('pvDlg').close();
+document.getElementById('pvDlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+// ===== Pratinjau PDF =====
+// PDF.js dimuat dari CDN hanya bila ada lampiran PDF. Kanvas dipakai (bukan <iframe>) karena banyak browser HP tidak bisa menampilkan PDF di dalam halaman.
+// Bila gagal (tanpa internet / file tidak bisa dibaca), kartu tetap menampilkan tombol "Buka PDF di tab baru".
+const PDFJS_V = '3.11.174', PDFJS_CDN = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_V}/`;
+let pdfLibP = null;
+const muatPdfJs = () => pdfLibP || (pdfLibP = new Promise((ok, no) => {
+  const siap = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_CDN + 'pdf.worker.min.js'; ok(window.pdfjsLib); };
+  if (window.pdfjsLib) return siap();
+  const s = document.createElement('script'); s.src = PDFJS_CDN + 'pdf.min.js';
+  s.onload = () => { try { siap(); } catch (e) { pdfLibP = null; no(e); } };
+  s.onerror = () => { pdfLibP = null; no(new Error('PDF.js tidak dapat dimuat')); };
+  document.head.appendChild(s);
+}));
+const pdfDocs = new Map();
+const bukaPdf = url => {
+  if (!pdfDocs.has(url)) pdfDocs.set(url, muatPdfJs().then(L => L.getDocument({ url }).promise).catch(e => { pdfDocs.delete(url); throw e; }));
+  return pdfDocs.get(url);
+};
+async function gambarHalaman(page, canvas, lebarCss) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const vp = page.getViewport({ scale: (Math.max(lebarCss, 200) / page.getViewport({ scale: 1 }).width) * dpr });
+  canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+}
+
+// Kartu: halaman 1 digambar saat kartu mendekati layar.
+let ioPdf = null;
+function pasangPdf() {
+  if (ioPdf) ioPdf.disconnect();
+  const els = document.querySelectorAll('.pdfp[data-url]'); if (!els.length) return;
+  ioPdf = new IntersectionObserver(es => es.forEach(en => {
+    if (!en.isIntersecting) return; ioPdf.unobserve(en.target);
+    const el = en.target, btn = el.querySelector('.pgb');
+    bukaPdf(el.dataset.url).then(async doc => {
+      el.querySelector('.jml').textContent = doc.numPages + ' halaman';
+      await gambarHalaman(await doc.getPage(1), btn.querySelector('canvas'), btn.clientWidth);
+      btn.classList.add('siap');
+    }).catch(() => { btn.classList.add('gagal'); btn.disabled = true; btn.querySelector('.ph0').textContent = 'Pratinjau belum bisa ditampilkan. Gunakan tombol di bawah untuk membuka PDF.'; });
+  }), { rootMargin: '300px' });
+  els.forEach(el => ioPdf.observe(el));
+}
+
+// Pop-up: seluruh halaman, digambar bertahap saat digulir.
+let tokenPdf = 0, ioView = null;
+async function tampilPdf(url, judul) {
+  const dlg = $('#pdfDlg'), box = $('#pdfPages'), my = ++tokenPdf;
+  $('#pdfT').textContent = judul || 'Dokumen PDF'; $('#pdfSub').textContent = 'Memuat…'; $('#pdfOpen').href = url;
+  box.innerHTML = '<div class="pdfmsg">Memuat dokumen…</div>'; box.scrollTop = 0;
+  if (!dlg.open) dlg.showModal();
+  try {
+    const doc = await bukaPdf(url); if (my !== tokenPdf) return;
+    $('#pdfSub').textContent = doc.numPages + ' halaman'; box.innerHTML = '';
+    if (ioView) ioView.disconnect();
+    const hal = new Map();
+    ioView = new IntersectionObserver(es => es.forEach(en => {
+      if (!en.isIntersecting) return; ioView.unobserve(en.target);
+      const pg = hal.get(en.target); if (!pg) return;
+      gambarHalaman(pg, en.target.firstChild, en.target.clientWidth).catch(() => {});
+    }), { root: box, rootMargin: '700px' });
+    for (let i = 1; i <= doc.numPages; i++) {
+      const pg = await doc.getPage(i); if (my !== tokenPdf) return;
+      const v = pg.getViewport({ scale: 1 }), w = document.createElement('div');
+      w.className = 'pgv'; w.style.aspectRatio = v.width + ' / ' + v.height; w.appendChild(document.createElement('canvas'));
+      box.appendChild(w); hal.set(w, pg); ioView.observe(w);
+    }
+  } catch (e) {
+    if (my === tokenPdf) { $('#pdfSub').textContent = ''; box.innerHTML = '<div class="pdfmsg">Dokumen tidak dapat ditampilkan di sini.<br>Gunakan tautan di bawah untuk membukanya.</div>'; }
+  }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.pgb'); if (!b || b.disabled) return;
+  const p = b.closest('.pdfp'); tampilPdf(p.dataset.url, p.dataset.judul);
+});
+$('#pdfX').onclick = () => $('#pdfDlg').close();
+$('#pdfDlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+$('#pdfDlg').addEventListener('close', () => { tokenPdf++; if (ioView) ioView.disconnect(); $('#pdfPages').innerHTML = ''; });
+const linkify = t => esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const tgl = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const tglS = d => new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+const KAT = { semua: 'Semua', pengumuman: 'Pengumuman', agenda: 'Agenda', surat: 'Surat Edaran', kegiatan: 'Berita Kegiatan', prestasi: 'Prestasi', lainnya: 'Lainnya' };
+if (self !== top) document.body.classList.add('emb');
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Tautan bagikan: /bagikan/<id> (pratinjau judul + ringkasan di WhatsApp dll), lalu membuka hanya info itu saja.
+function bagiHtml(x) {
+  if (!UUID.test(x.id)) return '';
+  const u = location.origin + '/bagikan/' + x.id, t = x.judul, e = encodeURIComponent;
+  return `<div class="share" data-u="${esc(u)}" data-t="${esc(t)}"><span>Bagikan:</span>
+    <a class="sh wa" href="https://wa.me/?text=${esc(e(t + '\n' + u))}" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="sh" href="https://www.facebook.com/sharer/sharer.php?u=${esc(e(u))}" target="_blank" rel="noopener">Facebook</a>
+    <a class="sh" href="https://t.me/share/url?url=${esc(e(u))}&text=${esc(e(t))}" target="_blank" rel="noopener">Telegram</a>
+    <a class="sh" href="https://twitter.com/intent/tweet?url=${esc(e(u))}&text=${esc(e(t))}" target="_blank" rel="noopener">X</a>
+    <button class="sh" data-copy>Salin tautan</button>${navigator.share ? '<button class="sh" data-native>Lainnya…</button>' : ''}</div>`;
+}
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('button.sh'); if (!b) return;
+  const w = b.closest('.share'), u = w.dataset.u, t = w.dataset.t;
+  if (b.dataset.native !== undefined) { try { await navigator.share({ title: t, text: t, url: u }); } catch (_) {} return; }
+  let ok = false;
+  try { await navigator.clipboard.writeText(u); ok = true; }
+  catch (_) { const a = document.createElement('textarea'); a.value = u; a.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch (_) {} a.remove(); }
+  if (!ok) { prompt('Salin tautan ini:', u); return; }
+  b.innerHTML = 'Tautan disalin ' + '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'; setTimeout(() => { b.textContent = 'Salin tautan'; }, 2500);
+});
+
+let DATA = [], TODAY = '', kat = 'semua';
+const QS = new URLSearchParams(location.search), FOKUS = QS.get('id') || '', SOLO = QS.get('solo') === '1';
+if (QS.get('kat') && KAT[QS.get('kat')]) kat = QS.get('kat');
+
+const BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const ym = d => String(d || '').slice(0, 7);
+const namaBln = k => { const [y, m] = k.split('-').map(Number); return BLN[m - 1] + ' ' + y; };
+let periode = 'terbaru', arsipBuka = false;   // 'terbaru' = bulan berjalan; 'YYYY-MM' = arsip bulan itu
+
+// Info yang tampil menurut periode. Info disematkan selalu ikut di "terbaru". Saat mencari, semua arsip ikut dicari.
+function lingkup() {
+  const q = $('#q').value.trim();
+  if (q) return DATA;
+  const cur = ym(TODAY);
+  if (periode === 'terbaru') return DATA.filter(x => ym(x.tanggal_terbit) >= cur || x.sematkan);
+  return DATA.filter(x => ym(x.tanggal_terbit) === periode);
+}
+function render() {
+  const q = $('#q').value.trim().toLowerCase();
+  const rows = lingkup().filter(x => (kat === 'semua' || x.kategori === kat) && (!q || (x.judul + ' ' + (x.isi || '')).toLowerCase().includes(q)));
+  const kosong = q ? 'Tidak ada info yang cocok di seluruh arsip.'
+    : periode === 'terbaru' ? `Belum ada info untuk ${namaBln(ym(TODAY))}. Lihat <b>Arsip</b> untuk info bulan-bulan sebelumnya.` : 'Belum ada info untuk ditampilkan.';
+  $('#list').innerHTML = rows.length ? rows.map(x => {
+    const lamp = x.lampiran_url && /^https?:\/\//.test(x.lampiran_url) ? x.lampiran_url : '';
+    const isImg = /\.(jpe?g|png|webp)(\?|$)/i.test(lamp);
+    const isPdf = !!lamp && (/\.pdf(\?|#|$)/i.test(lamp) || /\.pdf$/i.test(x.lampiran_nama || ''));
+    const long = (x.isi || '').length > 280 || (x.isi || '').split('\n').length > 5;
+    return `<article class="card post" data-id="${esc(x.id)}">
+      <div class="meta"><span class="pill ${esc(x.kategori)}">${esc(KAT[x.kategori] || 'Info')}</span>${x.sematkan ? '<span class="pin"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v1.5H7V13l3-3z"/><path d="M12 14.5V20"/></svg> Disematkan</span>' : ''}<span>${tglS(x.tanggal_terbit)}</span></div>
+      <h3>${esc(x.judul)}</h3>
+      ${x.tanggal_agenda ? `<div class="meta"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2.6"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg> ${tgl(x.tanggal_agenda)}${x.lokasi ? ' · ' + esc(x.lokasi) : ''}</div>` : (x.lokasi ? `<div class="meta"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg> ${esc(x.lokasi)}</div>` : '')}
+      ${x.isi ? `<div class="isi${long ? ' cut' : ''}">${linkify(x.isi)}</div>${long ? '<button class="more">Baca selengkapnya</button>' : ''}` : ''}
+      ${isImg ? `<a class="pvl" href="${esc(lamp)}" target="_blank" rel="noopener" data-judul="${esc(x.judul)}"><img class="lamp-img" loading="lazy" src="${esc(lamp)}" alt="${esc(x.lampiran_nama || x.judul)}"></a>` : ''}
+      ${isPdf ? `<div class="pdfp" data-url="${esc(lamp)}" data-judul="${esc(x.judul)}"><div class="pph"><span class="tag">PDF</span><span class="nm">${esc(x.lampiran_nama || 'Dokumen')}</span><span class="jml"></span></div><button type="button" class="pgb" aria-label="Buka pratinjau PDF: ${esc(x.judul)}"><canvas></canvas><span class="ph0">Memuat pratinjau…</span><span class="lihat">Baca dokumen lengkap</span></button></div>` : ''}
+      ${lamp && !isImg ? `<a class="lamp" href="${esc(lamp)}" target="_blank" rel="noopener"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg> ${isPdf ? 'Buka PDF di tab baru' : esc(x.lampiran_nama || 'Buka lampiran')}</a>` : ''}
+      ${bagiHtml(x)}
+    </article>`;
+  }).join('') : `<div class="card empty">${kosong}</div>`;
+  document.querySelectorAll('.more').forEach(b => b.onclick = () => {
+    const c = b.previousElementSibling.classList.toggle('cut'); b.textContent = c ? 'Baca selengkapnya' : 'Tutup';
+  });
+  pasangPdf();
+}
+
+function renderChips() {
+  const ada = new Set(lingkup().map(x => x.kategori));
+  if (kat !== 'semua' && !ada.has(kat)) kat = 'semua';
+  $('#chips').innerHTML = Object.keys(KAT).filter(k => k === 'semua' || ada.has(k))
+    .map(k => `<button data-k="${k}" class="${k === kat ? 'on' : ''}">${KAT[k]}</button>`).join('');
+  document.querySelectorAll('#chips button').forEach(b => b.onclick = () => { kat = b.dataset.k; renderChips(); render(); });
+}
+
+// Arsip: bulan-bulan sebelum bulan berjalan, dikelompokkan per tahun (terbaru di atas).
+function petaArsip() {
+  const cur = ym(TODAY), m = {};
+  DATA.forEach(x => { const k = ym(x.tanggal_terbit); if (k && k < cur) m[k] = (m[k] || 0) + 1; });
+  return m;
+}
+function renderPeriode() {
+  const arsip = petaArsip(), keys = Object.keys(arsip).sort().reverse();
+  const q = $('#q').value.trim();
+  if (q) {
+    $('#per').innerHTML = `<div><h2>Hasil pencarian</h2><div class="mut">Mencari di semua info, termasuk arsip.</div></div>`;
+    $('#arsip').hidden = true; return;
+  }
+  const judul = periode === 'terbaru' ? `<h2>Info bulan ini</h2><div class="mut">${namaBln(ym(TODAY))}</div>` : `<h2>Arsip · ${namaBln(periode)}</h2><div class="mut">${arsip[periode] || 0} info</div>`;
+  const tombol = (periode !== 'terbaru' ? '<button class="pbtn" data-p="terbaru"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Info terbaru</button> ' : '')
+    + (keys.length ? `<button class="pbtn ${arsipBuka ? 'on' : ''}" data-p="arsip" aria-expanded="${arsipBuka}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2H10l2 2.5h6.5a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg> Arsip (${keys.length} bulan)</button>` : '');
+  $('#per').innerHTML = `<div>${judul}</div><div style="display:flex;gap:8px;flex-wrap:wrap">${tombol}</div>`;
+  const tahun = [...new Set(keys.map(k => k.slice(0, 4)))];
+  $('#arsip').hidden = !arsipBuka || !keys.length;
+  $('#arsip').innerHTML = tahun.map(y => `<h3>${y}</h3><div class="bln">${keys.filter(k => k.startsWith(y)).map(k =>
+    `<button data-p="${k}" class="${k === periode ? 'on' : ''}">${BLN[Number(k.slice(5)) - 1]}<small>${arsip[k]} info</small></button>`).join('')}</div>`).join('');
+}
+function setPeriode(p) {
+  if (p === 'arsip') { arsipBuka = !arsipBuka; renderPeriode(); return; }
+  periode = p; arsipBuka = false; kat = 'semua';
+  renderPeriode(); renderChips(); render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b && (b.closest('#per') || b.closest('#arsip'))) setPeriode(b.dataset.p); });
+
+function renderPendaftaran(list) {
+  const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+  $('#pdWrap').hidden = !list.length;
+  $('#pd').innerHTML = list.map(k => {
+    const u = location.origin + '/daftar.html?k=' + encodeURIComponent(k.id);
+    return `<div class="pdi"><div><div class="t">${esc(k.nama)}</div>
+      <div class="s">Kegiatan ${tglS(k.tanggal_kegiatan)} · Daftar sampai ${tglS(k.tutup_daftar)} · ${k.biaya ? rp(k.biaya) : 'Gratis'}${k.sisa != null ? ' · Sisa kuota ' + k.sisa : ''}</div>
+      ${k.deskripsi ? `<div class="s" style="margin-top:4px">${esc(k.deskripsi)}</div>` : ''}</div>
+      ${k.fase === 'penuh' ? '<span class="pill">Kuota penuh</span>' : `<a class="go" href="${esc(u)}" target="_top">Daftar sekarang</a>`}</div>`;
+  }).join('');
+}
+
+function renderAgenda() {
+  const ag = DATA.filter(x => x.tanggal_agenda && x.tanggal_agenda >= TODAY).sort((a, b) => a.tanggal_agenda.localeCompare(b.tanggal_agenda)).slice(0, 5);
+  $('#agWrap').hidden = !ag.length;
+  $('#agenda').innerHTML = ag.map(x => {
+    const d = new Date(x.tanggal_agenda + 'T00:00:00');
+    return `<div class="ag"><div class="d"><b>${d.getDate()}</b><span>${d.toLocaleDateString('id-ID', { month: 'short' })}</span></div>
+      <div><div class="t">${esc(x.judul)}</div><div class="s">${esc(x.lokasi || KAT[x.kategori] || '')}</div></div></div>`;
+  }).join('');
+}
+
+$('#q').oninput = () => { renderPeriode(); renderChips(); render(); };
+// Daftar Info Terbaru hanya memuat info menu Info Terbaru (utama=1). Tautan ke satu info tertentu (?id=…) tetap memuat semua
+// supaya info Ekskul/Club/Unggulan yang dibagikan lewat WhatsApp tetap bisa dibuka.
+fetch(FOKUS ? '/api/info?limit=1000' : '/api/info?utama=1&limit=1000').then(r => r.json()).then(d => {
+  if (d.error) throw new Error(d.error);
+  DATA = d.info.filter(x => !x.jenis_kegiatan || x.id === FOKUS); TODAY = d.today; renderPendaftaran(d.pendaftaran || []);
+  const f = FOKUS && DATA.find(x => x.id === FOKUS);
+  if (f) kat = 'semua';
+  if (SOLO && f) {                          // dibuka dari tautan bagikan: hanya info ini
+    DATA = [f]; document.body.classList.add('solo');
+    document.querySelector('.bar').style.display = 'none'; $('#chips').style.display = 'none';
+    $('#list').insertAdjacentHTML('afterend', '<p style="text-align:center;margin-top:18px"><a class="lamp" href="/#info" target="_top">Lihat info lainnya <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>');
+    render();
+  } else {
+    const bl = QS.get('bulan');                       // ?bulan=2026-09 membuka arsip bulan itu
+    if (bl && /^\d{4}-\d{2}$/.test(bl) && bl < ym(TODAY)) periode = bl;
+    if (f && ym(f.tanggal_terbit) < ym(TODAY) && !f.sematkan) periode = ym(f.tanggal_terbit);   // info yang dituju sudah diarsipkan
+    renderAgenda(); renderPeriode(); renderChips(); render();
+  }
+  if (f) {                                  // dibuka dari beranda: tampilkan info yang dituju, isi lengkap
+    const el = document.querySelector(`article[data-id="${CSS.escape(f.id)}"]`);
+    if (el) { el.classList.add('hl'); const t = el.querySelector('.isi'); if (t) t.classList.remove('cut'); const b = el.querySelector('.more'); if (b) b.textContent = 'Tutup'; el.scrollIntoView({ block: 'start' }); }
+  }
+}).catch(e => { $('#list').innerHTML = `<div class="card empty">${esc(e.message || 'Gagal memuat info.')}</div>`; });
+</script>
+<script src="data-sekolah.js"></script>
+<script src="data-kalender.js"></script>
+<script>if (window.KALENDER) document.getElementById('kalTA').textContent = '· ' + window.KALENDER.tahunAjaran;</script>
+<script src="footer-sekolah.js"></script>
+</body>
+</html>

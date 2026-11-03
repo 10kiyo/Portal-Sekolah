@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilih Panel</title>
+<link rel="icon" type="image/png" href="favicon-terang.png?v=3">
+<link rel="icon" type="image/png" href="favicon.png?v=3" media="(prefers-color-scheme: light)">
+<style>
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(820px,calc(100% - 24px));margin:0 auto;padding:7vh 0 40px;text-align:center}
+p{margin:0;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:30px}
+a.panel{display:block;text-align:left;text-decoration:none;color:inherit;background:#fff;border:1px solid #dbe8f2;border-radius:22px;padding:28px;box-shadow:0 18px 45px #102a4310;transition:.18s}
+a.panel:hover,a.panel:focus-visible{border-color:var(--blue);transform:translateY(-2px);outline:none}
+a.panel h2{margin:0 0 8px;color:var(--navy);font-size:22px}
+a.panel span{color:var(--mute);font-size:15px}
+.small{margin-top:24px;font-size:14px}
+.small a{color:var(--mute)}
+</style>
+<link rel="stylesheet" href="si-tema.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="si-head">
+    <img src="logo-at-taqwa.png" alt="">
+    <h1>Pilih panel</h1>
+    <p>Masuk ke bagian yang ingin kamu kelola.</p>
+  </div>
+  <div class="grid">
+    <a class="panel" href="/kelas.html"><h2>Administrasi Guru dan Staf</h2><span>Menu sesuai tugas: kelas &amp; nilai, perpustakaan, keuangan, persuratan, operator.</span></a>
+    <a class="panel" href="/kegiatan.html"><h2>Kegiatan Sekolah</h2><span>Pendaftaran kegiatan, cek bukti transfer, dan rekap peserta.</span></a>
+    <a class="panel" href="/#admin"><h2>Admin Buku Tamu</h2><span>Rekap kehadiran tamu, pembagian, dan doorprize.</span></a>
+  </div>
+  <p class="small"><a href="/ortu.html">Halaman orang tua</a></p>
+</div>
+</body>
+</html>

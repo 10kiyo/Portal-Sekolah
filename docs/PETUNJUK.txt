@@ -1,0 +1,204 @@
+MODUL KEGIATAN SEKOLAH - cara pasang
+1. Supabase > SQL Editor: jalankan 00-kegiatan.sql (membuat 2 tabel + bucket privat "bukti").
+2. Salin folder ke repo (struktur sama):
+   functions/_lib/util.js            (BARU)
+   functions/api/ortu-kegiatan.js    (BARU)
+   functions/api/admin-kegiatan.js   (BARU)
+   src/worker.js                     (DIGANTI - menambah 2 route)
+   public/kegiatan.html              (BARU - halaman panitia)
+   public/ortu.html                  (DIGANTI - bagian Kegiatan untuk orang tua)
+   public/index.html, public/admin.html (DIGANTI - menu/tautan)
+3. Deploy. Tidak ada variabel baru: memakai SUPABASE_SERVICE_ROLE_KEY, ADMIN_PIN, ADMIN_SECRET yang sudah ada.
+
+MODUL INFO TERBARU (pengumuman, agenda, surat)
+1. Supabase > SQL Editor: jalankan 00-info.sql (membuat tabel info_sekolah + bucket publik "info").
+2. File baru/diganti (struktur sama):
+   functions/api/info.js          (BARU - data publik)
+   functions/api/admin-info.js    (BARU - khusus admin)
+   src/worker.js                  (DIGANTI - menambah 2 route)
+   public/info.html               (BARU - halaman publik)
+   public/info-admin.html         (BARU - panel admin, PIN yang sama)
+   public/index.html              (DIGANTI - menu, tile, footer, cuplikan beranda)
+3. Deploy. Tidak ada variabel baru. Admin mengelola lewat /#info-admin (atau tautan "Kelola info" di bawah halaman Info Terbaru).
+
+MENU KEGIATAN (Jurnal Murid, Ekstrakurikuler, Club, Kegiatan Unggulan)
+1. Supabase > SQL Editor: jalankan 01-jurnal.sql (tabel jurnal_murid, bucket privat "jurnal", kolom info_sekolah.jenis_kegiatan).
+   JALANKAN SEBELUM DEPLOY: kode admin-info sekarang menyimpan kolom jenis_kegiatan.
+2. File baru/diganti:
+   functions/api/jurnal.js, murid-jurnal.js, admin-jurnal.js   (BARU)
+   functions/api/info.js, admin-info.js, functions/_lib/util.js  (DIGANTI)
+   src/worker.js                                               (DIGANTI - menambah 3 route)
+   public/jurnal.html, kegiatan-sekolah.html                   (BARU)
+   public/info-admin.html, public/index.html                   (DIGANTI)
+3. Alur: murid masuk dengan kode akses (sama dengan Pantau Belajar Anak) > kirim jurnal > admin menyetujui di
+   Kelola info > tab "Jurnal murid" > tayang di menu Kegiatan > Jurnal Murid.
+   Ekskul/Club/Kegiatan Unggulan: di Kelola info, isi kolom "Jenis kegiatan" pada info (kategori disarankan "Berita Kegiatan").
+
+GURU & STAFF OTOMATIS DARI SUPABASE
+   functions/api/guru.js (BARU), public/guru.html, public/data-guru.js, public/footer-sekolah.js.
+   Cek jenis undangan: buka /api/guru?jenis=1 . Atur manual dengan variabel GURU_JENIS di Cloudflare bila perlu.
+
+GURU & STAFF: JABATAN + AKUN LOGIN OTOMATIS (username + PIN)
+1. Supabase > SQL Editor: jalankan 02-guru.sql (membuat tabel guru_staf, mengisinya dari daftar tamu guru/staf,
+   membuat username & PIN otomatis, mengisi jabatan awal). Periksa hasilnya di Table Editor > guru_staf.
+2. File baru/diganti (struktur sama):
+   functions/api/guru-login.js (BARU), functions/api/guru.js, src/worker.js,
+   public/guru.html, public/data-guru.js, public/kelas.html   (DIGANTI)
+3. Deploy. Tidak ada variabel wajib baru (memakai SUPABASE_SERVICE_ROLE_KEY).
+   Opsional GURU_EMAIL_DOMAIN: bila Supabase menolak email teknis "username@guru.at-taqwa.sch.id" saat membuat akun,
+   isi dengan domain asli yang punya MX record.
+4. Alur harian:
+   - Guru/staf baru: Table Editor > guru_staf > Insert row, isi "nama" (+ jabatan, kelompok, mapel, foto). Username & PIN muncul otomatis.
+   - Ubah jabatan/foto/mapel: edit barisnya; halaman Guru & Staff ikut berubah (maks. 1 menit).
+   - Login Administrasi Kelas: username + PIN dari kolom username & pin. Akun Supabase dibuat otomatis saat login pertama.
+   - Guru lama yang sudah punya akun email: isi auth_user_id di barisnya agar data kelas lamanya tetap terhubung.
+   - Murid: halaman Administrasi Kelas menyinkronkan murid (baru, ganti nama, pindah kelas, tidak aktif) dengan database
+     setiap halaman dibuka, atau lewat tombol "Sinkronkan Murid". Buku Tamu sudah membaca database setiap dibuka.
+
+MENU PER PERAN + MENU SAMPING (Administrasi Guru dan Staf)
+1. Supabase > SQL Editor: jalankan 03-peran.sql (SETELAH 02-guru.sql). Membuat kolom peran, tabel kerja
+   tiap peran, dan aturan akses (hanya peran yang bersangkutan yang bisa membuka datanya).
+2. File baru/diganti: public/modul-staf.js (BARU), public/kelas.html, public/admin.html, public/index.html,
+   public/guru.html, functions/api/guru.js (DIGANTI).
+3. Peran ditebak otomatis dari jabatan (pustaka -> pustakawan, bendahara/keuangan -> keuangan, surat/sekretar -> persuratan,
+   operator -> operator, lainnya -> guru/staf). Ubah di kolom guru_staf.peran atau lewat menu Akun guru & staf (operator).
+   Akun Anda sendiri: set peran = 'admin' agar semua menu tampil.
+4. Menu: guru (kelas & nilai) | pustakawan (kartu pelajar, ekskul & club, peminjaman buku) | keuangan (kas, laporan, proposal, LPJ)
+   | persuratan (surat masuk, surat keluar, agenda) | operator (pekerjaan, akun guru & staf, data murid). Semua punya Profil saya.
+5. Halaman Guru & Staff kini hanya menampilkan yang ada di tabel guru_staf (tidak ada nama ganda dari daftar tamu).
+
+KARTU PELAJAR (menu Pustakawan: desain kartu, data dari database, PDF)
+1. Supabase > SQL Editor: jalankan 05-kartu.sql (SETELAH 03-peran.sql). Membuat tabel murid_profil (NIS, NISN, tempat/tanggal lahir,
+   alamat, foto_path; terisi satu baris kosong per murid), tabel kartu_desain, bucket privat "foto-murid", dan aturan akses.
+2. File diganti: public/modul-staf.js, public/kelas.html. Tidak ada variabel baru.
+3. Admin utama melengkapi data di Table Editor > murid_profil (tanggal_lahir format YYYY-MM-DD). Data baru langsung bisa dipakai pustakawan
+   setelah klik "Muat ulang data". Kolom baru (mis. agama) cukup ditambahkan di tabel: otomatis muncul di daftar "Bagian yang tampil di kartu".
+   Murid baru di daftar tamu: jalankan ulang bagian 2 di 05-kartu.sql.
+4. Foto (opsional): unggah ke Storage > foto-murid (mis. 3A/budi.jpg), isi kolom foto_path dengan "3A/budi.jpg". Tanpa foto, kotak foto kosong tampil.
+5. Pustakawan: atur judul, warna, ukuran huruf, bagian yang tampil + urutannya, lalu "Simpan tampilan" (berlaku untuk semua pustakawan).
+   Pilih kelas (atau Semua kelas), centang murid, pilih format (A4 10 kartu/halaman atau 1 kartu/halaman), klik "Unduh PDF".
+   Pembuatan PDF memuat pustaka html2canvas & jsPDF dari cdn.jsdelivr.net, jadi perlu internet.
+
+KEGIATAN PER TINGKAT KELAS + PENDAFTARAN UMUM + EDIT DATA MURID OLEH OPERATOR
+1. Supabase > SQL Editor: jalankan 06-kegiatan-tingkat.sql (SETELAH 05-kartu.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah kolom kegiatan.tingkat / untuk_umum / tampil_info, kolom lapisan di murid_profil, dan fungsi murid_gabungan().
+2. File baru/diganti (struktur sama):
+   BARU    : functions/api/umum-kegiatan.js, public/daftar.html, 06-kegiatan-tingkat.sql
+   DIGANTI : functions/_lib/util.js, functions/api/ortu-kegiatan.js, admin-kegiatan.js, info.js, src/worker.js,
+             public/kegiatan.html, ortu.html, info.html, kelas.html, modul-staf.js
+3. Kegiatan per tingkat: menu Kegiatan (Panitia) > Tambah/Edit > "Siapa yang boleh mendaftar" > centang Kelas 1, 2, 3.
+   Tidak ada yang dicentang = semua kelas. Dicek di server (kelas anak diambil dari kode akses), bukan sekadar disembunyikan.
+   Tombol "Salin tautan murid" menghasilkan /ortu.html?k=<id>. Orang tua dari kelas lain yang membukanya melihat pesan
+   "khusus untuk Kelas 1, 2, 3"; kegiatan tidak tampil di daftar mereka.
+4. Pendaftaran umum: centang "Buka juga untuk umum". Tombol "Salin tautan umum" menghasilkan /daftar.html?k=<id>
+   (tanpa login). Peserta mengisi nama, asal sekolah, kontak WhatsApp, (bukti transfer bila berbiaya). Pendaftar muncul di daftar
+   pendaftar yang sama dengan kelas "Umum". Kegiatan umum yang sedang dibuka otomatis tampil di halaman Info Terbaru
+   (hilang sendiri saat ditutup/selesai; hilangkan dengan mencabut centang "Tampilkan ... di halaman Info Terbaru").
+5. Operator > Data murid: ubah nama/kelas/NIS/NISN/TTL/alamat, tambah murid, tempel dari Excel, nonaktifkan/aktifkan.
+   Disimpan di murid_profil (daftar_tamu_gabungan tidak diubah). Guru menerima perubahan lewat sinkron murid otomatis
+   (saat membuka Administrasi Kelas, kembali ke tab setelah >5 menit, atau tombol "Sinkronkan Murid"). Baris murid yang sama
+   diperbarui di tempat, jadi presensi, nilai, dan kode akses TIDAK hilang. Murid nonaktif hanya disembunyikan.
+   Catatan: Buku Tamu masih membaca daftar_tamu_gabungan langsung, jadi murid tambahan operator belum muncul di sana.
+
+EKSKUL & CLUB (tautan dari panitia, data hanya untuk pustakawan)
+1. Supabase > SQL Editor: jalankan 07-ekskul-club.sql (SETELAH 03-peran.sql & 06-kegiatan-tingkat.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah kolom kegiatan.jenis, tabel ekskul_pendaftar (RLS: hanya peran pustakawan/admin), dan izin baca bukti transfer folder ekskul/.
+2. File diganti: public/kegiatan.html, public/ortu.html, public/modul-staf.js, functions/api/admin-kegiatan.js, functions/api/ortu-kegiatan.js.
+3. Alur: panitia > Kegiatan Sekolah > Tambah kegiatan > pilih Jenis (Ekstrakurikuler / Club) > Salin tautan murid > bagikan ke murid.
+   Ekskul: berbayar, orang tua unggah bukti transfer ke rekening Bu Laras; Bu Laras (menu Pustakawan > Ekskul & club) memeriksa bukti,
+   mengisi jumlah yang diterima, lalu Konfirmasi lunas / Tolak. Club: gratis, orang tua menulis alasan; Bu Laras menyeleksi (Terima / Tidak diterima).
+   Panitia hanya melihat jumlah pendaftar, bukan nama atau datanya. Ekskul & club tidak bisa dibuka untuk umum.
+4. Akun Bu Laras harus berperan 'pustakawan' (guru_staf.peran). Pendaftaran manual lama di menu Ekskul & club diganti alur ini.
+
+FOTO GURU & STAFF (diunggah sendiri, langsung tampil di halaman Guru & Staff)
+1. Supabase > SQL Editor: jalankan 04-foto-guru.sql (SETELAH 02-guru.sql & 03-peran.sql). JALANKAN SEBELUM DEPLOY.
+   Membuat bucket publik "foto-guru", aturan agar tiap orang hanya bisa menulis file miliknya (<uid>.jpg), dan fungsi simpan_foto_saya().
+2. File diganti: public/kelas.html, public/modul-staf.js (halaman Guru & Staff tidak berubah; sudah membaca kolom guru_staf.foto).
+3. Alur: guru/staf login > Profil saya > Ganti foto profil. Foto otomatis mengisi guru_staf.foto, tampil di halaman Guru & Staff (maks. ~1 menit karena cache).
+4. Nama diatur operator: menu Akun guru & staf > tombol "Ubah nama". Di Profil saya, kolom nama terkunci (readonly) untuk yang sudah ada di daftar guru & staf.
+   Akun yang belum terhubung ke daftar guru & staf (auth_user_id kosong) tidak bisa menyimpan foto: hubungi operator.
+
+FASILITAS SEKOLAH (halaman publik, dikelola Waka SarPras / Pak Mahidin)
+1. Supabase > SQL Editor: jalankan 08-fasilitas.sql (SETELAH 03-peran.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah kolom peran_tambahan (satu orang boleh punya beberapa menu), peran "sarpras", tabel fasilitas, bucket publik "fasilitas", dan aturan akses.
+   Akun dengan jabatan memuat sarpras/sarana/prasarana (dan nama Mahidin yang sudah ada) otomatis mendapat peran TAMBAHAN sarpras,
+   peran utamanya tetap guru, sehingga menu Kelas (wali kelas) dan menu Sarana & prasarana tampil bersamaan.
+   Operator bisa mengatur peran tambahan siapa pun lewat kotak centang di Akun guru & staf.
+2. File baru/diganti: public/fasilitas.html (BARU), functions/api/fasilitas.js (BARU), src/worker.js, public/index.html, public/kelas.html, public/modul-staf.js.
+3. Pengelolaan: Pak Mahidin login di Administrasi Guru dan Staf > menu "Sarana & prasarana > Kelola fasilitas": tambah/edit, foto banyak (foto pertama = sampul),
+   urutan naik/turun, sembunyikan/tampilkan, hapus. Kondisi (baik/perlu perbaikan/sedang diperbaiki) hanya catatan internal, tidak tampil ke publik.
+4. Halaman publik: menu Profil > Fasilitas (#fasilitas), ada pencarian dan filter kategori, klik kartu untuk galeri foto. Perubahan tampil maks. ~1 menit.
+
+BIMBINGAN KONSELING (BK): kedisiplinan + poin + SP, konseling rahasia, orang tua, kelas per guru BK
+1. Supabase > SQL Editor: jalankan 09-bk.sql (SETELAH 08-fasilitas.sql). JALANKAN SEBELUM DEPLOY.
+   Menambah peran 'bk', tabel bk_kelas, bk_jenis, bk_catatan, bk_tindak, bk_konseling, bk_ortu, bk_pengaturan (semua RLS: hanya peran bk/admin),
+   data awal jenis pelanggaran + poin (contoh SD) dan ambang poin. Jangan jalankan ulang 08-fasilitas.sql / 03-peran.sql sesudahnya.
+2. File baru/diganti (struktur sama):
+   BARU    : 09-bk.sql, public/modul-bk.js
+   DIGANTI : public/kelas.html (memuat modul-bk.js, menu BK, jabatan BK -> menu otomatis), public/modul-staf.js (daftar peran memuat 'bk'),
+             public/ortu.html + functions/api/ortu-lookup.js (kartu Kedisiplinan di Pantau Belajar Anak). src/worker.js TIDAK berubah.
+3. Dua guru BK: keduanya mengajar di kelas, jadi peran utama tetap 'guru' dan peran TAMBAHAN 'bk'. Otomatis bila jabatannya memuat "BK",
+   "Bimbingan", atau "Konseling". Bila tidak: Administrasi Guru dan Staf > Akun guru & staf > centang "bk" pada Peran tambahan guru tsb.
+   Mereka membuka ulang halaman agar menu "Bimbingan Konseling" muncul di samping menu Kelas.
+4. Tiap guru BK: menu BK > Kelas saya > centang kelas yang ditangani > Simpan. Satu kelas boleh dipegang dua guru (diberi tanda).
+   Menu lain menampilkan murid dari kelas itu; kotak "Tampilkan semua kelas" menampilkan semuanya (saling menggantikan saat berhalangan).
+5. Alur: Catat kedisiplinan (pilih kategori, kelas, jenis, centang banyak murid sekaligus) > poin terkumpul per semester (Jul-Des Ganjil, Jan-Jun Genap)
+   > bila mencapai ambang muncul di Tindak lanjut & SP > klik Catat, cetak Surat Peringatan (PDF lewat dialog cetak browser).
+   Konseling: catatan rahasia, hanya akun BK. Orang tua & surat: catatan panggilan/home visit, cetak surat panggilan & surat kesepakatan.
+6. BK > Pengaturan (dipakai bersama): ambang poin (awal: teguran 5, SP1 10, SP2 20, SP3 30), nama/NIP kepala sekolah untuk surat,
+   daftar jenis + bobot poin (SESUAIKAN dengan tata tertib sekolah), dan saklar menampilkan ringkasan kedisiplinan ke orang tua.
+7. Orang tua melihat kartu "Kedisiplinan" (jumlah, poin, tindak lanjut, rincian) di Pantau Belajar Anak. Konseling & catatan orang tua tidak pernah dikirim.
+   Matikan lewat BK > Pengaturan bila belum ingin ditampilkan.
+8. Belum termasuk: pengajuan konseling oleh murid, integrasi presensi guru kelas (data alpa milik tiap guru), notifikasi WhatsApp, audit log.
+
+GALERI PRESTASI SISWA (beranda): unggah banyak foto sekaligus, digabung dengan Info berkategori Prestasi
+1. Supabase > SQL Editor: jalankan 11-galeri.sql (membuat tabel galeri_prestasi). JALANKAN SEBELUM DEPLOY.
+   Foto disimpan di bucket "info" yang sudah ada (folder galeri/); tidak perlu bucket baru.
+2. File baru/diganti (struktur sama):
+   BARU    : 11-galeri.sql, functions/api/galeri.js, public/galeri.html
+   DIGANTI : src/worker.js (rute /api/galeri), functions/api/admin-info.js (aksi galeri_tambah/galeri_ubah/galeri_hapus),
+             public/info-admin.html (tab "Galeri Prestasi"), public/index.html (galeri beranda gabungan + lightbox + halaman #galeri)
+3. Admin yang sama dengan Info Terbaru (PIN admin yang sama): buka Kelola Info Terbaru > tab "Galeri Prestasi" >
+   Pilih foto (boleh puluhan, atau tarik ke kotak) > isi tanggal dan keterangan (opsional) > Unggah.
+   Foto diperkecil otomatis di browser (maks. sisi 1600 px) dan diunggah 3 sekaligus. Foto yang gagal tetap di antrean untuk dicoba lagi.
+4. Kelola: centang beberapa foto lalu Tampilkan / Sembunyikan / Ubah keterangan / Hapus (hapus juga membuang file dari penyimpanan).
+5. Digabung: beranda (bagian Prestasi siswa) dan halaman Galeri (/#galeri, tombol "Lihat semua") menampilkan foto galeri + gambar lampiran
+   Info berkategori Prestasi yang terbit, diurutkan tanggal terbaru dulu (Info yang disematkan di paling depan); foto yang sama tidak dobel.
+   Foto dari Info punya tautan "Baca beritanya" di lightbox; foto galeri tidak. Perubahan muncul paling lambat 60 detik (cache).
+6. Sebelum 11-galeri.sql dijalankan, beranda tetap berfungsi seperti biasa (hanya foto dari Info).
+
+PERAN "ADMIN INFO & GALERI": tombol "Kelola info/galeri (admin)" dipindah ke akun guru/staf
+1. Supabase > SQL Editor: jalankan 10-peran-info.sql (SETELAH 09-bk.sql). JALANKAN SEBELUM DEPLOY.
+2. File baru/diganti: BARU 10-peran-info.sql | DIGANTI functions/_lib/util.js (fungsi infoOk), functions/api/admin-info.js,
+   public/info-admin.html (mode staf), public/kelas.html, public/modul-staf.js, public/info.html & public/galeri.html (tombol admin dihapus),
+   09-bk.sql (daftar peran memuat 'info').
+3. Beri peran: Administrasi Guru dan Staf (operator) > Akun guru & staf > pada baris orangnya, menu "+ Tambah" di kolom Peran tambahan > "Admin Info".
+   Orang itu membuka ulang halaman, lalu muncul menu "Info & Galeri > Kelola Info & Galeri" di samping menu Kelas/BK-nya.
+4. Panel memakai login akun guru itu sendiri (tanpa PIN admin). Server memeriksa tokennya ke Supabase pada setiap permintaan dan hanya
+   mengizinkan akun aktif berperan Admin Info (atau admin). Mencabut peran = akses langsung hilang.
+5. Tombol admin di halaman Info Terbaru dan Galeri Prestasi sudah dihapus. Alamat lama /#info-admin (dengan PIN admin) tetap berfungsi sebagai cadangan.
+6. Verifikasi Jurnal Murid tidak termasuk peran ini (tab itu disembunyikan di mode staf); tetap lewat /#info-admin dengan PIN admin.
+
+VERIFIKASI JURNAL MURID UNTUK PERAN ADMIN INFO + GALERI BERANDA BERJALAN
+1. Tidak ada SQL baru (peran 'info' sudah dibuat lewat 10-peran-info.sql).
+2. File diganti: functions/api/admin-jurnal.js, public/info-admin.html, public/index.html.
+3. Akun guru/staf berperan Admin Info (atau peran tambahan 'info', atau admin) kini melihat tab "Jurnal Murid" di menu
+   Kelola Info & Galeri dan bisa menyetujui / minta revisi / menolak / menghapus jurnal tanpa PIN admin. Jalur PIN di /#info-admin tetap berfungsi.
+4. Beranda: bagian "Prestasi siswa" kini berjalan otomatis (marquee). Berhenti saat kursor di atasnya / layar disentuh; klik foto membuka lightbox
+   seperti sebelumnya. Pengguna dengan pengaturan "kurangi gerakan" mendapat baris yang bisa digeser manual.
+
+HAPUS LOGIN EMAIL + AKUN GURU LAMA BERBASIS EMAIL
+1. public/kelas.html (DIGANTI): tombol/form "Masuk dengan email" dihapus; hanya username + PIN.
+2. Pembersihan data di Supabase: buka supabase-hapus-akun-email.sql di SQL Editor. BACKUP dulu. Jalankan Bagian 1 (pratinjau akun & jumlah baris),
+   isi daftar "pertahankan" bila perlu (mis. email admin utama), lalu jalankan Bagian 2. Akun username+PIN (@guru.at-taqwa.sch.id) dan tabel guru_staf tidak dihapus.
+
+TAMPILAN BERANDA BARU (hero gelap + pita nilai berjalan + Visi & Kepala Sekolah)
+1. Hanya satu file diganti: public/index.html. Tidak ada SQL dan tidak ada file API yang berubah.
+2. Aset yang dipakai sudah ada: foto-sekolah.jpg (hero), foto-pimpinan.jpg (bagian Visi), logo-at-taqwa.png.
+3. Ubah teks: cari komentar "HERO" (judul, tagline, angka statistik, lencana) dan "NILAI" (teks pita berjalan) di index.html.
+   Teks sambutan tetap di blok SAMBUTAN pada script. Bagian Info terbaru, Video, Prestasi (galeri berjalan), dan footer tidak berubah.
+4. Saat menyalin ke repo: GABUNGKAN/timpa file saja, jangan mengganti seluruh folder public.
+
+FOTO KEPALA SEKOLAH BARU
+   File: public/foto-kepsek.jpg (BARU) dan public/index.html (DIGANTI). Foto lama foto-pimpinan.jpg tidak lagi dipakai di beranda (boleh dihapus).
+   Ganti foto lagi: timpa public/foto-kepsek.jpg dengan nama yang sama. Tinggi foto mengikuti tinggi kolom teks Visi; nama & jabatan di atas foto ada di index.html (class "cp").
