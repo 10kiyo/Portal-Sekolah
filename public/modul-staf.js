@@ -740,6 +740,16 @@ MODUL.akun = async function () {
    Guru menerima perubahan lewat sinkron murid otomatis di Administrasi Kelas: baris murid yang sama (guest_id) diperbarui di tempat,
    sehingga presensi, nilai, dan kode akses murid tidak hilang. Murid yang dinonaktifkan hanya disembunyikan, datanya tetap tersimpan. */
 const kosongNull = v => { v = String(v ?? '').trim(); return v === '' ? null : v; };
+// Tanggal lahir dari tempelan Excel: terima 2015-03-27, 27/03/2015, atau 27-03-2015; hasil selalu YYYY-MM-DD (null bila tidak valid).
+const tglIso = v => {
+  v = String(v ?? '').trim(); if (!v) return null;
+  let y, m, d, a;
+  if ((a = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(v))) [y, m, d] = [a[1], a[2], a[3]];
+  else if ((a = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/.exec(v))) [d, m, y] = [a[1], a[2], a[3]];
+  else return null;
+  const t = new Date(Date.UTC(+y, +m - 1, +d));
+  return t.getUTCFullYear() === +y && t.getUTCMonth() === +m - 1 && t.getUTCDate() === +d ? `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null;
+};
 const idBaru = () => 'OP-' + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => (b % 36).toString(36)).join('').toUpperCase();
 MODUL.data = async function () {
   $('#view').innerHTML = '<p>Memuat data murid...</p>';
@@ -747,6 +757,7 @@ MODUL.data = async function () {
   let g, prof;
   try { [g, prof] = await Promise.all([dataSiswa(), semua(() => sb.from('murid_profil').select('*').order('guest_id'))]); }
   catch (e) { $('#view').innerHTML = `<p class="msg err">Data murid tidak bisa dibaca: ${esc((e && e.message) || e)}</p><p class="mut">Pastikan 05-kartu.sql dan 06-kegiatan-tingkat.sql sudah dijalankan.</p>`; return; }
+  if (prof[0] && !('nama_panggilan' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom nama_panggilan belum ada di tabel murid_profil. Jalankan 13-nama-panggilan.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
   if (prof[0] && !('nonaktif' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom baru belum ada di tabel murid_profil. Jalankan 06-kegiatan-tingkat.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
   const pm = new Map(prof.map(p => [String(p.guest_id), p]));
   const aktif = g.map(x => ({ id: String(x.guest_id), nama: String(x.guest_name).trim(), kelas: String(x.instansi_kelas || '').trim(), jenis: x.jenis_undangan, p: pm.get(String(x.guest_id)) || {}, aktif: true }));
@@ -765,6 +776,7 @@ MODUL.data = async function () {
     <div><label for="mk">Kelas</label><input id="mk" list="mkl" value="${esc(m ? m.kelas : '')}" placeholder="mis. 3A"><datalist id="mkl">${kls.map(k => `<option value="${esc(k)}">`).join('')}</datalist></div>
     ${m ? '' : `<div><label for="mj">Jenis data</label><select id="mj">${opsi(jenisList, jenisUtama)}</select></div>`}
     <div><label for="mnis">NIS</label><input id="mnis" value="${esc(p.nis || '')}"></div><div><label for="mnisn">NISN</label><input id="mnisn" value="${esc(p.nisn || '')}"></div>
+    <div><label for="mpg">Nama panggilan</label><input id="mpg" value="${esc(p.nama_panggilan || '')}" maxlength="50"></div>
     <div><label for="mtl">Tempat lahir</label><input id="mtl" value="${esc(p.tempat_lahir || '')}"></div><div><label for="mtg">Tanggal lahir</label><input id="mtg" type="date" value="${esc(p.tanggal_lahir || '')}"></div></div>
     <label for="mal">Alamat</label><input id="mal" value="${esc(p.alamat || '')}">
     <p><button class="p" id="mSimpan">Simpan</button> <button id="mBatal">Batal</button></p></div>`;
@@ -772,8 +784,8 @@ MODUL.data = async function () {
   const tabel = () => {
     const k = $('#dk').value, q = $('#dq').value.trim().toLowerCase(), st = $('#ds').value;
     const l = semuaM.filter(x => (!k || x.kelas === k) && (!q || x.nama.toLowerCase().includes(q)) && (st === 'semua' || (st === 'nonaktif') === !x.aktif));
-    $('#dl').innerHTML = `<p class="mut">${l.length} murid</p><table><tr><th>No</th><th>Nama</th><th>Kelas</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>${l.map((x, i) => `<tr${x.aktif ? '' : ' style="opacity:.6"'}><td>${i + 1}</td><td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td><td>${esc(x.kelas)}</td><td>${esc(x.p.nis || '')}</td><td>${esc(x.p.nisn || '')}</td><td>${x.aktif ? 'Aktif' : 'Nonaktif'}</td>
-      <td class="noprint"><button data-ed="${esc(x.id)}">Ubah</button> <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td colspan="7" class="mut">Tidak ada data.</td></tr>'}</table>`;
+    $('#dl').innerHTML = `<p class="mut">${l.length} murid</p><table><tr><th>No</th><th>Nama</th><th>Panggilan</th><th>Kelas</th><th>Tempat lahir</th><th>Tanggal lahir</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>${l.map((x, i) => `<tr${x.aktif ? '' : ' style="opacity:.6"'}><td>${i + 1}</td><td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td><td>${esc(x.p.nama_panggilan || '')}</td><td>${esc(x.kelas)}</td><td>${esc(x.p.tempat_lahir || '')}</td><td>${x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : ''}</td><td>${esc(x.p.nis || '')}</td><td>${esc(x.p.nisn || '')}</td><td>${x.aktif ? 'Aktif' : 'Nonaktif'}</td>
+      <td class="noprint"><button data-ed="${esc(x.id)}">Ubah</button> <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td colspan="10" class="mut">Tidak ada data.</td></tr>'}</table>`;
     return l;
   };
   const selesai = async (t) => { await MODUL.data(); msg(t + ' Daftar murid di akun guru ikut berubah otomatis dalam sekitar satu menit. Nilai & presensi yang sudah ada tidak berubah.'); };
@@ -782,15 +794,15 @@ MODUL.data = async function () {
   <p class="noprint"><select id="dk" style="max-width:150px"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select> <select id="ds" style="max-width:150px"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option><option value="semua">Semua</option></select>
   <input id="dq" type="search" placeholder="Cari nama" style="max-width:220px"> <button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
   <div id="msg" class="msg"></div><div id="dform"></div>
-  <div id="dtempel" class="noprint" hidden><label for="dta">Tempel baris dari Excel: Nama, Kelas, NIS, NISN (dipisah tab atau koma; kolom NIS dan NISN boleh kosong)</label><textarea id="dta" rows="6" placeholder="Budi Santoso&#9;3A&#9;1234&#9;0012345678"></textarea><p><button class="p" id="dImpor">Impor murid</button> <span id="dprev" class="mut"></span></p></div>
+  <div id="dtempel" class="noprint" hidden><label for="dta">Tempel baris dari Excel: Nama, Kelas, NIS, NISN, Nama panggilan, Tempat lahir, Tanggal lahir (dipisah tab atau titik koma; kolom setelah Kelas boleh kosong; tanggal: 27/03/2015 atau 2015-03-27)</label><textarea id="dta" rows="6" placeholder="Budi Santoso&#9;3A&#9;1234&#9;0012345678&#9;Budi&#9;Jakarta&#9;27/03/2015"></textarea><p><button class="p" id="dImpor">Impor murid</button> <span id="dprev" class="mut"></span></p></div>
   <div id="dl"></div>`;
   $('#dk').onchange = $('#ds').onchange = tabel; $('#dq').oninput = tabel; tabel();
-  $('#dCsv').onclick = () => csv('data-murid.csv', [['Nama', 'Kelas', 'ID', 'NIS', 'NISN', 'Tempat lahir', 'Tanggal lahir', 'Alamat', 'Status'], ...tabel().map(x => [x.nama, x.kelas, x.id, x.p.nis, x.p.nisn, x.p.tempat_lahir, x.p.tanggal_lahir, x.p.alamat, x.aktif ? 'aktif' : 'nonaktif'])]);
+  $('#dCsv').onclick = () => csv('data-murid.csv', [['Nama', 'Nama panggilan', 'Kelas', 'ID', 'NIS', 'NISN', 'Tempat lahir', 'Tanggal lahir', 'Alamat', 'Status'], ...tabel().map(x => [x.nama, x.p.nama_panggilan, x.kelas, x.id, x.p.nis, x.p.nisn, x.p.tempat_lahir, x.p.tanggal_lahir, x.p.alamat, x.aktif ? 'aktif' : 'nonaktif'])]);
   const bukaForm = id => { edit = { id }; $('#dform').innerHTML = formHtml(); $('#mn').focus(); $('#mBatal').onclick = () => { edit = null; $('#dform').innerHTML = ''; };
     $('#mSimpan').onclick = async () => {
       const nama = $('#mn').value.trim().replace(/\s+/g, ' '), kelas = $('#mk').value.trim();
       if (!nama || !kelas) return msg('Nama dan kelas wajib diisi.', true);
-      const profil = { nis: kosongNull($('#mnis').value), nisn: kosongNull($('#mnisn').value), tempat_lahir: kosongNull($('#mtl').value), tanggal_lahir: kosongNull($('#mtg').value), alamat: kosongNull($('#mal').value) };
+      const profil = { nama_panggilan: kosongNull($('#mpg').value), nis: kosongNull($('#mnis').value), nisn: kosongNull($('#mnisn').value), tempat_lahir: kosongNull($('#mtl').value), tanggal_lahir: kosongNull($('#mtg').value), alamat: kosongNull($('#mal').value) };
       $('#mSimpan').disabled = true;
       try {
         if (id) {
@@ -809,12 +821,12 @@ MODUL.data = async function () {
     }; };
   $('#dTambah').onclick = () => bukaForm(null);
   $('#dTempel').onclick = () => { const b = $('#dtempel'); b.hidden = !b.hidden; };
-  const baca = () => $('#dta').value.split(/\r?\n/).map(r => r.split(/\t|,|;/).map(c => c.trim())).filter(r => r[0] && r[1]).map(r => ({ nama: r[0].replace(/\s+/g, ' '), kelas: r[1], nis: kosongNull(r[2]), nisn: kosongNull(r[3]) }));
+  const baca = () => $('#dta').value.split(/\r?\n/).map(r => r.split(/\t|;/).map(c => c.trim())).filter(r => r[0] && r[1] && r[0].toLowerCase() !== 'nama').map(r => ({ nama: r[0].replace(/\s+/g, ' '), kelas: r[1], nis: kosongNull(r[2]), nisn: kosongNull(r[3]), nama_panggilan: kosongNull(r[4]), tempat_lahir: kosongNull(r[5]), tanggal_lahir: tglIso(r[6]) }));
   $('#dta').oninput = () => { const b = baca(); $('#dprev').textContent = b.length ? `${b.length} baris terbaca.` : ''; };
   $('#dImpor').onclick = async () => {
     const baris = baca(); if (!baris.length) return msg('Tidak ada baris yang terbaca. Pastikan kolom pertama nama dan kolom kedua kelas.', true);
     const ada = new Set(semuaM.filter(x => x.aktif).map(x => x.nama.toLowerCase() + '|' + x.kelas)), baru = [];
-    baris.forEach(r => { const k = r.nama.toLowerCase() + '|' + r.kelas; if (!ada.has(k)) { ada.add(k); baru.push({ guest_id: idBaru(), nama_ref: r.nama, nama: r.nama, kelas: r.kelas, jenis: jenisUtama, sumber: 'operator', nis: r.nis, nisn: r.nisn }); } });
+    baris.forEach(r => { const k = r.nama.toLowerCase() + '|' + r.kelas; if (!ada.has(k)) { ada.add(k); baru.push({ guest_id: idBaru(), nama_ref: r.nama, nama: r.nama, kelas: r.kelas, jenis: jenisUtama, sumber: 'operator', nis: r.nis, nisn: r.nisn, nama_panggilan: r.nama_panggilan, tempat_lahir: r.tempat_lahir, tanggal_lahir: r.tanggal_lahir }); } });
     if (!baru.length) return msg('Semua baris sudah ada di data murid.', true);
     if (!confirm(`Tambahkan ${baru.length} murid baru${baris.length - baru.length ? ` (${baris.length - baru.length} baris dilewati karena sudah ada)` : ''}?`)) return;
     $('#dImpor').disabled = true;
