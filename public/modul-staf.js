@@ -750,6 +750,22 @@ const tglIso = v => {
   const t = new Date(Date.UTC(+y, +m - 1, +d));
   return t.getUTCFullYear() === +y && t.getUTCMonth() === +m - 1 && t.getUTCDate() === +d ? `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null;
 };
+// Membaca CSV (tanda kutip, BOM, pemisah koma / titik koma / tab terdeteksi dari baris judul).
+const bacaCsv = teks => {
+  teks = teks.replace(/^\uFEFF/, '');
+  const h = teks.split(/\r?\n/, 1)[0] || '', sep = [',', ';', '\t'].map(s => [s, h.split(s).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const out = []; let row = [], c = '', q = false;
+  for (let i = 0; i < teks.length; i++) {
+    const ch = teks[i];
+    if (q) { if (ch === '"') { if (teks[i + 1] === '"') { c += '"'; i++; } else q = false; } else c += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === sep) { row.push(c); c = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && teks[i + 1] === '\n') i++; row.push(c); out.push(row); row = []; c = ''; }
+    else c += ch;
+  }
+  if (c !== '' || row.length) { row.push(c); out.push(row); }
+  return out.filter(r => r.some(v => v.trim() !== ''));
+};
 const idBaru = () => 'OP-' + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => (b % 36).toString(36)).join('').toUpperCase();
 MODUL.data = async function () {
   $('#view').innerHTML = '<p>Memuat data murid...</p>';
@@ -792,7 +808,7 @@ MODUL.data = async function () {
 
   $('#view').innerHTML = `<h2>Data murid (${aktif.length} aktif${mati.length ? `, ${mati.length} nonaktif` : ''})</h2><p class="mut">${hitung}</p>
   <p class="noprint"><select id="dk" style="max-width:150px"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select> <select id="ds" style="max-width:150px"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option><option value="semua">Semua</option></select>
-  <input id="dq" type="search" placeholder="Cari nama" style="max-width:220px"> <button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
+  <input id="dq" type="search" placeholder="Cari nama" style="max-width:220px"> <button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button id="dUnggah">Unggah CSV</button><input id="dfile" type="file" accept=".csv,text/csv,text/plain" hidden> <button onclick="print()">Cetak</button></p>
   <div id="msg" class="msg"></div><div id="dform"></div>
   <div id="dtempel" class="noprint" hidden><label for="dta">Tempel baris dari Excel: Nama, Kelas, NIS, NISN, Nama panggilan, Tempat lahir, Tanggal lahir (dipisah tab atau titik koma; kolom setelah Kelas boleh kosong; tanggal: 27/03/2015 atau 2015-03-27)</label><textarea id="dta" rows="6" placeholder="Budi Santoso&#9;3A&#9;1234&#9;0012345678&#9;Budi&#9;Jakarta&#9;27/03/2015"></textarea><p><button class="p" id="dImpor">Impor murid</button> <span id="dprev" class="mut"></span></p></div>
   <div id="dl"></div>`;
@@ -820,6 +836,37 @@ MODUL.data = async function () {
       } catch (e) { $('#mSimpan').disabled = false; }
     }; };
   $('#dTambah').onclick = () => bukaForm(null);
+  // Perbaikan massal: unggah CSV hasil Unduh CSV yang sudah diedit. Murid dicocokkan lewat kolom ID.
+  // Sel kosong = data lama dibiarkan (tidak dihapus). Hanya baris yang benar-benar berubah yang dikirim ke Supabase.
+  $('#dUnggah').onclick = () => $('#dfile').click();
+  $('#dfile').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    const tbl = bacaCsv(await f.text()), kep = (tbl[0] || []).map(h => h.trim().toLowerCase()), iId = kep.indexOf('id');
+    if (iId < 0) return msg('Kolom "ID" tidak ditemukan. Pakai file hasil Unduh CSV dan jangan hapus kolom ID.', true);
+    const ambil = (r, n) => { const i = kep.indexOf(n); return i < 0 ? null : kosongNull(r[i]); };
+    const peta = new Map(semuaM.map(x => [x.id, x])), kirim = [], tidakAda = [], tglSalah = [];
+    for (const r of tbl.slice(1)) {
+      const id = String(r[iId] || '').trim(); if (!id) continue;
+      const m = peta.get(id); if (!m) { tidakAda.push(id); continue; }
+      const p = m.p, baru = { nama_panggilan: ambil(r, 'nama panggilan'), tempat_lahir: ambil(r, 'tempat lahir'), tanggal_lahir: null, nis: ambil(r, 'nis'), nisn: ambil(r, 'nisn'), alamat: ambil(r, 'alamat') };
+      const tg = ambil(r, 'tanggal lahir'); if (tg) { baru.tanggal_lahir = tglIso(tg); if (!baru.tanggal_lahir) tglSalah.push(m.nama); }
+      const nm = (ambil(r, 'nama') || '').replace(/\s+/g, ' '), kl = ambil(r, 'kelas') || '';
+      // semua baris memakai himpunan kolom yang sama agar upsert massal tidak menimpa kolom lain dengan null
+      const row = { guest_id: id, nama_ref: p.nama_ref || m.nama, nonaktif: !!p.nonaktif, nama: p.nama ?? null, kelas: p.kelas ?? null }; let ubah = false;
+      if (nm && nm !== m.nama) { row.nama = nm; ubah = true; }
+      if (kl && kl !== m.kelas) { row.kelas = kl; ubah = true; }
+      for (const k of ['nama_panggilan', 'tempat_lahir', 'tanggal_lahir', 'nis', 'nisn', 'alamat']) {
+        const lama = p[k] ?? null; row[k] = baru[k] ?? lama;
+        if (baru[k] != null && String(baru[k]) !== String(lama ?? '')) ubah = true;
+      }
+      if (ubah) kirim.push(row);
+    }
+    const cat = (tidakAda.length ? ` ${tidakAda.length} baris dilewati (ID tidak dikenal).` : '') + (tglSalah.length ? ` Tanggal lahir tidak valid dan diabaikan untuk: ${tglSalah.slice(0, 5).join(', ')}${tglSalah.length > 5 ? ', dst' : ''}.` : '');
+    if (!kirim.length) return msg('Tidak ada perubahan yang perlu disimpan.' + cat, !!cat);
+    if (!confirm(`Perbarui ${kirim.length} murid dari file "${f.name}"?\nSel yang kosong tidak menghapus data lama.${cat ? '\n\n' + cat.trim() : ''}`)) return;
+    try { for (let i = 0; i < kirim.length; i += 200) await run(sb.from('murid_profil').upsert(kirim.slice(i, i + 200), { onConflict: 'guest_id' })); await selesai(`${kirim.length} murid diperbarui dari CSV.${cat}`); }
+    catch (err) { /* run() sudah menampilkan pesan galat */ }
+  };
   $('#dTempel').onclick = () => { const b = $('#dtempel'); b.hidden = !b.hidden; };
   const baca = () => $('#dta').value.split(/\r?\n/).map(r => r.split(/\t|;/).map(c => c.trim())).filter(r => r[0] && r[1] && r[0].toLowerCase() !== 'nama').map(r => ({ nama: r[0].replace(/\s+/g, ' '), kelas: r[1], nis: kosongNull(r[2]), nisn: kosongNull(r[3]), nama_panggilan: kosongNull(r[4]), tempat_lahir: kosongNull(r[5]), tanggal_lahir: tglIso(r[6]) }));
   $('#dta').oninput = () => { const b = baca(); $('#dprev').textContent = b.length ? `${b.length} baris terbaca.` : ''; };
