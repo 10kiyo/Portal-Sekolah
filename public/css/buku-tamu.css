@@ -108,7 +108,7 @@
 #adminRoot .primary{background:var(--blue);color:#fff}
 #adminRoot .primary:hover{background:#0e65ae}
 #adminRoot .secondary{background:#fff;border:1px solid var(--line);color:var(--navy)}
-#adminRoot .login{max-width:380px;margin:12vh auto 0;text-align:center}
+#adminRoot .login{max-width:380px;margin:var(--si-login-offset) auto 0;text-align:center}
 #adminRoot .login form{display:grid;gap:12px;text-align:left;margin-top:16px}
 #adminRoot .err{color:var(--danger);font-size:14px;min-height:18px;margin:0}
 #adminRoot .bar{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}

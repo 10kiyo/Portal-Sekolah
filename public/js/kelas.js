@@ -88,9 +88,22 @@ async function loadPeran() {
 }
 function buildMenu() {
   const grup = [...menuPeran(S.peran, S.peranTambahan), ['Akun', [['profil', 'Profil saya']]]];
-  $('#menu').innerHTML = grup.map(([judul, items]) => `<h4>${esc(judul)}</h4>` + items.map(([k, l]) => `<button data-t="${k}">${esc(l)}</button>`).join('')).join('');
+  $('#menu').innerHTML = grup.map(([judul, items], i) => {
+    const id = `menu-group-${i}`;
+    return `<section class="menu-group"><button class="menu-group-toggle" type="button" data-group aria-expanded="false" aria-controls="${id}"><span>${esc(judul)}</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 6 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="menu-group-items" id="${id}">${items.map(([k, l]) => `<button data-t="${k}">${esc(l)}</button>`).join('')}</div></section>`;
+  }).join('');
 }
 $('#menu').onclick = e => {
+  const toggle = e.target.closest('[data-group]');
+  if (toggle) {
+    const group = toggle.closest('.menu-group'), open = !group.classList.contains('is-open');
+    $('#menu').querySelectorAll('.menu-group').forEach(g => {
+      const expanded = open && g === group;
+      g.classList.toggle('is-open', expanded);
+      g.querySelector('[data-group]').setAttribute('aria-expanded', String(expanded));
+    });
+    return;
+  }
   const t = e.target.dataset.t; if (!t) return;
   S.tab = t; S.tugas = null; show();
   if (matchMedia('(max-width:860px)').matches) setMenu(false);
@@ -118,6 +131,11 @@ function syncMapel() {
 function show() {
   S.rid++; $('#view').onclick = null; $('#view').onchange = null;
   document.querySelectorAll('#menu button').forEach(b => b.classList.toggle('on', b.dataset.t === S.tab));
+  $('#menu').querySelectorAll('.menu-group').forEach(g => {
+    const active = !!g.querySelector(`[data-t="${S.tab}"]`);
+    g.classList.toggle('is-open', active);
+    g.querySelector('[data-group]').setAttribute('aria-expanded', String(active));
+  });
   $('#kelasCard').style.display = (['guru', 'admin'].includes(S.peran) && KELAS_TABS.includes(S.tab)) ? 'flex' : 'none';
   if (S.tab === 'profil') return ['guru', 'admin'].includes(S.peran) ? vProfil() : jalan(MODUL.profilStaf);
   if (MODUL[S.tab]) return jalan(MODUL[S.tab]);

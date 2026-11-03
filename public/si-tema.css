@@ -4,7 +4,7 @@
    Warna dasar sudah sama di semua halaman (--navy #102a43, --blue #1677c8, emas #f5b335).
    Aturan di sini hanya elemen dasar, jadi gaya khusus per halaman tetap berlaku.
    ============================================================ */
-:root { --gold: #f5b335; --hero: #0b1f33; }
+:root { --gold: #f5b335; --hero: #0b1f33; --si-header-card-gap: 18px; --si-login-offset: clamp(24px, 8vh, 72px); }
 html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
 button, input, select, textarea { font-family: inherit; }          /* sebelumnya sebagian tombol memakai Arial */
 h1, h2, h3 { font-family: inherit; font-weight: 800; }              /* Beranda memakai bobot 800 */
@@ -20,9 +20,12 @@ h3 { letter-spacing: -.02em; }
    Pasang class "si-head" pada pembungkus logo + h1 + p.
    ============================================================ */
 .si-head { text-align: center; }
+.wrap > .si-head { margin-bottom: var(--si-header-card-gap); }
+.wrap:has(> #login.si-login:not(.hidden)),
+.awrap:has(> #login.si-login:not(.hidden)) { padding-top: 0; }
 .si-head img { display: block; width: 64px; height: 64px; margin: 0 auto 10px; padding: 0; background: none; border-radius: 0; box-shadow: none; object-fit: contain; }
 .si-head h1 { margin: 0; color: #102a43; font-size: clamp(22px, 5vw, 26px); line-height: 1.15; text-wrap: balance; letter-spacing: -.04em; }
 .si-head p { margin: 6px 0 0; color: #627d98; font-size: 14px; line-height: 1.4; }
 /* Kartu masuk (login) seragam */
-.si-login { max-width: 420px; margin: 8vh auto 0; text-align: center; }
+.si-login { max-width: 420px; margin: var(--si-login-offset) auto 0; text-align: center; }
 .si-login .si-head { margin-bottom: 16px; }
