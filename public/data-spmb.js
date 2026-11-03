@@ -92,6 +92,7 @@ const tahapan = (hariSabtu, tombol) => [
 
 const SPMB = {
   tahunAjaran: '2027/2028',
+  rekeningFormulir: { bank: '', an: '', no: '' },   // ISI: bank, atas nama, no. rekening untuk biaya formulir TK Luar (kosong = peserta diminta tanya panitia)
   pengantar: 'Informasi penerimaan murid baru kelas I SDS Islam At-Taqwa Rawamangun. Pilih jalur pendaftaran sesuai asal TK calon peserta didik.',
   fakta: [
     { angka: '76', label: 'Daya tampung kelas I (3 rombel paralel)' },

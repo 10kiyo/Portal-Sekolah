@@ -41,6 +41,61 @@ async function siapkan(file, label, bolehPdf) {
   return kecilkan(file, label);
 }
 
+/* ---------- Tahap 1 (khusus TK Luar): bukti pembayaran formulir ---------- */
+const BAYAR_KEY = 'spmb_bayar_luar', BAYAR_TTL = 7 * 24 * 3600 * 1000;
+let BAYAR = null;   // { token, nama, kontak, t }
+function bayarMuat() {
+  try {
+    const o = JSON.parse(localStorage.getItem(BAYAR_KEY) || 'null');
+    if (o && o.token && Date.now() - o.t < BAYAR_TTL) return o;
+    localStorage.removeItem(BAYAR_KEY);
+  } catch (e) {}
+  return null;
+}
+const bayarSimpan = o => { try { localStorage.setItem(BAYAR_KEY, JSON.stringify(o)); } catch (e) {} };
+const bayarHapus = () => { try { localStorage.removeItem(BAYAR_KEY); } catch (e) {} BAYAR = null; };
+
+function bayarHtml() {
+  const R = SPMB.rekeningFormulir || {};
+  return `<div class="card"><h2 style="font-size:18px">Langkah 1 dari 2 · Pembayaran formulir</h2>
+  <p class="mut" style="margin:4px 0 12px">Biaya formulir <b>Rp 375.000</b>. Unggah bukti transfer untuk membuka formulir biodata.</p>
+  ${R.no ? `<div class="box">Transfer ke ${esc(R.bank)} a.n. ${esc(R.an)}, no. rek. <b>${esc(R.no)}</b>. Sertakan nama calon murid pada berita transfer.</div>`
+         : `<div class="box">Cara pembayaran formulir: tanyakan ke panitia SPMB.</div>`}
+  <form id="fb" novalidate>
+    <div class="hp" aria-hidden="true"><label>Jangan diisi<input name="website" tabindex="-1" autocomplete="off"></label></div>
+    ${inp('nama', 'Nama lengkap calon murid', { w: 1, attr: 'autocomplete="off"' })}
+    ${inp('kontak', 'Nomor WhatsApp yang bisa dihubungi', { w: 1, max: 40, attr: 'inputmode="tel" autocomplete="tel"' })}
+    ${berkasInp('bukti', 'Bukti transfer', { w: 1, pdf: 1, hint: 'Foto atau PDF, maksimal 2,5 MB. Pastikan nominal dan tanggal terbaca.' })}
+    <div><button type="submit" id="lanjut" disabled>Unggah dan lanjutkan</button><div id="errb" class="err" role="alert"></div></div>
+  </form></div>`;
+}
+
+function bindBayar() {
+  const f = $('#fb'); if (!f) return;
+  const err = $('#errb'), btn = $('#lanjut');
+  const cek = () => { btn.disabled = !(f.elements.nama.value.trim() && f.elements.kontak.value.trim() && f.elements.bukti.files.length); };
+  f.addEventListener('input', cek); f.addEventListener('change', cek); cek();
+  f.onsubmit = async e => {
+    e.preventDefault(); err.textContent = '';
+    const nama = f.elements.nama.value.trim(), kontak = f.elements.kontak.value.trim(), hp = kontak.replace(/\D/g, '');
+    if (hp.length < 9 || hp.length > 15) { err.textContent = 'Isi nomor WhatsApp dengan benar.'; f.elements.kontak.focus(); return; }
+    btn.disabled = true; btn.textContent = 'Mengunggah…';
+    try {
+      const berkas = await siapkan(f.elements.bukti.files[0], 'Bukti transfer', true);
+      const fd = new FormData();
+      fd.set('website', f.elements.website.value); fd.set('jalur', JID); fd.set('nama', nama); fd.set('kontak', kontak);
+      fd.append('bukti', berkas, berkas.name || 'bukti.jpg');
+      const r = await fetch('/api/spmb-bayar', { method: 'POST', body: fd }), d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.token) throw new Error(d.error || 'Gagal mengunggah bukti transfer.');
+      BAYAR = { token: d.token, nama, kontak, t: Date.now() }; bayarSimpan(BAYAR);
+      tampil(); window.scrollTo(0, 0);
+    } catch (e2) {
+      err.textContent = e2 instanceof TypeError ? 'Tidak bisa terhubung. Periksa koneksi internet lalu coba lagi.' : (e2.message || 'Gagal mengunggah.');
+      btn.textContent = 'Unggah dan lanjutkan'; cek();
+    }
+  };
+}
+
 /* ---------- tampilan ---------- */
 function ringkasan() {
   const mk = tglPanjang(CFG.tgl_lahir_maks);
@@ -52,7 +107,7 @@ function ringkasan() {
   <ul class="pts">
     <li>Usia calon murid minimal 5 tahun 10 bulan per Juli 2027 (lahir paling lambat ${esc(mk)}).</li>
     ${J.tahapan[0].ringkas.slice(0, 2).map(x => `<li>${esc(x)}</li>`).join('')}
-    <li>Unggah di formulir ini: foto calon murid, akte kelahiran, dan Kartu Keluarga (foto atau PDF, maksimal 2,5 MB per berkas).</li>
+    <li>${LUAR ? 'Langkah 1: unggah bukti transfer biaya formulir. Langkah 2: isi biodata dan unggah foto calon murid, akte kelahiran, dan Kartu Keluarga' : 'Unggah di formulir ini: foto calon murid, akte kelahiran, dan Kartu Keluarga'} (foto atau PDF, maksimal 2,5 MB per berkas).</li>
   </ul>
   <details class="det"><summary>Berkas yang dibawa saat daftar ulang</summary><div class="mut" style="margin-top:6px">${esc(BERKAS.label)}</div><ul class="pts">${BERKAS.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>
   <details class="det"><summary>Jadwal SPMB</summary><ul class="pts">${J.jadwal.map(x => `<li><b>${esc(x.tanggal)}</b> — ${esc(x.judul)}</li>`).join('')}</ul></details>
@@ -66,7 +121,8 @@ const inp = (nama, label, o = {}) => `<div><label for="f_${nama}">${label}${o.w 
 const berkasInp = (nama, label, o) => `<div><label for="f_${nama}">${label}${o.w ? WAJIB : ''}</label><input id="f_${nama}" name="${nama}" type="file" accept="${o.pdf ? 'image/*,application/pdf' : 'image/*'}"${o.w ? ' required' : ''}><div class="hint">${o.hint}</div></div>`;
 
 function formHtml() {
-  return `<div class="card"><h2 style="font-size:18px">Formulir pendaftaran</h2>
+  return `<div class="card"><h2 style="font-size:18px">${LUAR ? 'Langkah 2 dari 2 · ' : ''}Formulir pendaftaran</h2>
+  ${LUAR && BAYAR ? `<div class="box">Bukti transfer diterima (${esc(BAYAR.nama)}) dan akan diverifikasi panitia. <a href="#" id="ulangBayar">Unggah ulang bukti</a></div>` : ''}
   <p class="mut" style="margin:4px 0 12px">Kolom bertanda <span class="req">*</span> wajib diisi.</p>
   <form id="f" novalidate>
     <div class="hp" aria-hidden="true"><label>Jangan diisi<input name="website" tabindex="-1" autocomplete="off"></label></div>
@@ -104,7 +160,6 @@ function formHtml() {
       ${berkasInp('foto', 'Foto calon murid', { w: 1, hint: 'Foto berwarna, wajah terlihat jelas (JPG atau PNG).' })}
       ${berkasInp('akte', 'Akte kelahiran', { w: 1, pdf: 1, hint: 'Foto atau PDF, maksimal 2,5 MB. Pastikan tulisan terbaca.' })}
       ${berkasInp('kk', 'Kartu Keluarga', { w: 1, pdf: 1, hint: 'Foto atau PDF, maksimal 2,5 MB. Pastikan NIK dan nama terbaca.' })}
-      ${LUAR ? berkasInp('bukti', 'Bukti pembayaran formulir (opsional)', { pdf: 1, hint: 'Unggah bila sudah membayar formulir. Bila belum, tanyakan cara pembayaran ke panitia.' }) : ''}
     </fieldset>
 
     <label class="chk"><input type="checkbox" name="setuju" required> <span>Saya orang tua/wali calon murid. Data yang saya isi benar dan saya bersedia mengikuti ketentuan SPMB SDS Islam At-Taqwa.</span></label>
@@ -134,6 +189,7 @@ function cekHtml() {
 }
 
 function sukses(d) {
+  bayarHapus();
   $('#isi').innerHTML = ringkasan() + `<div class="card"><h2 class="ok">${d.diperbaiki ? 'Perbaikan pendaftaran terkirim' : 'Pendaftaran terkirim'}</h2>
     ${d.no_daftar ? `<div class="mut" style="margin-top:8px">Nomor pendaftaran</div><div class="nomor">${esc(d.no_daftar)}</div>` : ''}
     <p>Data dan berkas sudah kami terima dan akan diperiksa panitia. Informasi lanjutan disampaikan lewat WhatsApp. Simpan nomor pendaftaran di atas.</p>
@@ -164,6 +220,8 @@ function bindCek() {
 
 function bindForm() {
   const f = $('#f'); if (!f) return;
+  if (LUAR && BAYAR) { f.elements.nama.value = BAYAR.nama; f.elements.kontak.value = BAYAR.kontak; }
+  const u = $('#ulangBayar'); if (u) u.onclick = e => { e.preventDefault(); bayarHapus(); tampil(); };
   f.onsubmit = async e => {
     e.preventDefault(); const err = $('#err'), btn = $('#kirim'); err.textContent = '';
     const gagal = (teks, el) => { err.textContent = teks; if (el) el.focus(); };
@@ -180,21 +238,32 @@ function bindForm() {
     btn.disabled = true; btn.textContent = 'Mengirim…';
     try {
       const fd = new FormData(f);
-      for (const [k, label, pdf] of [['foto', 'Foto calon murid', false], ['akte', 'Akte kelahiran', true], ['kk', 'Kartu Keluarga', true], ['bukti', 'Bukti pembayaran formulir', true]]) {
+      for (const [k, label, pdf] of [['foto', 'Foto calon murid', false], ['akte', 'Akte kelahiran', true], ['kk', 'Kartu Keluarga', true]]) {
         fd.delete(k);
         const el = f.elements[k]; if (!el || !el.files[0]) continue;
         const berkas = await siapkan(el.files[0], label, pdf);
         fd.append(k, berkas, berkas.name || k + '.jpg');
       }
       fd.set('jalur', JID); fd.set('setuju', f.elements.setuju.checked ? 'true' : '');
+      if (LUAR) fd.set('token_bayar', BAYAR.token);
       const r = await fetch('/api/spmb-daftar', { method: 'POST', body: fd }), d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || 'Gagal mengirim pendaftaran.');
+      if (!r.ok) {
+        if (LUAR && d.kode === 'bayar') { bayarHapus(); tampil(); $('#errb').textContent = d.error || 'Bukti pembayaran tidak valid. Unggah ulang bukti transfer.'; return; }
+        throw new Error(d.error || 'Gagal mengirim pendaftaran.');
+      }
       sukses(d);
     } catch (e2) {
       err.textContent = e2 instanceof TypeError ? 'Tidak bisa terhubung. Periksa koneksi internet lalu coba lagi.' : (e2.message || 'Gagal mengirim.');
       btn.disabled = false; btn.textContent = 'Kirim pendaftaran';
     }
   };
+}
+
+function tampil() {
+  const fs = CFG.jalur[JID].fase;
+  const isi = fs !== 'dibuka' ? tutupHtml(fs) : (LUAR && !BAYAR ? bayarHtml() : formHtml());
+  $('#isi').innerHTML = ringkasan() + isi + cekHtml();
+  bindBayar(); bindForm(); bindCek();
 }
 
 (async () => {
@@ -204,7 +273,6 @@ function bindForm() {
     if (!r.ok) throw new Error(d.error || 'Gagal memuat.');
     CFG = d;
   } catch (e) { $('#isi').innerHTML = `<div class="card">${esc(e.message || 'Gagal memuat.')}${kontakHtml()}</div>`; return; }
-  const fs = CFG.jalur[JID].fase;
-  $('#isi').innerHTML = ringkasan() + (fs === 'dibuka' ? formHtml() : tutupHtml(fs)) + cekHtml();
-  bindForm(); bindCek();
+  if (LUAR) BAYAR = bayarMuat();
+  tampil();
 })();
