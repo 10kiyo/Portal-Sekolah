@@ -2,10 +2,6 @@
 
     let guests = [];
 
-    const SUPABASE_URL = SITAQWA.SUPABASE_URL;
-    const SUPABASE_ANON_KEY = SITAQWA.SUPABASE_KEY;
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
     const $ = s => document.querySelector(s); 
     const storeKey = 'bukuTamuSekolah.v1'; 
     const eventStoreKey = 'bukuTamuSekolah.event.v1';
@@ -247,15 +243,14 @@
       }
     };
 
-    const fetchGuestsFromSupabase = async () => {
+    const muatDaftarTamu = async () => {
       try {
-        const { data, error } = await supabaseClient
-          .from('daftar_tamu_gabungan') 
-          .select('guest_id, guest_name, jenis_undangan, instansi_kelas, nomor_whatsapp'); 
+        // Server menggabungkan daftar_tamu_gabungan dengan lapisan operator (murid baru, ganti nama/kelas, nonaktif).
+        const response = await fetch('/api/daftar-tamu');
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
 
-        if (error) throw error;
-
-        if (data) {
+        if (Array.isArray(data)) {
           guests = data.map(item => ({
             id: item.guest_id,
             name: item.guest_name,
@@ -272,7 +267,7 @@
       }
     };
 
-    fetchGuestsFromSupabase();
+    muatDaftarTamu();
     loadOnlineData();
     muatPengaturan();
   

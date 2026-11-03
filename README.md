@@ -253,11 +253,13 @@ lalu ganti PDF kalender di folder `public/`.
   Selama itu belum ada, memasang dari nol belum bisa. Cara paling mudah mengekspornya dari database yang sudah jalan:
   `npx supabase db dump --db-url "<connection string>" --schema public -f supabase/00-skema-dasar.sql`
   (connection string ada di Supabase > Project Settings > Database), lalu periksa isinya sebelum di-commit.
-- Meja registrasi buku tamu membaca daftar tamu (`daftar_tamu_gabungan`, termasuk nomor WhatsApp) langsung dengan kunci
-  *publishable*. Pastikan aturan RLS-nya hanya mengizinkan kolom/baris yang memang perlu dibuka. Rekap kehadiran
-  lengkap (dengan tanda tangan) sudah dikunci untuk admin; halaman publik memakai `/api/status-kehadiran`.
+- Buku Tamu (halaman tamu dan panel admin) membaca daftar tamu lewat `/api/daftar-tamu`: gabungan `daftar_tamu_gabungan`
+  dan lapisan operator di `murid_profil` (murid baru, ganti nama/kelas, nonaktif), dengan aturan yang sama seperti
+  `murid_gabungan()`. Publik hanya menerima nomor WhatsApp tersamar; admin (token) menerima nomor lengkap untuk CSV.
+  Karena frontend tidak lagi membaca tabel itu dengan kunci *publishable*, hak `select` untuk `anon` pada
+  `daftar_tamu_gabungan` bisa dicabut di Supabase, setelah memastikan tidak ada halaman lain yang masih memakainya.
+  Rekap kehadiran lengkap (dengan tanda tangan) sudah dikunci untuk admin; halaman publik memakai `/api/status-kehadiran`.
 - Pembuatan PDF kartu pelajar memuat pustaka `html2canvas` dan `jsPDF` dari CDN, jadi **perlu koneksi internet**.
-- Buku Tamu masih membaca `daftar_tamu_gabungan` langsung, sehingga murid yang ditambahkan operator belum muncul di sana.
 
 ---
 

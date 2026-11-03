@@ -62,12 +62,10 @@ function fmt(raw){
   return isNaN(d)?String(raw):`${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()}, ${p2(d.getHours())}:${p2(d.getMinutes())}`;
 }
 async function fetchGuests(){
-  let all=[],from=0;const step=1000;
-  for(;;){
-    const{data,error}=await supabaseClient.from('daftar_tamu_gabungan').select('guest_id, guest_name, jenis_undangan, instansi_kelas, nomor_whatsapp').order('guest_id').range(from,from+step-1);
-    if(error)throw error;all=all.concat(data);if(data.length<step)break;from+=step;
-  }
-  return all.map(x=>({id:x.guest_id,name:x.guest_name,type:x.jenis_undangan||'Lainnya',origin:x.instansi_kelas||'—',phone:x.nomor_whatsapp||''}));
+  // Server menggabungkan daftar tamu dengan lapisan operator (murid baru, ganti nama/kelas, nonaktif). Token admin = nomor WhatsApp lengkap untuk CSV.
+  const r=await fetch('/api/daftar-tamu',{headers:{Authorization:'Bearer '+sessionStorage.getItem(TOKEN_KEY)}});
+  if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
+  return (await r.json()).map(x=>({id:x.guest_id,name:x.guest_name,type:x.jenis_undangan||'Lainnya',origin:x.instansi_kelas||'—',phone:x.nomor_whatsapp||''}));
 }
 async function fetchDist(){
   const r=await fetch(FN,{headers:{Authorization:'Bearer '+sessionStorage.getItem(TOKEN_KEY)}});

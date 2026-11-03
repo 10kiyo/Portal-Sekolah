@@ -2,6 +2,16 @@
 
 Riwayat rilis per modul sebelum file ini ada: lihat `docs/PETUNJUK.txt`.
 
+## Perbaikan: murid baru dari operator kini muncul di Buku Tamu
+
+- **Penyebab:** murid yang ditambah/diubah operator disimpan sebagai lapisan di `murid_profil` (bukan di
+  `daftar_tamu_gabungan`), sedangkan Buku Tamu membaca `daftar_tamu_gabungan` langsung dengan kunci publik.
+- **Perbaikan:** endpoint baru `/api/daftar-tamu` menggabungkan keduanya dengan aturan yang sama seperti `murid_gabungan()`
+  (murid baru muncul, nama/kelas baru ikut, murid nonaktif disembunyikan). Halaman tamu dan panel admin Buku Tamu memakainya.
+- **Keamanan:** nomor WhatsApp untuk publik kini tersamar (4 angka terakhir); nomor lengkap hanya untuk admin (token).
+  Bila lapisan operator tidak terbaca, daftar dasar tetap tampil.
+- **Test:** `tests/daftar-tamu.test.mjs`.
+
 ## Lanjutan perapian
 
 - **KV aktif:** binding `PEMBATAS_KV` ada di `wrangler.jsonc` (dibuat otomatis oleh Wrangler >= 4.45 saat deploy).

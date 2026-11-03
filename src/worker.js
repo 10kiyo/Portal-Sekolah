@@ -20,6 +20,7 @@ import * as jurnal from '../functions/api/jurnal.js';
 import * as muridJurnal from '../functions/api/murid-jurnal.js';
 import * as adminJurnal from '../functions/api/admin-jurnal.js';
 import * as bukuTamuPengaturan from '../functions/api/buku-tamu-pengaturan.js';
+import * as daftarTamu from '../functions/api/daftar-tamu.js';
 import { cfg, dbGet } from '../functions/_lib/util.js';
 
 const routes = {
@@ -42,7 +43,8 @@ const routes = {
   '/api/jurnal': jurnal,
   '/api/murid-jurnal': muridJurnal,
   '/api/admin-jurnal': adminJurnal,
-  '/api/buku-tamu-pengaturan': bukuTamuPengaturan
+  '/api/buku-tamu-pengaturan': bukuTamuPengaturan,
+  '/api/daftar-tamu': daftarTamu
 };
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
