@@ -316,7 +316,7 @@ MODUL.ekskul = async function () {
       ${stat(ps.length, 'Pendaftar')}${club ? stat(n('diterima'), 'Diterima') + stat(n('menunggu'), 'Belum diseleksi') + stat(n('ditolak'), 'Tidak diterima') + (k.kuota ? stat(Math.max(0, k.kuota - n('diterima')), 'Sisa kuota') : '')
         : stat(n('lunas'), 'Lunas') + stat(n('menunggu'), 'Perlu diperiksa') + stat(n('ditolak'), 'Ditolak') + stat(rp(dana), 'Dana terkonfirmasi') + (k.kuota ? stat(Math.max(0, k.kuota - ps.filter(r => r.status !== 'ditolak').length), 'Sisa kuota') : '')}
     </div>
-    <p><select id="efs" style="max-width:200px"><option value="">Semua status</option>${Object.keys(ST).filter(x => club ? x !== 'lunas' : x !== 'diterima').map(x => `<option value="${x}">${club && x === 'ditolak' ? 'Tidak diterima' : ST[x][0]}</option>`).join('')}</select> <button id="eCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
+    <p><select id="efs" style="max-width:200px"><option value="">Semua status</option>${Object.keys(ST).filter(x => club ? x !== 'lunas' : x !== 'diterima').map(x => `<option value="${x}">${club && x === 'ditolak' ? 'Tidak diterima' : ST[x][0]}</option>`).join('')}</select> <button id="eCsv">Unduh CSV</button> <button id="eCetak">Cetak</button></p>
     <div id="et" style="overflow-x:auto"></div>` : `<p class="mut">Belum ada kegiatan ${club ? 'club' : 'ekskul'}. Minta panitia membuatnya di menu Kegiatan Sekolah (pilih jenis ${club ? 'Club' : 'Ekstrakurikuler'}).</p>`}
     <div id="msg" class="msg"></div>`;
     document.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { jenis = b.dataset.j; kid = ''; tampil(); });
@@ -336,6 +336,19 @@ MODUL.ekskul = async function () {
       [club ? ['Nama', 'Kelas', 'Status', 'Alasan bergabung', 'Nilai seleksi', 'Kontak', 'Catatan', 'Waktu daftar'] : ['Nama', 'Kelas', 'Status', 'Pengirim', 'Tanggal transfer', 'Jumlah dikonfirmasi', 'Kontak', 'Catatan', 'Waktu daftar'],
        ...ps.map(r => club ? [r.nama_anak, r.kelas, r.status, (r.data || {}).motivasi, r.nilai_seleksi, (r.data || {}).kontak, r.catatan, r.created_at]
          : [r.nama_anak, r.kelas, r.status, r.nama_pengirim, r.tanggal_transfer, r.nominal_diterima, (r.data || {}).kontak, r.catatan, r.created_at])]);
+    $('#eCetak').onclick = () => {
+      const f = $('#efs').value, l = ps.filter(r => !f || r.status === f), lbl = s => club && s === 'ditolak' ? 'Tidak diterima' : (ST[s] || ST.menunggu)[0];
+      const kol = [{ h: 'No', c: 'c', v: (r, i) => i + 1 }, { h: 'Nama', v: r => esc(r.nama_anak) }, { h: 'Kelas', v: r => esc(r.kelas || '') },
+        { h: 'Status', v: r => esc(lbl(r.status)) + (r.catatan ? `<br><i>${esc(r.catatan)}</i>` : '') },
+        club ? { h: 'Alasan bergabung', v: r => esc((r.data || {}).motivasi || '-') } : { h: 'Pengirim', v: r => esc(r.nama_pengirim || '-') },
+        ...(club ? [{ h: 'Nilai', c: 'c', v: r => r.nilai_seleksi ?? '-' }]
+          : [{ h: 'Tgl transfer', c: 'n', v: r => r.tanggal_transfer ? tglID(r.tanggal_transfer) : '-' }, { h: 'Diterima', c: 'r', v: r => r.nominal_diterima != null ? rp(r.nominal_diterima) : '-' }]),
+        { h: 'Kontak', v: r => esc((r.data || {}).kontak || '-') }];
+      const ring = club ? [['Pendaftar', ps.length], ['Diterima', n('diterima')], ['Belum diseleksi', n('menunggu')], ['Tidak diterima', n('ditolak')]]
+        : [['Pendaftar', ps.length], ['Lunas', n('lunas')], ['Perlu diperiksa', n('menunggu')], ['Ditolak', n('ditolak')], ['Dana terkonfirmasi', rp(dana)]];
+      const judul = 'Pendaftar ' + (club ? 'Club' : 'Ekstrakurikuler');
+      cetakPratinjau(judul, cetakDokumen(judul, cetakTabel(kol, l, 'Belum ada pendaftar.') + cetakRingkas(ring), { sub: `${esc(k.nama)} (${tglID(k.tanggal_kegiatan)})${f ? '<br>Status: ' + esc(lbl(f)) : ''}` }));
+    };
   };
   async function periksa(r, k) {
     const club = k.jenis === 'club', d = r.data || {};
@@ -527,7 +540,7 @@ MODUL.transaksi = async function (bln) {
   <label for="tu">Uraian</label><input id="tu">
   <p><button class="p" id="tAdd">Simpan transaksi</button></p><div id="msg" class="msg"></div>
   <h2 style="margin-top:22px">Transaksi ${namaBulan(bln)}</h2>
-  <p>${inputBulan('tb', bln)} <button id="tCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
+  <p>${inputBulan('tb', bln)} <button id="tCsv">Unduh CSV</button> <button id="tCetak">Cetak</button></p>
   <p><b>Pemasukan:</b> ${rp(m)} &nbsp; <b>Pengeluaran:</b> ${rp(k)} &nbsp; <b>Selisih bulan ini:</b> ${rp(m - k)}</p>
   <table><tr><th>Tanggal</th><th>Kategori</th><th>Uraian</th><th>Masuk</th><th>Keluar</th><th>Ref</th><th class="noprint"></th></tr>
   ${rows.map(r => `<tr><td>${tglID(r.tanggal)}</td><td>${esc(r.kategori)}</td><td>${esc(r.uraian)}</td><td>${r.jenis === 'masuk' ? rp(r.jumlah) : ''}</td><td>${r.jenis === 'keluar' ? rp(r.jumlah) : ''}</td><td>${esc(r.ref)}</td><td class="noprint"><button class="d" data-del="${r.id}">Hapus</button></td></tr>`).join('') || '<tr><td colspan="7" class="mut">Belum ada transaksi bulan ini.</td></tr>'}</table>`;
@@ -539,6 +552,12 @@ MODUL.transaksi = async function (bln) {
     MODUL.transaksi($('#tt').value ? $('#tt').value.slice(0, 7) : bln);
   };
   $('#tCsv').onclick = () => csv(`kas-${bln}.csv`, [['Tanggal', 'Jenis', 'Kategori', 'Uraian', 'Jumlah', 'Ref'], ...rows.map(r => [r.tanggal, r.jenis, r.kategori, r.uraian, r.jumlah, r.ref])]);
+  $('#tCetak').onclick = () => {
+    const judul = 'Kas Masuk dan Keluar';
+    cetakPratinjau(judul, cetakDokumen(judul, cetakTabel([{ h: 'No', c: 'c', v: (r, i) => i + 1 }, { h: 'Tanggal', c: 'n', v: r => tglID(r.tanggal) }, { h: 'Kategori', v: r => esc(r.kategori || '') }, { h: 'Uraian', v: r => esc(r.uraian) },
+      { h: 'Masuk', c: 'r', v: r => r.jenis === 'masuk' ? rp(r.jumlah) : '' }, { h: 'Keluar', c: 'r', v: r => r.jenis === 'keluar' ? rp(r.jumlah) : '' }, { h: 'Ref', v: r => esc(r.ref || '') }], rows, 'Belum ada transaksi bulan ini.')
+      + cetakRingkas([['Pemasukan', rp(m)], ['Pengeluaran', rp(k)], ['Selisih bulan ini', rp(m - k)]]), { sub: 'Bulan ' + namaBulan(bln) }));
+  };
   $('#view').onclick = async e => { const id = e.target.dataset.del; if (id && confirm('Hapus transaksi ini?')) { await run(sb.from('keuangan_transaksi').delete().eq('id', id)); MODUL.transaksi(bln); } };
 };
 
@@ -553,7 +572,7 @@ MODUL.laporan = async function (bln) {
   const masuk = per('masuk'), keluar = per('keluar'), tm = jumlah(rows.filter(r => r.jenis === 'masuk')), tk = jumlah(rows.filter(r => r.jenis === 'keluar'));
   const baris = l => l.map(([c, v]) => `<tr><td>${esc(c)}</td><td style="text-align:right">${rp(v)}</td></tr>`).join('') || '<tr><td colspan="2" class="mut">-</td></tr>';
   $('#view').innerHTML = `<h2>Laporan keuangan ${namaBulan(bln)}</h2>
-  <p class="noprint">${inputBulan('lb', bln)} <button onclick="print()">Cetak laporan</button></p>
+  <p class="noprint">${inputBulan('lb', bln)} <button id="lCetak">Cetak laporan</button></p>
   <table style="max-width:520px"><tr><td>Saldo awal</td><td style="text-align:right"><b>${rp(saldoAwal)}</b></td></tr>
   <tr><td>Total pemasukan</td><td style="text-align:right">${rp(tm)}</td></tr><tr><td>Total pengeluaran</td><td style="text-align:right">${rp(tk)}</td></tr>
   <tr><td><b>Saldo akhir</b></td><td style="text-align:right"><b>${rp(saldoAwal + tm - tk)}</b></td></tr></table>
@@ -561,6 +580,14 @@ MODUL.laporan = async function (bln) {
   <div><h3 style="color:var(--navy)">Pengeluaran per kategori</h3><table>${baris(keluar)}</table></div></div>
   <p class="mut">Dokumen bulan ini: ${dok.filter(d => d.jenis === 'proposal').length} proposal, ${dok.filter(d => d.jenis === 'lpj').length} LPJ.</p>`;
   $('#lb').onchange = e => e.target.value && MODUL.laporan(e.target.value);
+  $('#lCetak').onclick = () => {
+    const judul = 'Laporan Keuangan', kol = [{ h: 'Kategori', v: r => esc(r[0]) }, { h: 'Jumlah', c: 'r', v: r => rp(r[1]) }];
+    const isi = cetakTabel([{ h: 'Keterangan', v: r => r[0] }, { h: 'Jumlah', c: 'r', v: r => r[1] }],
+        [['Saldo awal', rp(saldoAwal)], ['Total pemasukan', rp(tm)], ['Total pengeluaran', rp(tk)], ['<b>Saldo akhir</b>', '<b>' + rp(saldoAwal + tm - tk) + '</b>']])
+      + cetakBagian('Pemasukan per kategori', '', cetakTabel(kol, masuk, 'Tidak ada.')) + cetakBagian('Pengeluaran per kategori', '', cetakTabel(kol, keluar, 'Tidak ada.'))
+      + `<p class="ket" style="margin-top:3mm">Dokumen bulan ini: ${dok.filter(d => d.jenis === 'proposal').length} proposal, ${dok.filter(d => d.jenis === 'lpj').length} LPJ.</p>`;
+    cetakPratinjau(judul, cetakDokumen(judul, isi, { sub: 'Bulan ' + namaBulan(bln) }));
+  };
 };
 
 const STATUS_DOK = { proposal: ['draf', 'diajukan', 'disetujui', 'ditolak', 'dicairkan'], lpj: ['draf', 'dikumpulkan', 'diverifikasi', 'selesai'] };
@@ -628,8 +655,14 @@ MODUL.agenda = async function (bln) {
   bln = (typeof bln === 'string' && bln) || today().slice(0, 7);
   const rows = await run(sb.from('surat').select('*').gte('tanggal', bln + '-01').lte('tanggal', akhirBulan(bln)).order('tanggal').order('created_at'));
   const tabel = j => { const l = rows.filter(r => r.jenis === j); return `<h3 style="color:var(--navy)">Surat ${j} (${l.length})</h3><table><tr><th>No</th><th>Tanggal</th><th>Nomor</th><th>${j === 'masuk' ? 'Asal' : 'Tujuan'}</th><th>Perihal</th><th>Status</th></tr>${l.map((r, i) => `<tr><td>${i + 1}</td><td>${tglID(r.tanggal)}</td><td>${esc(r.nomor)}</td><td>${esc(r.pihak)}</td><td>${esc(r.perihal)}</td><td>${esc(r.status)}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">Tidak ada.</td></tr>'}</table>`; };
-  $('#view').innerHTML = `<h2>Agenda surat ${namaBulan(bln)}</h2><p class="noprint">${inputBulan('ab', bln)} <button onclick="print()">Cetak agenda</button></p>${tabel('masuk')}${tabel('keluar')}`;
+  $('#view').innerHTML = `<h2>Agenda surat ${namaBulan(bln)}</h2><p class="noprint">${inputBulan('ab', bln)} <button id="aCetak">Cetak agenda</button></p>${tabel('masuk')}${tabel('keluar')}`;
   $('#ab').onchange = e => e.target.value && MODUL.agenda(e.target.value);
+  $('#aCetak').onclick = () => {
+    const judul = 'Agenda Surat', bag = j => { const l = rows.filter(r => r.jenis === j);
+      return cetakBagian(`Surat ${j} (${l.length})`, '', cetakTabel([{ h: 'No', c: 'c', v: (r, i) => i + 1 }, { h: 'Tanggal', c: 'n', v: r => tglID(r.tanggal) }, { h: 'Nomor', v: r => esc(r.nomor || '') },
+        { h: j === 'masuk' ? 'Asal' : 'Tujuan', v: r => esc(r.pihak || '') }, { h: 'Perihal', v: r => esc(r.perihal || '') }, { h: 'Status', v: r => esc(r.status || '') }], l, 'Tidak ada.')); };
+    cetakPratinjau(judul, cetakDokumen(judul, bag('masuk') + bag('keluar'), { sub: 'Bulan ' + namaBulan(bln) }));
+  };
 };
 
 /* ================= OPERATOR ================= */
@@ -692,7 +725,7 @@ MODUL.akun = async function () {
   <div id="msg" class="msg"></div>
   <div class="ak-bar noprint"><input class="cari" id="aq" type="search" placeholder="Cari nama, jabatan, username..." aria-label="Cari akun">
   <select id="af" aria-label="Filter peran"><option value="">Semua peran</option>${opsiPeran(PERAN, '')}</select>
-  <span class="sp"></span><label class="ak-sw2"><span class="ak-sw"><input type="checkbox" id="aLihat"><i></i></span> Tampilkan PIN</label><button onclick="print()">Cetak</button><button id="aCsv">CSV</button></div>
+  <span class="sp"></span><label class="ak-sw2"><span class="ak-sw"><input type="checkbox" id="aLihat"><i></i></span> Tampilkan PIN</label><button id="aCetak">Cetak</button><button id="aCsv">CSV</button></div>
   <div class="ak-cnt noprint" id="ac"></div><div id="al"></div>`;
   gambar();
   $('#aq').oninput = gambar;
@@ -703,6 +736,13 @@ MODUL.akun = async function () {
     MODUL.akun();
   };
   $('#aCsv').onclick = () => csv('akun-guru-staf.csv', [['Nama', 'Jabatan', 'Peran', 'Peran tambahan', 'Username', 'PIN', 'Aktif'], ...rows.map(r => [r.nama, r.jabatan, r.peran, (r.peran_tambahan || []).join(' '), r.username, r.pin, r.aktif ? 'ya' : 'tidak'])]);
+  $('#aCetak').onclick = () => {
+    const judul = 'Daftar Akun Guru dan Staf', l = rows.filter(cocok);
+    cetakPratinjau(judul, cetakDokumen(judul, cetakTabel([{ h: 'No', c: 'c', v: (r, i) => i + 1 }, { h: 'Nama', v: r => esc(r.nama) }, { h: 'Jabatan', v: r => esc(r.jabatan || '-') }, { h: 'Username', v: r => esc(r.username) },
+      ...(lihat ? [{ h: 'PIN', c: 'n', v: r => esc(r.pin) }] : []), { h: 'Peran', v: r => esc(PERAN_LABEL[r.peran] || r.peran) },
+      { h: 'Peran tambahan', v: r => esc((r.peran_tambahan || []).map(x => PERAN_LABEL[x] || x).join(', ') || '-') }, { h: 'Aktif', c: 'n', v: r => r.aktif ? 'ya' : 'tidak' }], l)
+      + cetakRingkas([['Jumlah akun', l.length]])));
+  };
   const aksi = async (r, a) => {
     if (a === 'nm') { const n = prompt('Nama baru (boleh dengan gelar):', r.nama); if (n && n.trim() && n.trim() !== r.nama) { const { error } = await sb.from('guru_staf').update({ nama: n.trim() }).eq('id', r.id); if (error) return msg(error.message.includes('duplicate') ? 'Nama itu sudah ada.' : error.message, true); MODUL.akun(); } }
     if (a === 'jab') { const j = prompt('Jabatan baru untuk ' + r.nama + ':', r.jabatan || ''); if (j !== null) { await run(sb.from('guru_staf').update({ jabatan: j.trim() || null }).eq('id', r.id)); MODUL.akun(); } }
@@ -750,6 +790,13 @@ const tglIso = v => {
   const t = new Date(Date.UTC(+y, +m - 1, +d));
   return t.getUTCFullYear() === +y && t.getUTCMonth() === +m - 1 && t.getUTCDate() === +d ? `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null;
 };
+// Jenis kelamin dari tempelan / CSV: L, LK, Laki-laki, Pria -> 'L'; P, PR, Perempuan, Wanita -> 'P'; selain itu null.
+const jkNorm = v => {
+  v = String(v ?? '').trim().toLowerCase(); if (!v) return null;
+  if (/^(l|lk|laki|laki-laki|laki laki|pria|male|m)$/.test(v)) return 'L';
+  if (/^(p|pr|perempuan|wanita|female|f)$/.test(v)) return 'P';
+  return null;
+};
 // Membaca CSV (tanda kutip, BOM, pemisah koma / titik koma / tab terdeteksi dari baris judul).
 const bacaCsv = teks => {
   teks = teks.replace(/^\uFEFF/, '');
@@ -766,6 +813,16 @@ const bacaCsv = teks => {
   if (c !== '' || row.length) { row.push(c); out.push(row); }
   return out.filter(r => r.some(v => v.trim() !== ''));
 };
+// HTML cetak Data murid: kop surat + judul sesuai filter + tabel + jumlah murid. Dibuat oleh pembuat dokumen seragam (js/cetak.js).
+function htmlCetakMurid(judul, l) {
+  const lk = l.filter(x => x.p.jenis_kelamin === 'L').length, pr = l.filter(x => x.p.jenis_kelamin === 'P').length, kosong = l.length - lk - pr;
+  const tabel = cetakTabel([
+    { h: 'No', c: 'c', v: (x, i) => i + 1 }, { h: 'Nama', v: x => esc(x.nama) }, { h: 'Panggilan', v: x => esc(x.p.nama_panggilan || '') },
+    { h: 'L/P', c: 'c', v: x => esc(x.p.jenis_kelamin || '') }, { h: 'Kelas', v: x => esc(x.kelas) }, { h: 'Tempat lahir', v: x => esc(x.p.tempat_lahir || '') },
+    { h: 'Tanggal lahir', c: 'n', v: x => x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : '' }, { h: 'NIS', v: x => esc(x.p.nis || '') },
+    { h: 'NISN', v: x => esc(x.p.nisn || '') }, { h: 'Status', v: x => x.aktif ? 'Aktif' : 'Nonaktif' }], l);
+  return cetakDokumen(judul, tabel + cetakRingkas([['Jumlah murid', l.length], ['Laki-laki', lk], ['Perempuan', pr], ...(kosong ? [['Belum diisi', kosong]] : [])]));
+}
 const idBaru = () => 'OP-' + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => (b % 36).toString(36)).join('').toUpperCase();
 MODUL.data = async function () {
   $('#view').innerHTML = '<p>Memuat data murid...</p>';
@@ -774,6 +831,7 @@ MODUL.data = async function () {
   try { [g, prof] = await Promise.all([dataSiswa(), semua(() => sb.from('murid_profil').select('*').order('guest_id'))]); }
   catch (e) { $('#view').innerHTML = `<p class="msg err">Data murid tidak bisa dibaca: ${esc((e && e.message) || e)}</p><p class="mut">Pastikan 05-kartu.sql dan 06-kegiatan-tingkat.sql sudah dijalankan.</p>`; return; }
   if (prof[0] && !('nama_panggilan' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom nama_panggilan belum ada di tabel murid_profil. Jalankan 13-nama-panggilan.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
+  if (prof[0] && !('jenis_kelamin' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom jenis_kelamin belum ada di tabel murid_profil. Jalankan 14-jenis-kelamin.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
   if (prof[0] && !('nonaktif' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom baru belum ada di tabel murid_profil. Jalankan 06-kegiatan-tingkat.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
   const pm = new Map(prof.map(p => [String(p.guest_id), p]));
   const aktif = g.map(x => ({ id: String(x.guest_id), nama: String(x.guest_name).trim(), kelas: String(x.instansi_kelas || '').trim(), jenis: x.jenis_undangan, p: pm.get(String(x.guest_id)) || {}, aktif: true }));
@@ -793,6 +851,7 @@ MODUL.data = async function () {
     ${m ? '' : `<div><label for="mj">Jenis data</label><select id="mj">${opsi(jenisList, jenisUtama)}</select></div>`}
     <div><label for="mnis">NIS</label><input id="mnis" value="${esc(p.nis || '')}"></div><div><label for="mnisn">NISN</label><input id="mnisn" value="${esc(p.nisn || '')}"></div>
     <div><label for="mpg">Nama panggilan</label><input id="mpg" value="${esc(p.nama_panggilan || '')}" maxlength="50"></div>
+    <div><label for="mjk">Jenis kelamin</label><select id="mjk"><option value="">-</option><option value="L" ${p.jenis_kelamin === 'L' ? 'selected' : ''}>Laki-laki</option><option value="P" ${p.jenis_kelamin === 'P' ? 'selected' : ''}>Perempuan</option></select></div>
     <div><label for="mtl">Tempat lahir</label><input id="mtl" value="${esc(p.tempat_lahir || '')}"></div><div><label for="mtg">Tanggal lahir</label><input id="mtg" type="date" value="${esc(p.tanggal_lahir || '')}"></div></div>
     <label for="mal">Alamat</label><input id="mal" value="${esc(p.alamat || '')}">
     <p><button class="p" id="mSimpan">Simpan</button> <button id="mBatal">Batal</button></p></div>`;
@@ -800,25 +859,26 @@ MODUL.data = async function () {
   const tabel = () => {
     const k = $('#dk').value, q = $('#dq').value.trim().toLowerCase(), st = $('#ds').value;
     const l = semuaM.filter(x => (!k || x.kelas === k) && (!q || x.nama.toLowerCase().includes(q)) && (st === 'semua' || (st === 'nonaktif') === !x.aktif));
-    $('#dl').innerHTML = `<p class="mut">${l.length} murid</p><table><tr><th>No</th><th>Nama</th><th>Panggilan</th><th>Kelas</th><th>Tempat lahir</th><th>Tanggal lahir</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>${l.map((x, i) => `<tr${x.aktif ? '' : ' style="opacity:.6"'}><td>${i + 1}</td><td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td><td>${esc(x.p.nama_panggilan || '')}</td><td>${esc(x.kelas)}</td><td>${esc(x.p.tempat_lahir || '')}</td><td>${x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : ''}</td><td>${esc(x.p.nis || '')}</td><td>${esc(x.p.nisn || '')}</td><td>${x.aktif ? 'Aktif' : 'Nonaktif'}</td>
-      <td class="noprint"><button data-ed="${esc(x.id)}">Ubah</button> <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td colspan="10" class="mut">Tidak ada data.</td></tr>'}</table>`;
+    $('#dl').innerHTML = `<p class="mut">${l.length} murid</p><table><tr><th>No</th><th>Nama</th><th>Panggilan</th><th>L/P</th><th>Kelas</th><th>Tempat lahir</th><th>Tanggal lahir</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>${l.map((x, i) => `<tr${x.aktif ? '' : ' style="opacity:.6"'}><td>${i + 1}</td><td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td><td>${esc(x.p.nama_panggilan || '')}</td><td>${esc(x.p.jenis_kelamin || '')}</td><td>${esc(x.kelas)}</td><td>${esc(x.p.tempat_lahir || '')}</td><td>${x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : ''}</td><td>${esc(x.p.nis || '')}</td><td>${esc(x.p.nisn || '')}</td><td>${x.aktif ? 'Aktif' : 'Nonaktif'}</td>
+      <td class="noprint"><button data-ed="${esc(x.id)}">Ubah</button> <button data-tg="${esc(x.id)}">${x.aktif ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>`).join('') || '<tr><td colspan="11" class="mut">Tidak ada data.</td></tr>'}</table>`;
     return l;
   };
   const selesai = async (t) => { await MODUL.data(); msg(t + ' Daftar murid di akun guru ikut berubah otomatis dalam sekitar satu menit. Nilai & presensi yang sudah ada tidak berubah.'); };
 
   $('#view').innerHTML = `<h2>Data murid (${aktif.length} aktif${mati.length ? `, ${mati.length} nonaktif` : ''})</h2><p class="mut">${hitung}</p>
   <p class="noprint"><select id="dk" style="max-width:150px"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select> <select id="ds" style="max-width:150px"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option><option value="semua">Semua</option></select>
-  <input id="dq" type="search" placeholder="Cari nama" style="max-width:220px"> <button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button id="dUnggah">Unggah CSV</button><input id="dfile" type="file" accept=".csv,text/csv,text/plain" hidden> <button onclick="print()">Cetak</button></p>
+  <input id="dq" type="search" placeholder="Cari nama" style="max-width:220px"></p>
+  <p class="noprint"><button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button id="dUnggah">Unggah CSV</button><input id="dfile" type="file" accept=".csv,text/csv,text/plain" hidden> <button id="dCetak">Cetak</button></p>
   <div id="msg" class="msg"></div><div id="dform"></div>
-  <div id="dtempel" class="noprint" hidden><label for="dta">Tempel baris dari Excel: Nama, Kelas, NIS, NISN, Nama panggilan, Tempat lahir, Tanggal lahir (dipisah tab atau titik koma; kolom setelah Kelas boleh kosong; tanggal: 27/03/2015 atau 2015-03-27)</label><textarea id="dta" rows="6" placeholder="Budi Santoso&#9;3A&#9;1234&#9;0012345678&#9;Budi&#9;Jakarta&#9;27/03/2015"></textarea><p><button class="p" id="dImpor">Impor murid</button> <span id="dprev" class="mut"></span></p></div>
+  <div id="dtempel" class="noprint" hidden><label for="dta">Tempel baris dari Excel: Nama, Kelas, NIS, NISN, Nama panggilan, Tempat lahir, Tanggal lahir, Jenis kelamin L/P (dipisah tab atau titik koma; kolom setelah Kelas boleh kosong; tanggal: 27/03/2015 atau 2015-03-27)</label><textarea id="dta" rows="6" placeholder="Budi Santoso&#9;3A&#9;1234&#9;0012345678&#9;Budi&#9;Jakarta&#9;27/03/2015&#9;L"></textarea><p><button class="p" id="dImpor">Impor murid</button> <span id="dprev" class="mut"></span></p></div>
   <div id="dl"></div>`;
   $('#dk').onchange = $('#ds').onchange = tabel; $('#dq').oninput = tabel; tabel();
-  $('#dCsv').onclick = () => csv('data-murid.csv', [['Nama', 'Nama panggilan', 'Kelas', 'ID', 'NIS', 'NISN', 'Tempat lahir', 'Tanggal lahir', 'Alamat', 'Status'], ...tabel().map(x => [x.nama, x.p.nama_panggilan, x.kelas, x.id, x.p.nis, x.p.nisn, x.p.tempat_lahir, x.p.tanggal_lahir, x.p.alamat, x.aktif ? 'aktif' : 'nonaktif'])]);
+  $('#dCsv').onclick = () => csv('data-murid.csv', [['Nama', 'Nama panggilan', 'Jenis kelamin', 'Kelas', 'ID', 'NIS', 'NISN', 'Tempat lahir', 'Tanggal lahir', 'Alamat', 'Status'], ...tabel().map(x => [x.nama, x.p.nama_panggilan, x.p.jenis_kelamin, x.kelas, x.id, x.p.nis, x.p.nisn, x.p.tempat_lahir, x.p.tanggal_lahir, x.p.alamat, x.aktif ? 'aktif' : 'nonaktif'])]);
   const bukaForm = id => { edit = { id }; $('#dform').innerHTML = formHtml(); $('#mn').focus(); $('#mBatal').onclick = () => { edit = null; $('#dform').innerHTML = ''; };
     $('#mSimpan').onclick = async () => {
       const nama = $('#mn').value.trim().replace(/\s+/g, ' '), kelas = $('#mk').value.trim();
       if (!nama || !kelas) return msg('Nama dan kelas wajib diisi.', true);
-      const profil = { nama_panggilan: kosongNull($('#mpg').value), nis: kosongNull($('#mnis').value), nisn: kosongNull($('#mnisn').value), tempat_lahir: kosongNull($('#mtl').value), tanggal_lahir: kosongNull($('#mtg').value), alamat: kosongNull($('#mal').value) };
+      const profil = { nama_panggilan: kosongNull($('#mpg').value), jenis_kelamin: kosongNull($('#mjk').value), nis: kosongNull($('#mnis').value), nisn: kosongNull($('#mnisn').value), tempat_lahir: kosongNull($('#mtl').value), tanggal_lahir: kosongNull($('#mtg').value), alamat: kosongNull($('#mal').value) };
       $('#mSimpan').disabled = true;
       try {
         if (id) {
@@ -836,6 +896,13 @@ MODUL.data = async function () {
       } catch (e) { $('#mSimpan').disabled = false; }
     }; };
   $('#dTambah').onclick = () => bukaForm(null);
+  // Cetak: pratinjau dulu (kop surat + judul sesuai filter + jumlah murid yang dipilih), baru cetak / simpan PDF.
+  $('#dCetak').onclick = () => {
+    const l = tabel(), k = $('#dk').value, st = $('#ds').value;
+    if (!l.length) return msg('Tidak ada data untuk dicetak.', true);
+    const judul = 'Data Murid' + (k ? ' ' + (/^kelas/i.test(k) ? k : 'Kelas ' + k) : '') + (st === 'nonaktif' ? ' (Nonaktif)' : '');
+    cetakPratinjau(judul, htmlCetakMurid(judul, l));
+  };
   // Perbaikan massal: unggah CSV hasil Unduh CSV yang sudah diedit. Murid dicocokkan lewat kolom ID.
   // Sel kosong = data lama dibiarkan (tidak dihapus). Hanya baris yang benar-benar berubah yang dikirim ke Supabase.
   $('#dUnggah').onclick = () => $('#dfile').click();
@@ -848,14 +915,14 @@ MODUL.data = async function () {
     for (const r of tbl.slice(1)) {
       const id = String(r[iId] || '').trim(); if (!id) continue;
       const m = peta.get(id); if (!m) { tidakAda.push(id); continue; }
-      const p = m.p, baru = { nama_panggilan: ambil(r, 'nama panggilan'), tempat_lahir: ambil(r, 'tempat lahir'), tanggal_lahir: null, nis: ambil(r, 'nis'), nisn: ambil(r, 'nisn'), alamat: ambil(r, 'alamat') };
+      const p = m.p, baru = { nama_panggilan: ambil(r, 'nama panggilan'), jenis_kelamin: jkNorm(ambil(r, 'jenis kelamin')), tempat_lahir: ambil(r, 'tempat lahir'), tanggal_lahir: null, nis: ambil(r, 'nis'), nisn: ambil(r, 'nisn'), alamat: ambil(r, 'alamat') };
       const tg = ambil(r, 'tanggal lahir'); if (tg) { baru.tanggal_lahir = tglIso(tg); if (!baru.tanggal_lahir) tglSalah.push(m.nama); }
       const nm = (ambil(r, 'nama') || '').replace(/\s+/g, ' '), kl = ambil(r, 'kelas') || '';
       // semua baris memakai himpunan kolom yang sama agar upsert massal tidak menimpa kolom lain dengan null
       const row = { guest_id: id, nama_ref: p.nama_ref || m.nama, nonaktif: !!p.nonaktif, nama: p.nama ?? null, kelas: p.kelas ?? null }; let ubah = false;
       if (nm && nm !== m.nama) { row.nama = nm; ubah = true; }
       if (kl && kl !== m.kelas) { row.kelas = kl; ubah = true; }
-      for (const k of ['nama_panggilan', 'tempat_lahir', 'tanggal_lahir', 'nis', 'nisn', 'alamat']) {
+      for (const k of ['nama_panggilan', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'nis', 'nisn', 'alamat']) {
         const lama = p[k] ?? null; row[k] = baru[k] ?? lama;
         if (baru[k] != null && String(baru[k]) !== String(lama ?? '')) ubah = true;
       }
@@ -868,12 +935,12 @@ MODUL.data = async function () {
     catch (err) { /* run() sudah menampilkan pesan galat */ }
   };
   $('#dTempel').onclick = () => { const b = $('#dtempel'); b.hidden = !b.hidden; };
-  const baca = () => $('#dta').value.split(/\r?\n/).map(r => r.split(/\t|;/).map(c => c.trim())).filter(r => r[0] && r[1] && r[0].toLowerCase() !== 'nama').map(r => ({ nama: r[0].replace(/\s+/g, ' '), kelas: r[1], nis: kosongNull(r[2]), nisn: kosongNull(r[3]), nama_panggilan: kosongNull(r[4]), tempat_lahir: kosongNull(r[5]), tanggal_lahir: tglIso(r[6]) }));
+  const baca = () => $('#dta').value.split(/\r?\n/).map(r => r.split(/\t|;/).map(c => c.trim())).filter(r => r[0] && r[1] && r[0].toLowerCase() !== 'nama').map(r => ({ nama: r[0].replace(/\s+/g, ' '), kelas: r[1], nis: kosongNull(r[2]), nisn: kosongNull(r[3]), nama_panggilan: kosongNull(r[4]), tempat_lahir: kosongNull(r[5]), tanggal_lahir: tglIso(r[6]), jenis_kelamin: jkNorm(r[7]) }));
   $('#dta').oninput = () => { const b = baca(); $('#dprev').textContent = b.length ? `${b.length} baris terbaca.` : ''; };
   $('#dImpor').onclick = async () => {
     const baris = baca(); if (!baris.length) return msg('Tidak ada baris yang terbaca. Pastikan kolom pertama nama dan kolom kedua kelas.', true);
     const ada = new Set(semuaM.filter(x => x.aktif).map(x => x.nama.toLowerCase() + '|' + x.kelas)), baru = [];
-    baris.forEach(r => { const k = r.nama.toLowerCase() + '|' + r.kelas; if (!ada.has(k)) { ada.add(k); baru.push({ guest_id: idBaru(), nama_ref: r.nama, nama: r.nama, kelas: r.kelas, jenis: jenisUtama, sumber: 'operator', nis: r.nis, nisn: r.nisn, nama_panggilan: r.nama_panggilan, tempat_lahir: r.tempat_lahir, tanggal_lahir: r.tanggal_lahir }); } });
+    baris.forEach(r => { const k = r.nama.toLowerCase() + '|' + r.kelas; if (!ada.has(k)) { ada.add(k); baru.push({ guest_id: idBaru(), nama_ref: r.nama, nama: r.nama, kelas: r.kelas, jenis: jenisUtama, sumber: 'operator', nis: r.nis, nisn: r.nisn, nama_panggilan: r.nama_panggilan, tempat_lahir: r.tempat_lahir, tanggal_lahir: r.tanggal_lahir, jenis_kelamin: r.jenis_kelamin }); } });
     if (!baru.length) return msg('Semua baris sudah ada di data murid.', true);
     if (!confirm(`Tambahkan ${baru.length} murid baru${baris.length - baru.length ? ` (${baris.length - baru.length} baris dilewati karena sudah ada)` : ''}?`)) return;
     $('#dImpor').disabled = true;

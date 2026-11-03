@@ -105,6 +105,7 @@ $('#reload').addEventListener('click',loadAll);
 
 /* ---------- Tampilan ---------- */
 const has=(id,i)=>dist[id+'|'+i];
+const sumItem=list=>items.map(it=>`${esc(it.label)} ${list.filter(x=>has(x.id,it.key)).length}/${list.length}`).join(' · ');
 async function api(body){
   const r=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+sessionStorage.getItem(TOKEN_KEY)},body:JSON.stringify(body)});
   if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||('HTTP '+r.status));
@@ -145,7 +146,7 @@ function render(){
   view=base.filter(x=>(!st||x.status===st)&&(!q||x.name.toLocaleLowerCase('id').includes(q)));
   const bagi=mode==='bagi',door=mode==='doorprize';
   const hadir=base.filter(x=>x.status==='Hadir');
-  const sum=list=>items.map(it=>`${esc(it.label)} ${list.filter(x=>has(x.id,it.key)).length}/${list.length}`).join(' · ');
+  const sum=sumItem;
   const types=[...new Set(guests.map(g=>g.type))].sort((a,b)=>a.localeCompare(b,'id')).filter(t=>!type||t===type);
   const cnt=t=>{const l=guests.filter(g=>g.type===t&&(!org||g.origin===org)),h=l.filter(g=>recs[g.id]?.status==='Hadir').length,n=l.filter(g=>recs[g.id]?.status==='Tidak hadir').length;return[l.length,h,n,l.length-h-n]};
   const tot=[0,0,0,0],pc=(h,t)=>(t?Math.round(h/t*100):0)+'%';
@@ -221,7 +222,33 @@ function stamp(){
   $('#phFilter').textContent=`Jenis undangan: ${$('#fType').value||'Semua'}  |  Kelas/Instansi: ${$('#fOrg').value||'Semua'}  |  Status: ${$('#fStatus').value||'Semua'}  |  Dicetak: ${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()}, ${p2(d.getHours())}:${p2(d.getMinutes())}`;
 }
 window.addEventListener('beforeprint',stamp);
-$('#print').addEventListener('click',()=>window.print());
+/* Cetak lewat pembuat dokumen seragam (js/cetak.js): kop surat, judul sesuai menu, info acara & filter, tabel per kelas/instansi, kolom tanda tangan. */
+function cetakRekap(){
+  const bagi=mode==='bagi',door=mode==='doorprize',type=$('#fType').value;
+  if(bagi&&!items.length){alert('Belum ada item pembagian untuk dicetak.');return}
+  stamp();
+  const judul=$('#phTitle').textContent;
+  const sub=[$('#phInfo').textContent,$('#phFilter').textContent,$('#prog').textContent].filter(Boolean).map(esc).join('<br>');
+  const no={h:'No',c:'c',v:(x,i)=>i+1},nama={h:'Nama',v:x=>esc(x.name)},status={h:'Status',v:x=>esc(x.status)};
+  let isi='';
+  if(mode==='rekap'&&$('#phSum').innerHTML)isi+=$('#phSum').innerHTML.replace('<table class="sumt">','<table class="t">');
+  if(door){
+    const win=view.filter(x=>has(x.id,'doorprize'));
+    isi+=cetakTabel([no,{h:'Pemenang',v:x=>esc(x.name)},{h:'Instansi / Kelas',v:x=>esc(x.origin)},{h:'Waktu',c:'n',v:x=>esc(has(x.id,'doorprize'))},{h:'Hadiah / catatan',v:x=>esc(notes[x.id]||'')}],win,'Belum ada pemenang.');
+  }else if(!view.length)isi+='<p>Tidak ada data yang cocok.</p>';
+  else{
+    const groups={};view.forEach(x=>(groups[x.origin]??=[]).push(x));
+    const kol=bagi?[no,nama,status,...items.map(it=>({h:esc(it.label),v:x=>esc(has(x.id,it.key)||'')}))]
+      :[no,nama,status,{h:'Tanda tangan',v:x=>x.sig?`<img class="sig" src="${esc(x.sig)}" alt="">`:'—'},{h:'Waktu',c:'n',v:x=>esc(x.at)}];
+    isi+=Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0],'id',{numeric:true})).map(([k,list])=>{
+      list.sort((a,b)=>a.name.localeCompare(b.name,'id'));
+      return cetakBagian(esc((type?type+' - ':'')+k),`${list.length} tamu${bagi?' · '+sumItem(list):''}`,cetakTabel(kol,list));
+    }).join('');
+  }
+  isi+='<div class="ttd"><div><p>Mengetahui,<br>Kepala Sekolah</p>( ................................ )</div><div><p>Jakarta, ................................<br>Ketua Panitia</p>( ................................ )</div></div>';
+  cetakPratinjau(judul,cetakDokumen(judul,isi,{sub,css:'.sig{display:block;height:11mm;max-width:34mm;object-fit:contain}.ttd{display:flex;justify-content:space-between;gap:10mm;margin-top:10mm;text-align:center;page-break-inside:avoid}.ttd div{flex:1}.ttd p{margin:0 0 18mm}'}));
+}
+$('#print').addEventListener('click',cetakRekap);
 
 /* ---------- Ekspor CSV ---------- */
 $('#csv').addEventListener('click',()=>{

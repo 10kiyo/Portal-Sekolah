@@ -96,20 +96,12 @@ function bkPilihPasang(p, id) {
 const bkPilihan = p => { const m = bkMuridOleh($('#' + p + 'm').value); return m ? { guest_id: String(m.guest_id), nama: m.guest_name, kelas: kelasX(m) } : null; };
 const bkSemuaCatatan = (a, b) => semua(() => sb.from('bk_catatan').select('*').gte('tanggal', a).lte('tanggal', b).order('tanggal', { ascending: false }).order('id'));
 
-/* ---------- surat (dicetak lewat jendela baru; "Simpan sebagai PDF" dari dialog cetak) ---------- */
+/* ---------- surat (pratinjau cetak seragam: js/cetak.js; "Cetak / simpan PDF" dari pratinjau) ---------- */
+const BK_CSS_SURAT = `h1{font-size:13pt;text-decoration:underline;margin:14px 0 2px;text-transform:none;letter-spacing:0}.no{text-align:center;margin:0 0 14px}
+table.i td{padding:1px 8px 1px 0;vertical-align:top}table.b{border-collapse:collapse;width:100%;margin:8px 0}table.b td,table.b th{border:1px solid #000;padding:3px 6px;font-size:11pt;text-align:left}
+.ttd{display:flex;justify-content:space-between;gap:20px;margin-top:26px;text-align:center}.ttd div{flex:1}.sp{height:64px}p{margin:8px 0;text-align:justify}`;
 function bkCetak(judul, isi) {
-  const sekolah = (typeof KARTU_BAWAAN !== 'undefined' && KARTU_BAWAAN.sekolah) || 'Sekolah', s = BKS.atur.surat || {};
-  const w = window.open('', '_blank');
-  if (!w) return msg('Jendela cetak diblokir browser. Izinkan pop-up untuk situs ini, lalu coba lagi.', true);
-  w.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc(judul)}</title><style>
-  @page{size:A4;margin:18mm 20mm}body{font:12pt/1.5 "Times New Roman",serif;color:#000;margin:0}
-  .kop{display:flex;align-items:center;gap:14px;border-bottom:3px double #000;padding-bottom:8px;margin-bottom:14px}.kop img{width:70px;height:70px;object-fit:contain}
-  .kop b{font-size:15pt;display:block}.kop span{font-size:10pt}h1{font-size:13pt;text-align:center;text-decoration:underline;margin:14px 0 2px}.no{text-align:center;margin:0 0 14px}
-  table.i td{padding:1px 8px 1px 0;vertical-align:top}table.b{border-collapse:collapse;width:100%;margin:8px 0}table.b td,table.b th{border:1px solid #000;padding:3px 6px;font-size:11pt;text-align:left}
-  .ttd{display:flex;justify-content:space-between;gap:20px;margin-top:26px;text-align:center}.ttd div{flex:1}.sp{height:64px}p{margin:8px 0;text-align:justify}
-  </style></head><body><div class="kop"><img src="${esc(location.origin)}/logo-at-taqwa.png" alt=""><div><b>${esc(sekolah)}</b>${s.alamat ? `<span>${esc(s.alamat)}</span>` : ''}</div></div>${isi}
-  <script>onload=()=>setTimeout(()=>print(),400)<\/script></body></html>`);
-  w.document.close();
+  cetakPratinjau(judul, cetakDokumen(judul, isi, { tanpaJudul: true, margin: '14mm 20mm 16mm', font: '12pt/1.5', css: BK_CSS_SURAT }));
 }
 function bkTtd(kiri, tengahKepsek) {
   const s = BKS.atur.surat || {}, kota = s.kota || 'Jakarta';
@@ -254,7 +246,7 @@ MODUL.bkrekap = bkJalan(async function (sem0) {
   <div class="grid"><div><label for="rSem">Semester</label><select id="rSem">${bkSemDaftar().map(s => `<option ${s === sem ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
   <div><label for="rKls">Kelas</label><select id="rKls"><option value="">Semua</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select></div>
   <div><label for="rCari">Cari nama</label><input id="rCari"></div></div>
-  <p class="noprint"><label style="display:inline-flex;gap:6px;font-weight:600"><input type="checkbox" id="rSemua" style="width:auto"> Tampilkan juga murid tanpa catatan</label> <button id="rCsv">Unduh CSV</button> <button onclick="print()">Cetak</button></p>
+  <p class="noprint"><label style="display:inline-flex;gap:6px;font-weight:600"><input type="checkbox" id="rSemua" style="width:auto"> Tampilkan juga murid tanpa catatan</label> <button id="rCsv">Unduh CSV</button> <button id="rCetak">Cetak</button></p>
   <div id="rTab" style="overflow-x:auto"></div><div id="rDet"></div><div id="msg" class="msg"></div>`;
   let tampilRows = [];
   const gambar = () => {
@@ -267,6 +259,12 @@ MODUL.bkrekap = bkJalan(async function (sem0) {
   };
   gambar();
   $('#rCsv').onclick = () => csv(`rekap-bk-${sem.replace(/[^0-9A-Za-z]+/g, '-')}.csv`, [['Nama', 'Kelas', 'Terlambat', 'Atribut', 'Pelanggaran', 'Poin pelanggaran', 'Poin prestasi'], ...tampilRows.map(x => [x.m.guest_name, kelasX(x.m), x.t, x.a, x.p, x.poin, x.pres])]);
+  $('#rCetak').onclick = () => {
+    const judul = 'Rekap Kedisiplinan Siswa', kl = $('#rKls').value;
+    cetakPratinjau(judul, cetakDokumen(judul, cetakTabel([{ h: 'No', c: 'c', v: (x, i) => i + 1 }, { h: 'Nama', v: x => esc(x.m.guest_name) }, { h: 'Kelas', v: x => esc(kelasX(x.m)) },
+      { h: 'Terlambat', c: 'c', v: x => x.t }, { h: 'Atribut', c: 'c', v: x => x.a }, { h: 'Pelanggaran', c: 'c', v: x => x.p }, { h: 'Poin', c: 'c', v: x => `<b>${x.poin}</b>` }, { h: 'Prestasi', c: 'c', v: x => x.pres ? '+' + x.pres : 0 }], tampilRows, 'Tidak ada data untuk filter ini.')
+      + cetakRingkas([['Jumlah siswa', tampilRows.length]]), { sub: 'Semester ' + esc(sem) + (kl ? ' \u00b7 Kelas ' + esc(kl) : '') }));
+  };
   $('#rCari').oninput = gambar;
   bkPasang(() => MODUL.bkrekap($('#rSem') ? $('#rSem').value : undefined), async e => {
     if (e.target.dataset.det) await bkRiwayat(e.target.dataset.det, '#rDet');

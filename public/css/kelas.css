@@ -5,6 +5,12 @@ body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,
 .hidden{display:none!important}
 .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .bar h1{margin:0;font-size:22px;color:var(--navy);letter-spacing:-.03em;flex:1;min-width:160px}
+/* Identitas portal di bilah atas admin: logo + judul + nama sekolah (menyamai kepala halaman masuk) */
+.brand{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.brand img{width:48px;height:48px;object-fit:contain;flex:none}
+.brand b{display:block;font-size:20px;color:var(--navy);letter-spacing:-.03em;line-height:1.2}
+.brand small{display:block;color:var(--mute);font-weight:600;font-size:13px;margin-top:2px}
+@media(max-width:700px){.brand img{width:36px;height:36px}.brand b{font-size:16px}.brand small{display:none}}
 .card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:18px;box-shadow:0 12px 30px #102a4310;margin-top:14px;overflow:auto}
 h2{margin:0 0 12px;font-size:18px;color:var(--navy)}
 label{display:block;font-weight:700;color:var(--navy);margin:0 0 6px;font-size:14px}
@@ -28,6 +34,11 @@ button:focus-visible{outline:3px solid #1677c850}
 .main{flex:1;min-width:0}
 #sideHead{padding:6px 8px 10px;border-bottom:1px solid #e6eef5;margin-bottom:6px}
 #sideHead b{display:block;color:var(--navy);line-height:1.3}#sideHead span{font-size:13px;color:var(--mute)}
+/* Kepala bilah kiri: logo + judul portal + nama sekolah, di atas identitas pengguna */
+#sideBrand{display:flex;align-items:center;gap:10px;padding:4px 8px 12px;margin-bottom:8px;border-bottom:1px solid #e6eef5}
+#sideBrand img{width:44px;height:44px;object-fit:contain;flex:none}
+#sideBrand b{display:block;font-size:15px;line-height:1.25;color:var(--navy);letter-spacing:-.02em}
+#sideBrand small{display:block;margin-top:2px;font-size:12px;line-height:1.3;color:var(--mute);font-weight:600}
 #menu h4{margin:14px 8px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
 #menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:10px;font-weight:650;color:var(--navy)}
 #menu button:hover{background:var(--soft)}
@@ -45,6 +56,7 @@ button:focus-visible{outline:3px solid #1677c850}
   body.in-app .shell[data-open="0"] #side{display:none}
   body.in-app #menu{flex:1;overflow:auto;min-height:0}
   body.in-app .scrim{display:none!important}
+  body.in-app[data-menu="1"] .bar .brand{display:none}   /* identitas sudah tampil di kepala bilah kiri */
 }
 #sideFoot{display:none;padding-top:10px;border-top:1px solid #e6eef5;margin-top:8px}
 body.in-app #sideFoot{display:block}

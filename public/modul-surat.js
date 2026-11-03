@@ -204,7 +204,7 @@ MODUL.buatsurat = async function (jenisBaru) {
     if (t.id === 'addR') { D.rincian.push({ k: '', v: '' }); $('#rincian').innerHTML = rinciHtml(); return tunda(); }
     if (d.hapusb != null) { D.butir.splice(+d.hapusb, 1); $('#butir').innerHTML = butirHtml(); return tunda(); }
     if (d.hapusr != null) { D.rincian.splice(+d.hapusr, 1); $('#rincian').innerHTML = rinciHtml(); return tunda(); }
-    if (t.id === 'cetak') { clearTimeout(tm); pv.srcdoc = htmlSurat(D, c); pv.onload = () => { pv.contentWindow.focus(); pv.contentWindow.print(); }; return; }
+    if (t.id === 'cetak') { clearTimeout(tm); cetakKePdf(htmlSurat(D, c)); return; }
     if (d.buka || d.salin) {
       const r = R.rows.find(x => x.id === (d.buka || d.salin)); if (!r || !r.isi) return;
       R.D = { ...suratBaru(r.isi.jenis || 'kegiatan'), ...JSON.parse(JSON.stringify(r.isi)), id: d.buka ? r.id : null };

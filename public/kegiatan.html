@@ -174,6 +174,7 @@ a.btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none;box-si
 
 <script src="js/umum.js"></script>
 <script src="js/admin-umum.js"></script>
+<script src="js/cetak.js"></script>
 <script>
 const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 const FASE = { akan: ['Akan datang', 'blue'], dibuka: ['Dibuka', 'ok'], penuh: ['Kuota penuh', 'warn'], ditutup: ['Ditutup', ''], selesai: ['Selesai', ''] };
@@ -310,7 +311,8 @@ function renderDetail() {
     <div class="tabs noprint"><button data-t="daftar" class="${tab === 'daftar' ? 'on' : ''}">Pendaftar (${s.total})</button><button data-t="belum" class="${tab === 'belum' ? 'on' : ''}">Belum daftar (${belum.length})</button></div>
     <div id="isi"></div>`;
   box.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-t]'); if (b) { tab = b.dataset.t; renderDetail(); } };
-  $('#cetak').onclick = () => window.print();
+  let tampilRows = ps;   // baris yang sedang tampil di tab Pendaftar (mengikuti filter); dipakai tombol Cetak
+  $('#cetak').onclick = () => cetakK(k, tab === 'belum' ? belum : tampilRows, tab === 'belum', s);
   $('#csv').onclick = () => csv(k, ps);
   if (tab === 'belum') {
     $('#isi').innerHTML = belum.length ? `<div class="scroll"><table><tr><th>Nama</th><th>Kelas</th></tr>${belum.map(m => `<tr><td>${esc(m.nama)}</td><td>${esc(m.kelas)}</td></tr>`).join('')}</table></div>` : '<p class="mut">Semua murid yang berhak sudah mendaftar.</p>';
@@ -322,6 +324,7 @@ function renderDetail() {
   const draw = () => {
     const q = $('#fq').value.trim().toLowerCase(), fs = $('#fs').value, fk = $('#fk').value;
     const rows = ps.filter(x => (!fs || x.status === fs) && (!fk || x.kelas === fk) && (!q || x.nama_anak.toLowerCase().includes(q)));
+    tampilRows = rows;
     $('#tbl').innerHTML = rows.length ? `<div class="scroll"><table><tr><th>Anak</th><th>Status</th><th>Transfer</th>${k.tanya_kaos ? '<th>Kaos</th>' : ''}${k.tanya_bidang ? '<th>Bidang lomba</th>' : ''}${k.tanya_kesehatan ? '<th>Kesehatan</th>' : ''}<th>Kontak darurat</th><th class="noprint"></th></tr>
       ${rows.map(x => `<tr><td><b>${esc(x.nama_anak)}</b><div class="mut">${x.data.umum ? 'Umum · ' + esc(x.data.asal_sekolah || '') + (x.data.kelas_peserta ? ' (kelas ' + esc(x.data.kelas_peserta) + ')' : '') : esc(x.kelas)}</div></td><td><span class="pill ${ST[x.status][1]}">${ST[x.status][0]}</span>${x.catatan_panitia ? `<div class="mut">${esc(x.catatan_panitia)}</div>` : ''}</td>
       <td>${(k.biaya || x.has_bukti) ? `${esc(x.nama_pengirim)}<div class="mut">${tgl(x.tanggal_transfer)}</div>` : '-'}</td>${k.tanya_kaos ? `<td>${esc(x.data.kaos || '-')}</td>` : ''}${k.tanya_bidang ? `<td>${esc(x.data.bidang || '-')}</td>` : ''}${k.tanya_kesehatan ? `<td>${esc(x.data.kesehatan || '-')}</td>` : ''}<td>${esc(x.data.kontak || '-')}${x.data.nama_ortu ? `<div class="mut">${esc(x.data.nama_ortu)}</div>` : ''}</td>
@@ -348,6 +351,23 @@ async function periksa(p, k) {
     try { await api({ action: 'verifikasi', id: p.id, status: b.dataset.s, catatan: $('#cat').value }); dlg.close(); await muat(); }
     catch (err) { $('#perr').textContent = err.message; b.disabled = false; }
   };
+}
+
+// Cetak daftar pendaftar (sesuai filter yang sedang tampil) lewat pembuat dokumen seragam: js/cetak.js.
+function cetakK(k, daftar, belum, s) {
+  const judul = belum ? 'Murid Belum Mendaftar' : 'Pendaftar Kegiatan',
+    sub = `${esc(k.nama)}<br>Kegiatan ${tgl(k.tanggal_kegiatan)} · ${k.biaya ? rp(k.biaya) : 'Gratis'} · Untuk ${untukLabel(k)}${k.untuk_umum ? ' + umum' : ''}`;
+  if (belum) return cetakPratinjau(judul, cetakDokumen(judul, cetakTabel([{ h: 'No', c: 'c', v: (m, i) => i + 1 }, { h: 'Nama', v: m => esc(m.nama) }, { h: 'Kelas', v: m => esc(m.kelas) }], daftar, 'Semua murid yang berhak sudah mendaftar.')
+    + cetakRingkas([['Belum mendaftar', daftar.length]]), { sub }));
+  const kol = [{ h: 'No', c: 'c', v: (x, i) => i + 1 },
+    { h: 'Anak', v: x => `<b>${esc(x.nama_anak)}</b><br>${x.data.umum ? 'Umum · ' + esc(x.data.asal_sekolah || '') + (x.data.kelas_peserta ? ' (kelas ' + esc(x.data.kelas_peserta) + ')' : '') : esc(x.kelas)}` },
+    { h: 'Status', v: x => esc(ST[x.status][0]) + (x.catatan_panitia ? `<br><i>${esc(x.catatan_panitia)}</i>` : '') },
+    { h: 'Transfer', v: x => (k.biaya || x.has_bukti) ? `${esc(x.nama_pengirim)}<br>${tgl(x.tanggal_transfer)}` : '-' },
+    ...(k.tanya_kaos ? [{ h: 'Kaos', v: x => esc(x.data.kaos || '-') }] : []), ...(k.tanya_bidang ? [{ h: 'Bidang lomba', v: x => esc(x.data.bidang || '-') }] : []),
+    ...(k.tanya_kesehatan ? [{ h: 'Kesehatan', v: x => esc(x.data.kesehatan || '-') }] : []),
+    { h: 'Kontak darurat', v: x => esc(x.data.kontak || '-') + (x.data.nama_ortu ? `<br>${esc(x.data.nama_ortu)}` : '') }];
+  cetakPratinjau(judul, cetakDokumen(judul, cetakTabel(kol, daftar)
+    + cetakRingkas([['Pendaftar', s.total], ['Lunas', s.lunas], ['Menunggu', s.menunggu], ['Ditolak', s.ditolak], ['Dana terkonfirmasi', rp(s.lunas * k.biaya)], ...(daftar.length !== s.total ? [['Ditampilkan (sesuai filter)', daftar.length]] : [])]), { sub }));
 }
 
 function csv(k, ps) {

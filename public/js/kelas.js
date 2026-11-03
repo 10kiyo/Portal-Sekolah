@@ -169,9 +169,15 @@ async function vPertemuan(tgl) {
 async function vRekap() {
   const [ms, pr] = await Promise.all([murid(), run(sb.from('kelas_presensi').select('murid_id,status,kelas_pertemuan!inner(kelas_id)').eq('kelas_pertemuan.kelas_id', S.kid).eq('kelas_pertemuan.mapel_id', S.mid))]);
   const c = {}; ms.forEach(m => c[m.id] = { H: 0, I: 0, S: 0, A: 0 }); pr.forEach(x => c[x.murid_id] && c[x.murid_id][x.status]++);
-  $('#view').innerHTML = `<h2>Rekap kehadiran: ${esc(mn())}</h2><p><button id="csvR">Unduh CSV</button> <button onclick="print()">Cetak</button></p><table><tr><th>Nama</th><th>H</th><th>I</th><th>S</th><th>A</th><th>Persen hadir</th></tr>
+  $('#view').innerHTML = `<h2>Rekap kehadiran: ${esc(mn())}</h2><p><button id="csvR">Unduh CSV</button> <button id="cetakR">Cetak</button></p><table><tr><th>Nama</th><th>H</th><th>I</th><th>S</th><th>A</th><th>Persen hadir</th></tr>
   ${ms.map(m => { const r = c[m.id], t = r.H + r.I + r.S + r.A; return `<tr><td>${esc(m.nama)}</td><td>${r.H}</td><td>${r.I}</td><td>${r.S}</td><td>${r.A}</td><td>${t ? Math.round(r.H / t * 100) + '%' : '-'}</td></tr>`; }).join('')}</table>`;
   $('#csvR').onclick = () => csv('rekap-kehadiran.csv', [['Nama','Hadir','Izin','Sakit','Alpa'], ...ms.map(m => [m.nama, c[m.id].H, c[m.id].I, c[m.id].S, c[m.id].A])]);
+  $('#cetakR').onclick = () => {
+    const judul = 'Rekap Kehadiran', kls = (S.kelas.find(k => k.id === S.kid) || {}).nama || '';
+    cetakPratinjau(judul, cetakDokumen(judul, cetakTabel([{ h: 'No', c: 'c', v: (m, i) => i + 1 }, { h: 'Nama', v: m => esc(m.nama) }, { h: 'H', c: 'c', v: m => c[m.id].H }, { h: 'I', c: 'c', v: m => c[m.id].I }, { h: 'S', c: 'c', v: m => c[m.id].S }, { h: 'A', c: 'c', v: m => c[m.id].A },
+      { h: 'Persen hadir', c: 'r', v: m => { const r = c[m.id], t = r.H + r.I + r.S + r.A; return t ? Math.round(r.H / t * 100) + '%' : '-'; } }], ms, 'Belum ada murid.')
+      + cetakRingkas([['Jumlah murid', ms.length]]) + '<p class="ket" style="margin-top:3mm">H hadir, I izin, S sakit, A alpa.</p>', { sub: esc(mn()) + (kls ? ' · Kelas ' + esc(kls) : '') }));
+  };
 }
 
 /* ---------- tugas & nilai ---------- */

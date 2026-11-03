@@ -33,13 +33,14 @@
 <div id="app" class="hidden">
   <div class="bar" id="topbar">
     <button id="btnMenu" class="ic" title="Tampilkan / sembunyikan menu" aria-label="Menu" aria-expanded="true">&#9776;</button>
+    <div class="brand"><img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa"><span><b>Administrasi Guru dan Staf</b><small>SDS Islam At-Taqwa Rawamangun</small></span></div>
     <div id="btnProf" class="prof"><span id="av" class="av">G</span><span><small>Selamat datang,</small><b id="hello">Guru</b></span></div>
     <div class="nav">
       <button id="btnOut">Keluar</button>
     </div>
   </div>
   <div class="shell" id="shell" data-open="1">
-    <aside id="side"><div id="sideHead"><b id="sideNama">Guru</b><span id="sideJab"></span></div><nav id="menu"></nav><div id="sideFoot"><button id="btnHome" type="button">&larr; Beranda sekolah</button></div></aside>
+    <aside id="side"><div id="sideBrand"><img src="logo-at-taqwa.png" alt="Logo SDS Islam At-Taqwa"><span><b>Administrasi Guru dan Staf</b><small>SDS Islam At-Taqwa Rawamangun</small></span></div><div id="sideHead"><b id="sideNama">Guru</b><span id="sideJab"></span></div><nav id="menu"></nav><div id="sideFoot"><button id="btnHome" type="button">&larr; Beranda sekolah</button></div></aside>
     <div class="scrim" id="scrim"></div>
     <main class="main">
       <div class="card" id="kelasCard" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
@@ -58,6 +59,7 @@
 </div>
 
 </div>
+<script src="js/cetak.js"></script>
 <script src="modul-staf.js"></script>
 <script src="modul-surat.js"></script>
 <script src="modul-bk.js"></script>
