@@ -1,5 +1,8 @@
 /* ---------------- Kode tampilan (tidak perlu diubah) ---------------- */
-const https = u => /^https?:\/\//i.test(u || '') ? u : '';
+const linkUrl = u => {
+  const s = String(u || '');
+  return /^https?:\/\//i.test(s) || /^(?!\/\/)[\w./-]+(?:[?#][\w./?=&%+-]*)?$/i.test(s) ? s : '';
+};
 const byId = id => document.getElementById(id);
 const rp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
 const TODAY = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);   // WIB
@@ -19,7 +22,7 @@ byId('status').innerHTML = '<i></i>' + (TODAY < P0.mulai ? 'Pendaftaran dibuka m
   : 'Pendaftaran tahap pertama ditutup · Gelombang kedua dibuka jika masih ada kuota');
 
 const wa = 'https://wa.me/6281220706200?text=' + encodeURIComponent("Assalamu'alaikum, saya ingin menanyakan informasi SPMB SDS Islam At-Taqwa tahun ajaran " + S.tahunAjaran + '.');
-byId('btns').innerHTML = S.jalur.map((j, i) => https(j.daftarUrl)
+byId('btns').innerHTML = S.jalur.map((j, i) => linkUrl(j.daftarUrl)
   ? `<a class="btn ${i ? '' : 'gold'}" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">${esc(j.label)} ${PANAH}</a>` : '').join('')
   + `<a class="btn" href="${wa}" target="_blank" rel="noopener">Tanya via WhatsApp</a>`;
 
@@ -60,7 +63,7 @@ function alur(list) {
     <h3>${esc(t.judul)}</h3>
     ${t.waktu ? `<div class="fs-w">${esc(t.waktu)}</div>` : ''}
     ${t.ringkas && t.ringkas.length ? `<ul class="fs-l">${t.ringkas.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}
-    ${t.tombol && https(t.tombol.url) ? `<a class="btn dark sm" href="${esc(t.tombol.url)}" target="_blank" rel="noopener">${esc(t.tombol.teks)} ${PANAH}</a>` : ''}
+    ${t.tombol && linkUrl(t.tombol.url) ? `<a class="btn dark sm" href="${esc(t.tombol.url)}" target="_blank" rel="noopener">${esc(t.tombol.teks)} ${PANAH}</a>` : ''}
     ${t.poin && t.poin.length ? `<details class="fs-more"><summary>Lihat detail lengkap</summary><ul class="pts">${t.poin.map(poin).join('')}</ul></details>` : ''}
   </li>`).join('')}</ol>`;
 }
@@ -68,7 +71,7 @@ function alur(list) {
 function panel(j) {
   const out = [];
   out.push(`<section class="card"><h2>Pendaftaran — ${esc(j.nama)}</h2><div class="sum">${j.ringkas.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
-    <div class="btns">${https(j.daftarUrl) ? `<a class="btn dark" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">Isi formulir pendaftaran ${PANAH}</a>` : ''}${https(j.panduanUrl) || j.panduanUrl ? `<a class="btn line" href="${esc(j.panduanUrl)}" target="_blank" rel="noopener">Unduh buku panduan (PDF)</a>` : ''}</div></section>`);
+    <div class="btns">${linkUrl(j.daftarUrl) ? `<a class="btn dark" href="${esc(j.daftarUrl)}" target="_blank" rel="noopener">Isi formulir pendaftaran ${PANAH}</a>` : ''}${linkUrl(j.panduanUrl) ? `<a class="btn line" href="${esc(j.panduanUrl)}" target="_blank" rel="noopener">Unduh buku panduan (PDF)</a>` : ''}</div></section>`);
   out.push(`<section class="card"><h2>Jadwal SPMB</h2>${jadwal(j.jadwal)}</section>`);
   out.push(`<section class="card"><h2>Alur Pendaftaran</h2><p class="mut" style="margin:-6px 0 18px">Ikuti langkahnya secara berurutan. Buka Lihat detail lengkap pada tiap kartu untuk aturan selengkapnya.</p>${alur(j.tahapan)}</section>`);
   const b = j.biaya, tot = b.kolom.map((_, i) => b.baris.reduce((s, r) => s + r[i + 1], 0));
