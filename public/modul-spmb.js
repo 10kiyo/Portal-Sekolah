@@ -19,42 +19,6 @@ const SPMB_BERKAS = [['foto', 'Foto'], ['akte', 'Akta kelahiran'], ['kk', 'Kartu
 const spmbLabelStatus = status => (SPMB_STATUS.find(([id]) => id === status) || [status || '', status || '-'])[1];
 const spmbTgl = value => value ? new Date(value + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 let spmbTabAktif = 'spmbdaftar';
-let spmbPreview;
-
-function spmbBukaPreview(file, judul) {
-  if (!spmbPreview) {
-    spmbPreview = document.createElement('dialog');
-    spmbPreview.setAttribute('aria-labelledby', 'spmbPreviewTitle');
-    spmbPreview.style.cssText = 'border:0;border-radius:18px;padding:0;width:min(760px,calc(100% - 24px));max-height:calc(100dvh - 24px);overflow:hidden;box-shadow:0 20px 60px #102a4350;color:var(--ink,#243b53)';
-    spmbPreview.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:16px 18px">
-      <h2 id="spmbPreviewTitle" style="margin:0;color:var(--navy,#102a43);font-size:20px"></h2>
-      <button type="button" aria-label="Tutup pratinjau" data-spmb-preview-close style="flex:none;border:0;border-radius:50%;width:36px;height:36px;font-size:22px;cursor:pointer">×</button>
-    </div><div data-spmb-preview-body style="overflow:auto;max-height:calc(100dvh - 150px);background:#e6eef6;text-align:center"></div>
-    <div style="padding:12px 18px;border-top:1px solid #dbe8f2"><a data-spmb-preview-open target="_blank" rel="noopener">Buka file di tab baru / unduh</a></div>`;
-    document.body.appendChild(spmbPreview);
-    spmbPreview.querySelector('[data-spmb-preview-close]').onclick = () => spmbPreview.close();
-    spmbPreview.addEventListener('click', e => { if (e.target === spmbPreview) spmbPreview.close(); });
-  }
-  spmbPreview.querySelector('#spmbPreviewTitle').textContent = judul;
-  const body = spmbPreview.querySelector('[data-spmb-preview-body]');
-  body.replaceChildren();
-  const url = String(file.url || '');
-  if (file.pdf) {
-    const frame = document.createElement('iframe');
-    frame.src = url;
-    frame.title = judul;
-    frame.style.cssText = 'display:block;width:100%;height:min(75dvh,800px);border:0;background:#fff';
-    body.appendChild(frame);
-  } else {
-    const image = document.createElement('img');
-    image.src = url;
-    image.alt = judul;
-    image.style.cssText = 'display:block;margin:auto;max-width:100%;max-height:calc(100dvh - 180px);object-fit:contain';
-    body.appendChild(image);
-  }
-  spmbPreview.querySelector('[data-spmb-preview-open]').href = url;
-  spmbPreview.showModal();
-}
 
 async function spmbRequest(body) {
   const { data, error } = await sb.auth.getSession();
@@ -201,11 +165,11 @@ async function spmbTampil(tab) {
           const result = await spmbRequest({ action: 'berkas', id: button.dataset.spmbDoc });
           const file = result.berkas?.[button.dataset.kind];
           if (!file?.url) throw new Error('Tautan berkas tidak tersedia.');
-          spmbBukaPreview(file, SPMB_BERKAS.find(([key]) => key === button.dataset.kind)?.[1] || 'Berkas pendaftaran');
+          pratinjauBerkas(file.url, SPMB_BERKAS.find(([key]) => key === button.dataset.kind)?.[1] || 'Berkas pendaftaran', file.pdf);
         } else if (button.dataset.spmbPaymentDoc) {
           const result = await spmbRequest({ action: 'berkas_bayar', id: button.dataset.spmbPaymentDoc });
           if (!result.url) throw new Error('Tautan bukti pembayaran tidak tersedia.');
-          spmbBukaPreview(result, 'Bukti transfer formulir');
+          pratinjauBerkas(result.url, 'Bukti transfer formulir', result.pdf);
         } else if (button.dataset.spmbPaymentAccept || button.dataset.spmbPaymentReject) {
           const id = button.dataset.spmbPaymentAccept || button.dataset.spmbPaymentReject;
           const ditolak = !!button.dataset.spmbPaymentReject;

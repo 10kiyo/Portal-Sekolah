@@ -44,6 +44,36 @@ async function semua(f) {                     // ambil semua baris (lebih dari 1
 }
 const inputBulan = (id, v) => `<input id="${id}" type="month" value="${v}" style="max-width:190px">`;
 
+function pratinjauBerkas(url, judul, pdf = false) {
+  let dlg = document.getElementById('dlgPratinjauBerkas');
+  if (!dlg) {
+    dlg = document.createElement('dialog'); dlg.id = 'dlgPratinjauBerkas';
+    dlg.style.cssText = 'border:0;border-radius:18px;padding:0;width:min(760px,calc(100% - 24px));max-height:calc(100dvh - 24px);overflow:hidden;box-shadow:0 20px 60px #102a4350;color:var(--ink,#243b53)';
+    dlg.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:16px 18px">
+      <h2 data-title style="margin:0;color:var(--navy,#102a43);font-size:20px"></h2>
+      <button type="button" aria-label="Tutup pratinjau" data-close style="flex:none;border:0;border-radius:50%;width:36px;height:36px;font-size:22px;cursor:pointer">×</button>
+    </div><div data-body style="overflow:auto;max-height:calc(100dvh - 90px);background:#e6eef6;text-align:center"></div>`;
+    document.body.appendChild(dlg);
+    dlg.querySelector('[data-close]').onclick = () => dlg.close();
+    dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+  }
+  dlg.querySelector('[data-title]').textContent = judul;
+  const body = dlg.querySelector('[data-body]');
+  body.replaceChildren();
+  if (pdf) {
+    const frame = document.createElement('iframe');
+    frame.src = url; frame.title = judul;
+    frame.style.cssText = 'display:block;width:100%;height:min(78dvh,850px);border:0;background:#fff';
+    body.appendChild(frame);
+  } else {
+    const image = document.createElement('img');
+    image.src = url; image.alt = judul;
+    image.style.cssText = 'display:block;margin:auto;max-width:100%;max-height:calc(100dvh - 110px);object-fit:contain';
+    body.appendChild(image);
+  }
+  dlg.showModal();
+}
+
 /* ================= PUSTAKAWAN ================= */
 /* ================= PUSTAKAWAN: KARTU PELAJAR =================
    Data dasar (nama, kelas, ID) dari daftar_tamu_gabungan; data tambahan (NIS, NISN, tempat/tanggal lahir, alamat, foto, dst)
@@ -368,7 +398,9 @@ MODUL.ekskul = async function () {
     if (!club) {
       if (!r.bukti_path) $('#ebk').textContent = 'Tidak ada bukti transfer.';
       else sb.storage.from('bukti').createSignedUrl(r.bukti_path, 600).then(({ data, error }) => {
-        $('#ebk').innerHTML = error ? 'Bukti tidak dapat dimuat: ' + esc(error.message) : `<a href="${esc(data.signedUrl)}" target="_blank" rel="noopener"><img src="${esc(data.signedUrl)}" alt="Bukti transfer" style="max-width:100%;max-height:50vh;display:block;margin:6px auto;border-radius:12px;border:1px solid #cbd8e6"></a>`;
+        $('#ebk').innerHTML = error ? 'Bukti tidak dapat dimuat: ' + esc(error.message) : `<button type="button" id="ebkPreview" aria-label="Pratinjau bukti transfer" style="display:block;padding:0;border:0;background:none;cursor:zoom-in">
+          <img src="${esc(data.signedUrl)}" alt="Pratinjau bukti transfer" style="max-width:100%;max-height:50vh;display:block;margin:6px auto;border-radius:12px;border:1px solid #cbd8e6"></button>`;
+        $('#ebkPreview').onclick = () => pratinjauBerkas(data.signedUrl, 'Bukti transfer');
       });
     }
     dlg.onclick = async e => {
