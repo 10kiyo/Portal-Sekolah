@@ -1,5 +1,6 @@
 -- Bukti pembayaran formulir SPMB jalur TK Luar (Tahap 1).
--- Jalankan di Supabase SQL Editor.
+-- Jalankan di Supabase SQL Editor. Panitia mengubah status menunggu menjadi valid/ditolak;
+-- hanya bukti berstatus valid yang dapat membuka dan dipakai untuk mengirim formulir SPMB.
 
 create table if not exists spmb_bukti_bayar (
   id            uuid primary key default gen_random_uuid(),
@@ -10,9 +11,12 @@ create table if not exists spmb_bukti_bayar (
   status        text not null default 'menunggu'
                 check (status in ('menunggu', 'valid', 'ditolak')),
   catatan       text,                                             -- alasan bila ditolak (diisi panitia)
+  verified_at   timestamptz,                                     -- waktu panitia menerima/menolak bukti
   dipakai_oleh  uuid,                                             -- id pendaftaran yang memakai token ini
   created_at    timestamptz not null default now()
 );
+
+alter table public.spmb_bukti_bayar add column if not exists verified_at timestamptz;
 
 create index if not exists spmb_bukti_bayar_kontak_idx on spmb_bukti_bayar (kontak);
 

@@ -91,6 +91,26 @@ function spmbDaftar(data, hanyaHasil = false) {
   $('#spmbList').innerHTML = spmbTabel(hasil) + hasil.map(spmbRincian).join('');
 }
 
+function spmbPembayaran(pembayaran = []) {
+  const menunggu = pembayaran.filter(p => p.status === 'menunggu');
+  const selesai = pembayaran.filter(p => p.status !== 'menunggu');
+  return `<section class="card" style="margin:12px 0">
+    <h3 style="margin-top:0">Verifikasi pembayaran formulir TK Luar (${menunggu.length} menunggu)</h3>
+    <p class="mut">Periksa bukti transfer dan pastikan nominal formulir Rp 375.000 sebelum menerima.</p>
+    ${menunggu.length ? menunggu.map(p => `<div class="card" data-spmb-payment="${esc(p.id)}" style="margin:10px 0">
+      <b>${esc(p.nama)}</b><div class="mut">WhatsApp ${esc(p.kontak)} · Dikirim ${esc(spmbTgl(p.created_at))}</div>
+      <p><button type="button" data-spmb-payment-doc="${esc(p.id)}">Lihat bukti transfer</button> <span class="spmb-payment-url"></span></p>
+      <label>Catatan jika ditolak</label><input data-spmb-payment-note maxlength="300" placeholder="Contoh: Nominal tidak sesuai atau bukti tidak terbaca">
+      <p><button type="button" class="p" data-spmb-payment-accept="${esc(p.id)}">Terima (nominal sesuai)</button>
+      <button type="button" data-spmb-payment-reject="${esc(p.id)}">Tolak bukti</button></p>
+    </div>`).join('') : '<p class="mut">Tidak ada bukti pembayaran yang menunggu verifikasi.</p>'}
+    ${selesai.length ? `<details><summary>Riwayat verifikasi (${selesai.length})</summary><div style="overflow:auto"><table>
+      <tr><th>Calon murid</th><th>Kontak</th><th>Status</th><th>Catatan</th><th>Dikirim</th></tr>
+      ${selesai.map(p => `<tr><td>${esc(p.nama)}</td><td>${esc(p.kontak)}</td><td>${p.status === 'valid' ? 'Diterima' : p.status === 'ditolak' ? 'Ditolak' : 'Sudah dipakai'}</td><td>${esc(p.catatan || '-')}</td><td>${esc(spmbTgl(p.created_at))}</td></tr>`).join('')}
+    </table></div></details>` : ''}
+  </section>`;
+}
+
 async function spmbTampil(tab) {
   spmbTabAktif = tab;
   try {
@@ -98,9 +118,11 @@ async function spmbTampil(tab) {
     const rows = data.pendaftar || [];
     if (tab === 'spmbberanda') {
       const jumlah = status => rows.filter(r => r.status === status).length;
+      const menungguBayar = (data.pembayaran || []).filter(p => p.status === 'menunggu').length;
       $('#view').innerHTML = `<h2>Ringkasan SPMB ${esc(data.tahun_ajaran)}</h2>
         <p class="mut">Data pendaftar dimuat dari database SPMB.</p>
         <div class="grid">${[['Total pendaftar', rows.length], ...SPMB_STATUS.map(([id, label]) => [label, jumlah(id)])].map(([label, n]) => `<div class="card"><b>${esc(n)}</b><div>${esc(label)}</div></div>`).join('')}</div>
+        <p><b>${menungguBayar}</b> bukti pembayaran menunggu verifikasi.</p>
         <h3>Data terbaru</h3>${spmbTabel(rows.slice(0, 10))}`;
     } else if (tab === 'spmbatur') {
       $('#view').innerHTML = `<h2>Pengaturan periode SPMB</h2><p class="mut">Pengaturan setiap jalur tersimpan di database SPMB.</p><div id="spmbMsg" class="msg"></div>
@@ -124,6 +146,7 @@ async function spmbTampil(tab) {
     } else {
       const judul = tab === 'spmbhasil' ? 'Hasil seleksi SPMB' : 'Daftar pendaftar SPMB';
       $('#view').innerHTML = `<h2>${judul} (${rows.length})</h2><div id="spmbMsg" class="msg"></div>
+        ${tab === 'spmbdaftar' ? spmbPembayaran(data.pembayaran) : ''}
         <div class="grid"><div><label>Jalur</label><select id="spmbFilterJalur"><option value="">Semua jalur</option><option value="dalam">TK At-Taqwa</option><option value="luar">TK Luar</option></select></div>
         <div><label>Status</label><select id="spmbFilterStatus"><option value="">Semua status</option>${SPMB_STATUS.map(([id, label]) => `<option value="${id}" ${tab === 'spmbhasil' && id === 'diterima' ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
         <div><label>Cari pendaftar</label><input id="spmbCari" placeholder="Nomor, nama, atau kontak"></div></div><div id="spmbList"></div>`;
@@ -143,6 +166,17 @@ async function spmbTampil(tab) {
           const file = result.berkas?.[button.dataset.kind];
           if (!file?.url) throw new Error('Tautan berkas tidak tersedia.');
           button.nextElementSibling.innerHTML = ` <a href="${esc(file.url)}" target="_blank" rel="noopener">Buka berkas</a>`;
+        } else if (button.dataset.spmbPaymentDoc) {
+          const result = await spmbRequest({ action: 'berkas_bayar', id: button.dataset.spmbPaymentDoc });
+          if (!result.url) throw new Error('Tautan bukti pembayaran tidak tersedia.');
+          button.nextElementSibling.innerHTML = ` <a href="${esc(result.url)}" target="_blank" rel="noopener">Buka bukti transfer${result.pdf ? ' (PDF)' : ''}</a>`;
+        } else if (button.dataset.spmbPaymentAccept || button.dataset.spmbPaymentReject) {
+          const id = button.dataset.spmbPaymentAccept || button.dataset.spmbPaymentReject;
+          const ditolak = !!button.dataset.spmbPaymentReject;
+          const catatan = button.closest('[data-spmb-payment]').querySelector('[data-spmb-payment-note]').value.trim();
+          if (ditolak && !catatan) throw new Error('Tulis alasan penolakan terlebih dahulu.');
+          await spmbRequest({ action: 'verifikasi_bayar', id, status: ditolak ? 'ditolak' : 'valid', catatan });
+          await spmbTampil(spmbTabAktif);
         } else if (button.dataset.spmbSaveStatus) {
           const detail = button.closest('details');
           await spmbRequest({ action: 'status', id: button.dataset.spmbSaveStatus,

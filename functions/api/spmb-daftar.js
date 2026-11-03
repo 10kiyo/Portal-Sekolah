@@ -59,6 +59,17 @@ async function daftar(request, env, c) {
   const v = bersihkan(b, jalur);
   if (v.err) return json(400, { error: v.err });
   if (b.setuju !== 'true') return json(400, { error: 'Centang pernyataan orang tua/wali terlebih dahulu.' });
+  let pembayaran = null;
+  if (jalur === 'luar') {
+    const token = String(b.token_bayar || '');
+    if (!/^[0-9a-f-]{36}$/i.test(token)) return json(403, { kode: 'bayar', error: 'Bukti transfer belum diverifikasi. Cek status pembayaran terlebih dahulu.' });
+    pembayaran = (await get(`/spmb_bukti_bayar?token=eq.${token}&select=id,nama,kontak,status,dipakai_oleh&limit=1`))[0];
+    if (!pembayaran || pembayaran.status !== 'valid')
+      return json(403, { kode: 'bayar', error: 'Bukti transfer belum disetujui panitia. Periksa status pembayaran atau unggah ulang bukti.' });
+    const no = x => String(x || '').replace(/\D/g, '').slice(-9);
+    if (String(pembayaran.nama).trim().toLowerCase() !== v.row.nama.toLowerCase() || no(pembayaran.kontak) !== no(v.row.kontak))
+      return json(403, { kode: 'bayar', error: 'Nama dan nomor WhatsApp harus sama dengan data pada bukti pembayaran.' });
+  }
 
   // Berkas: foto calon murid (gambar), akte kelahiran dan Kartu Keluarga (gambar/PDF), bukti pembayaran formulir (opsional, TK Luar)
   const berkas = {};
@@ -74,27 +85,60 @@ async function daftar(request, env, c) {
   if (ex && ex.status !== 'perbaikan') return json(409, { error: 'Calon murid ini sudah terdaftar. Gunakan "Cek status pendaftaran" di bawah formulir.' });
   if (ex && ex.jalur !== jalur) return json(409, { error: `Pendaftaran ini tercatat pada jalur ${NAMA_JALUR[ex.jalur]}. Perbaiki lewat formulir jalur tersebut.` });
 
-  const id = ex ? ex.id : crypto.randomUUID(), baru = {};
-  for (const [k, r] of Object.entries(berkas)) {
-    const path = `${id}/${k}-${crypto.randomUUID().slice(0, 8)}.${r.ext}`;
-    if (!(await simpanBerkas(c, path, r))) { await hapusBerkas(c, Object.values(baru)); return json(500, { error: 'Gagal mengunggah berkas. Coba lagi beberapa saat.' }); }
-    baru[k] = path;
+  const id = ex ? ex.id : crypto.randomUUID();
+  let klaimBaru = false;
+  if (pembayaran) {
+    if (pembayaran.dipakai_oleh && pembayaran.dipakai_oleh !== id)
+      return json(409, { error: 'Bukti pembayaran ini sudah dipakai untuk pendaftaran lain.' });
+    if (!pembayaran.dipakai_oleh) {
+      const klaim = await fetch(`${c.REST}/spmb_bukti_bayar?id=eq.${pembayaran.id}&status=eq.valid&dipakai_oleh=is.null`, {
+        method: 'PATCH', headers: { ...headerTulis(c), Prefer: 'return=representation' },
+        body: JSON.stringify({ dipakai_oleh: id })
+      });
+      const rows = klaim.ok ? await klaim.json().catch(() => []) : [];
+      if (!rows.length) return json(409, { error: 'Bukti pembayaran sudah dipakai atau tidak lagi valid.' });
+      klaimBaru = true;
+    }
   }
-  const lama = k => (ex && ex[JENIS_BERKAS[k]]) || null;                       // berkas lama dipakai bila tidak diunggah ulang (hanya bukti)
-  const row = {
-    ...v.row, jalur, tahun_ajaran: TAHUN_AJARAN, kunci: key, status: 'baru', catatan_panitia: null, verified_at: null,
-    foto_path: baru.foto, akte_path: baru.akte, kk_path: baru.kk, bukti_path: baru.bukti || lama('bukti')
-  };
-  const jh = { ...headerTulis(c), Prefer: 'return=representation' };
-  const w = ex
-    ? await fetch(`${c.REST}/spmb_pendaftar?id=eq.${id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(row) })
-    : await fetch(`${c.REST}/spmb_pendaftar`, { method: 'POST', headers: jh, body: JSON.stringify({ ...row, id }) });
-  if (!w.ok) {
+
+  const baru = {};
+  try {
+    for (const [k, r] of Object.entries(berkas)) {
+      const path = `${id}/${k}-${crypto.randomUUID().slice(0, 8)}.${r.ext}`;
+      if (!(await simpanBerkas(c, path, r))) {
+        await hapusBerkas(c, Object.values(baru));
+        if (klaimBaru) await fetch(`${c.REST}/spmb_bukti_bayar?id=eq.${pembayaran.id}&dipakai_oleh=eq.${id}`, {
+          method: 'PATCH', headers: headerTulis(c), body: JSON.stringify({ dipakai_oleh: null })
+        });
+        return json(500, { error: 'Gagal mengunggah berkas. Coba lagi beberapa saat.' });
+      }
+      baru[k] = path;
+    }
+    const lama = k => (ex && ex[JENIS_BERKAS[k]]) || null;
+    const row = {
+      ...v.row, jalur, tahun_ajaran: TAHUN_AJARAN, kunci: key, status: 'baru', catatan_panitia: null, verified_at: null,
+      foto_path: baru.foto, akte_path: baru.akte, kk_path: baru.kk, bukti_path: baru.bukti || lama('bukti')
+    };
+    const jh = { ...headerTulis(c), Prefer: 'return=representation' };
+    const w = ex
+      ? await fetch(`${c.REST}/spmb_pendaftar?id=eq.${id}`, { method: 'PATCH', headers: jh, body: JSON.stringify(row) })
+      : await fetch(`${c.REST}/spmb_pendaftar`, { method: 'POST', headers: jh, body: JSON.stringify({ ...row, id }) });
+    if (!w.ok) {
+      await hapusBerkas(c, Object.values(baru));
+      if (klaimBaru) await fetch(`${c.REST}/spmb_bukti_bayar?id=eq.${pembayaran.id}&dipakai_oleh=eq.${id}`, {
+        method: 'PATCH', headers: headerTulis(c), body: JSON.stringify({ dipakai_oleh: null })
+      });
+      return w.status === 409 ? json(409, { error: 'Calon murid ini sudah terdaftar.' }) : json(500, { error: 'Gagal menyimpan pendaftaran. Coba lagi beberapa saat.' });
+    }
+    await hapusBerkas(c, Object.keys(baru).map(lama));
+    const hasil = (await w.json().catch(() => []))[0] || {};
+    return json(200, { ok: true, no_daftar: hasil.no_daftar || null, diperbaiki: !!ex });
+  } catch (e) {
     await hapusBerkas(c, Object.values(baru));
-    return w.status === 409 ? json(409, { error: 'Calon murid ini sudah terdaftar.' }) : json(500, { error: 'Gagal menyimpan pendaftaran. Coba lagi beberapa saat.' });
+    if (klaimBaru) await fetch(`${c.REST}/spmb_bukti_bayar?id=eq.${pembayaran.id}&dipakai_oleh=eq.${id}`, {
+      method: 'PATCH', headers: headerTulis(c), body: JSON.stringify({ dipakai_oleh: null })
+    });
+    throw e;
   }
-  await hapusBerkas(c, Object.keys(baru).map(lama));                           // berkas lama yang tergantikan
-  const hasil = (await w.json().catch(() => []))[0] || {};
-  return json(200, { ok: true, no_daftar: hasil.no_daftar || null, diperbaiki: !!ex });
 }
 export const onRequest = () => json(405, { error: 'Metode tidak diizinkan.' });

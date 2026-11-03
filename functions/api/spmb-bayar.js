@@ -1,6 +1,6 @@
 // Cloudflare Worker route: POST /api/spmb-bayar (PUBLIK, tanpa login).
-// Menyimpan bukti pembayaran formulir TK Luar dan mengembalikan token untuk langkah pendaftaran.
-import { json, cfg, dbGet, hariIni, headerTulis, terlaluSering } from '../_lib/util.js';
+// Menyimpan bukti pembayaran formulir TK Luar dan mengecek status verifikasinya.
+import { json, cfg, dbGet, hariIni, headerTulis, terlaluSering, UUID } from '../_lib/util.js';
 import { pengaturan, fase, bacaBerkas } from '../_lib/spmb.js';
 
 const MAX_BUKTI = 2.5 * 1024 * 1024;
@@ -9,6 +9,8 @@ const tokenPalsu = () => crypto.randomUUID();
 export async function onRequestPost({ request, env }) {
   const c = cfg(env);
   if (!c) return json(500, { error: 'Layanan belum siap.' });
+  if ((request.headers.get('content-type') || '').includes('application/json'))
+    return cekStatus(request, env, c);
   if (!(request.headers.get('content-type') || '').includes('multipart/form-data'))
     return json(400, { error: 'Kirim formulir pembayaran dengan format yang benar.' });
 
@@ -63,10 +65,27 @@ export async function onRequestPost({ request, env }) {
     const rows = await saved.json();
     const token = rows[0]?.token;
     if (!token) throw new Error('Token pembayaran tidak dikembalikan database.');
-    return json(200, { ok: true, token });
+    return json(200, { ok: true, token, status: 'menunggu' });
   } catch (e) {
     if (uploaded) await fetch(`${c.URL}/storage/v1/object/bukti-bayar/${path}`, { method: 'DELETE', headers: c.h });
     return json(500, { error: 'Terjadi kesalahan saat menyimpan pembayaran. Coba lagi beberapa saat.' });
+  }
+}
+
+async function cekStatus(request, env, c) {
+  let b = {};
+  try { b = await request.json(); } catch (e) {}
+  if (b.action !== 'cek' || !UUID.test(String(b.token || '')))
+    return json(400, { error: 'Token pembayaran tidak valid.' });
+  if (await terlaluSering(env, request, 'spmb-bayar-cek', 30))
+    return json(429, { error: 'Terlalu banyak pemeriksaan. Coba lagi beberapa saat.' });
+  try {
+    const rows = await dbGet(c)(`/spmb_bukti_bayar?token=eq.${b.token}&select=status,catatan,dipakai_oleh&limit=1`);
+    const row = rows[0];
+    if (!row) return json(404, { error: 'Data pembayaran tidak ditemukan. Unggah ulang bukti transfer.' });
+    return json(200, { status: row.dipakai_oleh ? 'dipakai' : row.status, catatan: row.catatan || null });
+  } catch (e) {
+    return json(500, { error: 'Status pembayaran tidak dapat diperiksa. Coba lagi beberapa saat.' });
   }
 }
 

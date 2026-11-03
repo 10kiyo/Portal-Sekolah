@@ -102,10 +102,10 @@ export const simpanBerkas = async (c, path, b) =>
 export const hapusBerkas = (c, paths) => Promise.all(paths.filter(Boolean).map(p =>
   fetch(`${c.URL}/storage/v1/object/spmb/${p}`, { method: 'DELETE', headers: c.h }).catch(() => {})));
 // Tautan sementara (10 menit) ke berkas di bucket privat
-export async function urlBerkas(c, path) {
+export async function urlBerkas(c, path, bucket = 'spmb') {
   if (!path) return null;
   try {
-    const r = await fetch(`${c.URL}/storage/v1/object/sign/spmb/${path}`, { method: 'POST', headers: { ...c.h, 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 600 }) });
+    const r = await fetch(`${c.URL}/storage/v1/object/sign/${bucket}/${path}`, { method: 'POST', headers: { ...c.h, 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 600 }) });
     const d = await r.json();
     return d.signedURL ? `${c.URL}/storage/v1${d.signedURL}` : null;
   } catch (e) { return null; }

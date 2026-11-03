@@ -43,7 +43,7 @@ async function siapkan(file, label, bolehPdf) {
 
 /* ---------- Tahap 1 (khusus TK Luar): bukti pembayaran formulir ---------- */
 const BAYAR_KEY = 'spmb_bayar_luar', BAYAR_TTL = 7 * 24 * 3600 * 1000;
-let BAYAR = null;   // { token, nama, kontak, t }
+let BAYAR = null;   // { token, nama, kontak, t, status, catatan }
 function bayarMuat() {
   try {
     const o = JSON.parse(localStorage.getItem(BAYAR_KEY) || 'null');
@@ -58,7 +58,7 @@ const bayarHapus = () => { try { localStorage.removeItem(BAYAR_KEY); } catch (e)
 function bayarHtml() {
   const R = SPMB.rekeningFormulir || {};
   return `<div class="card"><h2 style="font-size:18px">Langkah 1 dari 2 · Pembayaran formulir</h2>
-  <p class="mut" style="margin:4px 0 12px">Biaya formulir <b>Rp 375.000</b>. Unggah bukti transfer untuk membuka formulir biodata.</p>
+  <p class="mut" style="margin:4px 0 12px">Biaya formulir <b>Rp 375.000</b>. Setelah bukti transfer diunggah, panitia akan memeriksa nominal sebelum formulir biodata dibuka.</p>
   ${R.no ? `<div class="box">Transfer ke ${esc(R.bank)} a.n. ${esc(R.an)}, no. rek. <b>${esc(R.no)}</b>. Sertakan nama calon murid pada berita transfer.</div>`
          : `<div class="box">Cara pembayaran formulir: tanyakan ke panitia SPMB.</div>`}
   <form id="fb" novalidate>
@@ -66,8 +66,50 @@ function bayarHtml() {
     ${inp('nama', 'Nama lengkap calon murid', { w: 1, attr: 'autocomplete="off"' })}
     ${inp('kontak', 'Nomor WhatsApp yang bisa dihubungi', { w: 1, max: 40, attr: 'inputmode="tel" autocomplete="tel"' })}
     ${berkasInp('bukti', 'Bukti transfer', { w: 1, pdf: 1, hint: 'Foto atau PDF, maksimal 2,5 MB. Pastikan nominal dan tanggal terbaca.' })}
-    <div><button type="submit" id="lanjut" disabled>Unggah dan lanjutkan</button><div id="errb" class="err" role="alert"></div></div>
+    <div><button type="submit" id="lanjut" disabled>Kirim bukti pembayaran</button><div id="errb" class="err" role="alert"></div></div>
   </form></div>`;
+}
+
+function statusBayarHtml() {
+  const menunggu = BAYAR.status === 'menunggu' || BAYAR.status === 'memeriksa';
+  const dipakai = BAYAR.status === 'dipakai';
+  return `<div class="card"><h2 style="font-size:18px">Langkah 1 dari 2 · Verifikasi pembayaran</h2>
+    <p>${dipakai ? 'Bukti pembayaran ini sudah digunakan untuk mengirim pendaftaran.' : `Bukti transfer atas nama <b>${esc(BAYAR.nama)}</b> ${menunggu ? 'sedang menunggu pemeriksaan panitia.' : 'belum disetujui panitia.'}`}</p>
+    ${BAYAR.catatan ? `<div class="box">${esc(BAYAR.catatan)}</div>` : ''}
+    ${dipakai ? `<p class="mut">Jika sudah mengirim formulir, gunakan bagian <a href="#cekBox">Cek status pendaftaran</a> di bawah.</p>`
+      : menunggu ? `<p class="mut">Formulir biodata akan terbuka setelah pembayaran dinyatakan sesuai.</p>
+      <button type="button" id="cekBayar" ${BAYAR.status === 'memeriksa' ? 'disabled' : ''}>${BAYAR.status === 'memeriksa' ? 'Memeriksa…' : 'Cek status pembayaran'}</button>
+      <div id="errBayar" class="err" role="alert"></div>`
+      : `<p class="mut">Periksa catatan panitia, lalu unggah ulang bukti transfer yang benar.</p><button type="button" id="ulangBayar">Unggah ulang bukti transfer</button>`}
+  </div>`;
+}
+
+async function cekBayar() {
+  if (!BAYAR) return;
+  const token = BAYAR.token;
+  BAYAR.status = 'memeriksa'; tampil();
+  try {
+    const r = await fetch('/api/spmb-bayar', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'cek', token }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (r.status === 404) { bayarHapus(); tampil(); $('#errb').textContent = d.error || 'Data pembayaran tidak ditemukan. Unggah ulang bukti transfer.'; return; }
+      throw new Error(d.error || 'Gagal memeriksa status pembayaran.');
+    }
+    if (!['menunggu', 'valid', 'ditolak', 'dipakai'].includes(d.status)) throw new Error('Status pembayaran tidak dikenal.');
+    BAYAR.status = d.status; BAYAR.catatan = d.catatan || '';
+    bayarSimpan(BAYAR); tampil();
+  } catch (error) {
+    BAYAR.status = 'menunggu'; tampil();
+    $('#errBayar').textContent = error instanceof TypeError ? 'Tidak bisa terhubung. Periksa koneksi internet.' : (error.message || 'Gagal memeriksa status.');
+  }
+}
+
+function bindStatusBayar() {
+  const cek = $('#cekBayar');
+  if (cek) cek.onclick = cekBayar;
+  const ulang = $('#ulangBayar');
+  if (ulang) ulang.onclick = () => { bayarHapus(); tampil(); };
 }
 
 function bindBayar() {
@@ -87,11 +129,11 @@ function bindBayar() {
       fd.append('bukti', berkas, berkas.name || 'bukti.jpg');
       const r = await fetch('/api/spmb-bayar', { method: 'POST', body: fd }), d = await r.json().catch(() => ({}));
       if (!r.ok || !d.token) throw new Error(d.error || 'Gagal mengunggah bukti transfer.');
-      BAYAR = { token: d.token, nama, kontak, t: Date.now() }; bayarSimpan(BAYAR);
+      BAYAR = { token: d.token, nama, kontak, t: Date.now(), status: 'menunggu' }; bayarSimpan(BAYAR);
       tampil(); window.scrollTo(0, 0);
     } catch (e2) {
       err.textContent = e2 instanceof TypeError ? 'Tidak bisa terhubung. Periksa koneksi internet lalu coba lagi.' : (e2.message || 'Gagal mengunggah.');
-      btn.textContent = 'Unggah dan lanjutkan'; cek();
+      btn.textContent = 'Kirim bukti pembayaran'; cek();
     }
   };
 }
@@ -122,7 +164,7 @@ const berkasInp = (nama, label, o) => `<div><label for="f_${nama}">${label}${o.w
 
 function formHtml() {
   return `<div class="card"><h2 style="font-size:18px">${LUAR ? 'Langkah 2 dari 2 · ' : ''}Formulir pendaftaran</h2>
-  ${LUAR && BAYAR ? `<div class="box">Bukti transfer diterima (${esc(BAYAR.nama)}) dan akan diverifikasi panitia. <a href="#" id="ulangBayar">Unggah ulang bukti</a></div>` : ''}
+  ${LUAR && BAYAR ? `<div class="box">Bukti transfer sudah disetujui panitia (${esc(BAYAR.nama)}). <a href="#" id="ulangBayar">Unggah ulang bukti</a></div>` : ''}
   <p class="mut" style="margin:4px 0 12px">Kolom bertanda <span class="req">*</span> wajib diisi.</p>
   <form id="f" novalidate>
     <div class="hp" aria-hidden="true"><label>Jangan diisi<input name="website" tabindex="-1" autocomplete="off"></label></div>
@@ -247,10 +289,7 @@ function bindForm() {
       fd.set('jalur', JID); fd.set('setuju', f.elements.setuju.checked ? 'true' : '');
       if (LUAR) fd.set('token_bayar', BAYAR.token);
       const r = await fetch('/api/spmb-daftar', { method: 'POST', body: fd }), d = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        if (LUAR && d.kode === 'bayar') { bayarHapus(); tampil(); $('#errb').textContent = d.error || 'Bukti pembayaran tidak valid. Unggah ulang bukti transfer.'; return; }
-        throw new Error(d.error || 'Gagal mengirim pendaftaran.');
-      }
+      if (!r.ok) throw new Error(d.error || 'Gagal mengirim pendaftaran.');
       sukses(d);
     } catch (e2) {
       err.textContent = e2 instanceof TypeError ? 'Tidak bisa terhubung. Periksa koneksi internet lalu coba lagi.' : (e2.message || 'Gagal mengirim.');
@@ -261,9 +300,11 @@ function bindForm() {
 
 function tampil() {
   const fs = CFG.jalur[JID].fase;
-  const isi = fs !== 'dibuka' ? tutupHtml(fs) : (LUAR && !BAYAR ? bayarHtml() : formHtml());
+  const isi = fs !== 'dibuka' ? tutupHtml(fs)
+    : LUAR && !BAYAR ? bayarHtml()
+      : LUAR && BAYAR.status !== 'valid' ? statusBayarHtml() : formHtml();
   $('#isi').innerHTML = ringkasan() + isi + cekHtml();
-  bindBayar(); bindForm(); bindCek();
+  bindBayar(); bindStatusBayar(); bindForm(); bindCek();
 }
 
 (async () => {
@@ -273,6 +314,9 @@ function tampil() {
     if (!r.ok) throw new Error(d.error || 'Gagal memuat.');
     CFG = d;
   } catch (e) { $('#isi').innerHTML = `<div class="card">${esc(e.message || 'Gagal memuat.')}${kontakHtml()}</div>`; return; }
-  if (LUAR) BAYAR = bayarMuat();
+  if (LUAR) {
+    BAYAR = bayarMuat();
+    if (BAYAR) { BAYAR.status = 'memeriksa'; tampil(); await cekBayar(); return; }
+  }
   tampil();
 })();
