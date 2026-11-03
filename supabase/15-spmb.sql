@@ -1,7 +1,7 @@
 -- ============================================================
 -- SPMB ONLINE: pendaftaran murid baru kelas I (jalur TK At-Taqwa / "dalam" dan jalur TK Luar / "luar").
 -- Jalankan sekali di Supabase > SQL Editor. Tidak butuh skrip lain. Aman dijalankan ulang.
--- Data masuk lewat /api/spmb-daftar (formulir publik) dan dibaca panitia lewat /api/admin-spmb (operator / admin).
+-- Data masuk lewat /api/spmb-daftar (formulir publik) dan dibaca panitia lewat /api/admin-spmb (peran SPMB / operator / admin).
 -- Kedua tabel dikunci rapat: RLS aktif tanpa policy, jadi hanya Worker (service role) yang bisa membaca/menulis.
 -- ============================================================
 

@@ -111,7 +111,7 @@ export async function urlBerkas(c, path) {
   } catch (e) { return null; }
 }
 
-// ---- Izin panel panitia SPMB: PIN admin (token lama) ATAU akun guru/staf berperan operator / admin ----
+// ---- Izin panel panitia SPMB: PIN admin (token lama) ATAU akun guru/staf berperan SPMB / operator / admin ----
 // Token akun guru (Supabase Auth) diperiksa ke Supabase setiap permintaan; peran dibaca dari tabel guru_staf.
 export async function spmbOk(request, env) {
   if (await adminOk(request, env)) return true;
@@ -124,6 +124,6 @@ export async function spmbOk(request, env) {
     const uid = String((await u.json()).id || '');
     if (!UUID.test(uid)) return false;
     const r = (await dbGet(c)(`/guru_staf?auth_user_id=eq.${uid}&aktif=eq.true&select=peran,peran_tambahan&limit=1`))[0];
-    return !!r && (r.peran === 'admin' || r.peran === 'operator' || (r.peran_tambahan || []).includes('operator'));
+    return !!r && (['admin', 'operator', 'spmb'].includes(r.peran) || (r.peran_tambahan || []).some(p => ['operator', 'spmb'].includes(p)));
   } catch (e) { return false; }
 }

@@ -1,5 +1,5 @@
 // Cloudflare Worker route: GET/POST /api/admin-spmb   (khusus panitia SPMB)
-// Akses: PIN admin (token dari /api/admin-auth) ATAU akun guru/staf berperan operator / admin (token Supabase). Lihat spmbOk().
+// Akses: PIN admin (token dari /api/admin-auth) ATAU akun guru/staf berperan SPMB / operator / admin (token Supabase). Lihat spmbOk().
 //   GET                                          -> semua pendaftar + pengaturan periode (path berkas tidak ikut dikirim)
 //   POST { action:'berkas', id }                 -> tautan sementara foto / akte / KK / bukti pembayaran
 //   POST { action:'status', id, status, catatan }-> ubah status verifikasi (catatan tampil ke orang tua)

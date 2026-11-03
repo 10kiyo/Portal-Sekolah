@@ -116,7 +116,7 @@ Portal-Sekolah/
 │   │   ├── konfigurasi.js   #     URL & kunci publik Supabase (SATU tempat untuk frontend)
 │   │   └── umum.js          #     Pembantu bersama: $ dan esc (jangan dideklarasikan ulang di halaman)
 │   ├── css/                 #   Gaya halaman besar (index, spmb, kelas, buku-tamu)
-│   ├── modul-*.js           #   Modul menu: staf, BK, surat
+│   ├── modul-*.js           #   Modul menu: staf, BK, surat, SPMB
 │   ├── data-*.js            #   Data yang mudah diubah (sekolah, guru, kalender, SPMB)
 │   ├── si-tema.css          #   Tema tampilan
 │   └── *.pdf / *.png / *.jpg#   Panduan SPMB, kalender, logo, foto
@@ -221,6 +221,7 @@ Banyak hal cukup diubah lewat **satu file data**:
 | Judul dan tagline di beranda | `public/index.html` | Cari komentar `HERO` |
 | Teks pita nilai & sambutan kepala sekolah di beranda | `public/js/index.js` | Cari `NILAI` dan `SAMBUTAN` |
 | Jadwal, biaya, syarat, dan kontak SPMB | `public/data-spmb.js` | Edit bagian `SPMB` saja; tampilan ada di `js/spmb.js` |
+| Data pendaftar dan pengaturan panitia SPMB | `public/modul-spmb.js` | Membaca dan mengubah database SPMB lewat `/api/admin-spmb` |
 | Foto kepala sekolah | `public/foto-kepsek.jpg` | Timpa dengan nama file yang sama |
 | Jabatan, mapel, foto guru, peran | Supabase → tabel `guru_staf` | Tampil di website maksimal ±1 menit |
 | Pengumuman & galeri | Panel **Kelola Info & Galeri** | Tersedia untuk akun berperan *Admin Info* |
