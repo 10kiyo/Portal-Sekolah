@@ -21,7 +21,7 @@
     padding: 18px clamp(14px, 3vw, 28px);
     box-shadow: 0 14px 36px #0b1f3340;
   }
-  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) header { margin-bottom: 18px !important; }
+  body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) header { margin-bottom: var(--si-header-card-gap) !important; }
   body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) .admin button { color: #fff !important; text-shadow: 0 1px 6px #0b1f3399; }
   body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) .card { box-shadow: 0 14px 36px #0b1f3340; }
   body:not(:has(#app:not(.hidden), #hasil:not(.hidden))) #login.card { background: #f4f7fd; border-color: #ffffff66; }

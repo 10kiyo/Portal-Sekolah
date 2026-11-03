@@ -4,7 +4,7 @@
    Warna dasar sudah sama di semua halaman (--navy #102a43, --blue #1677c8, emas #f5b335).
    Aturan di sini hanya elemen dasar, jadi gaya khusus per halaman tetap berlaku.
    ============================================================ */
-:root { --gold: #f5b335; --hero: #0b1f33; --si-header-card-gap: 18px; --si-login-offset: clamp(24px, 8vh, 72px); }
+:root { --gold: #f5b335; --hero: #0b1f33; --si-header-card-gap: 12px; --si-login-offset: clamp(24px, 8vh, 72px); }
 html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
 button, input, select, textarea { font-family: inherit; }          /* sebelumnya sebagian tombol memakai Arial */
 h1, h2, h3 { font-family: inherit; font-weight: 800; }              /* Beranda memakai bobot 800 */
