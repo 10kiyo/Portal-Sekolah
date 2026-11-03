@@ -10,7 +10,8 @@ const GRUP = {
   sarpras: ['Sarana & prasarana', [['fasilitas', 'Kelola fasilitas']]],
   info: ['Info & Galeri', [['infoadmin', 'Kelola Info & Galeri']]],
   bk: ['Bimbingan Konseling', [['bkberanda', 'Ringkasan'], ['bkcatat', 'Catat kedisiplinan'], ['bkrekap', 'Rekap & poin siswa'], ['bktindak', 'Tindak lanjut & SP'], ['bkkonsel', 'Konseling (rahasia)'], ['bkortu', 'Orang tua & surat'], ['bkkelas', 'Kelas saya'], ['bkatur', 'Pengaturan']]],
-  operator: ['Operator sekolah', [['tugasop', 'Daftar pekerjaan'], ['akun', 'Akun guru & staf'], ['data', 'Data murid'], ['spmb', 'Pengolahan SPMB']]]
+  operator: ['Operator sekolah', [['tugasop', 'Daftar pekerjaan'], ['akun', 'Akun guru & staf'], ['data', 'Data murid']]],
+  spmb: ['SPMB', [['spmbberanda', 'Ringkasan'], ['spmbdaftar', 'Daftar pendaftar'], ['spmbhasil', 'Hasil seleksi'], ['spmbatur', 'Pengaturan']]]
 };
 // Peran -> kelompok menu. "admin" melihat semuanya; "staf" (satpam, kebersihan, dll) hanya Profil.
 // Peran utama + peran tambahan digabung (mis. guru wali kelas yang juga Waka SarPras melihat menu Kelas dan Sarana & prasarana).

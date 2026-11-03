@@ -666,8 +666,8 @@ MODUL.agenda = async function (bln) {
 };
 
 /* ================= OPERATOR ================= */
-const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'bk', 'info', 'staf'];
-const PERAN_LABEL = { guru: 'Guru', pustakawan: 'Pustakawan', keuangan: 'Keuangan', persuratan: 'Persuratan', operator: 'Operator', sarpras: 'Sarpras', bk: 'Guru BK', info: 'Admin Info', staf: 'Staf', admin: 'Admin' };
+const PERAN = ['guru', 'pustakawan', 'keuangan', 'persuratan', 'operator', 'sarpras', 'bk', 'info', 'staf', 'spmb', 'admin'];
+const PERAN_LABEL = { guru: 'Guru', pustakawan: 'Pustakawan', keuangan: 'Keuangan', persuratan: 'Persuratan', operator: 'Operator', sarpras: 'Sarpras', bk: 'Guru BK', info: 'Admin Info', staf: 'Staf', spmb: 'SPMB', admin: 'Admin' };
 const opsiPeran = (list, sel) => list.map(v => `<option value="${v}" ${v === sel ? 'selected' : ''}>${PERAN_LABEL[v] || v}</option>`).join('');
 function cssAkun() {
   if (document.getElementById('akunCss')) return;
