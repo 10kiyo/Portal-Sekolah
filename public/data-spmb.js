@@ -102,19 +102,19 @@ const SPMB = {
   jalur: [
     {
       id: 'dalam', nama: 'Dari TK Islam At-Taqwa', label: 'Daftar dari TK At-Taqwa',
-      daftarUrl: 'https://bit.ly/FORMULIRSPMBSDISLAMATTAQWA2027-2028KBTKATTAQWA',
+      daftarUrl: 'spmb-daftar-dalam.html',
       panduanUrl: 'PANDUAN-SPMB-TK-DALAM-2027-2028.pdf',
       periode: { mulai: '2026-10-01', selesai: '2026-11-13' },
       ringkas: [['Periode pendaftaran', '1 Oktober – 13 November 2026'], ['Biaya formulir', 'Gratis (sampai 31 Desember 2026)'], ['Tempat', 'Tata Usaha SDS Islam At-Taqwa']],
       jadwal: [
-        { tanggal: '1 Okt – 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran', isi: 'Formulir gratis. Senin – Jumat 07.30 – 14.00 WIB, Sabtu 08.00 – 12.00 WIB' },
+        { tanggal: '1 Okt - 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran', isi: 'Formulir gratis. Senin – Jumat 07.30 – 14.00 WIB, Sabtu 08.00 – 12.00 WIB' },
         { tanggal: '14 Nov 2026', mulai: '2026-11-14', judul: 'Pemantauan calon peserta didik', isi: 'Pukul 08.00 – 11.00 WIB' },
         { tanggal: '23 Nov 2026', mulai: '2026-11-23', judul: 'Pengumuman hasil SPMB', isi: 'Hasil pemantauan calon peserta didik' },
         { tanggal: '23 Nov – 7 Des 2026', mulai: '2026-11-23', selesai: '2026-12-07', judul: 'Daftar ulang dan pelunasan', isi: 'Lunasi pembayaran dan serahkan bukti transfer' },
         { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua dan pengukuran seragam', isi: 'Wawancara wajib dihadiri Bapak dan Ibu; siswa hadir untuk ukur seragam' },
-        { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/2028', isi: 'Tiba paling lambat 06.50 WIB, pulang 10.10 WIB' }
+        { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/２０２８', isi: 'Tiba paling lambat 06.５０ WIB, pulang １０.１０ WIB' }
       ],
-      tahapan: tahapan('08.00 – 12.00 WIB', { teks: 'Isi formulir pendaftaran', url: 'https://bit.ly/FORMULIRSPMBSDISLAMATTAQWA2027-2028KBTKATTAQWA' }),
+      tahapan: tahapan('08.00 – 12.00 WIB', { teks: 'Isi formulir pendaftaran', url: 'spmb-daftar-dalam.html' }),
       biaya: {
         judul: 'Rincian Uang Masuk TK Dalam (berlaku 7 Oktober 2026)',
         kolom: ['Okt – Des 2026', 'Jan – Juni 2027'],
@@ -122,25 +122,25 @@ const SPMB = {
         catatan: ['Biaya formulir gratis sampai 31 Desember 2026. Mendaftar setelah 31 Desember 2026 mengikuti ketentuan TK Luar (formulir berbayar).',
           'Tidak ada biaya daftar ulang dari kelas 1 – 6.', 'Wakaf yang sudah dibayarkan tidak bisa dikembalikan.',
           'Wakaf yang dibayarkan dipergunakan untuk pengadaan dan peningkatan kualitas sarana dan prasarana sekolah.',
-          'Peserta didik yang mengundurkan diri sebelum 1 Mei 2027: uang SPP dan infak pendidikan dikembalikan 50%.',
+          'Peserta didik yang mengundurkan diri sebelum 1 Mei 2027: uang SPP dan infak pendidikan dikembalikan 5０%.',
           'Peserta didik yang mengundurkan diri pada 1 Juni 2027: dana tidak dapat dikembalikan seluruhnya.']
       }
     },
     {
       id: 'luar', nama: 'Dari TK Luar', label: 'Daftar dari TK Luar',
-      daftarUrl: 'https://bit.ly/FORMULIRPENDAFTARANSPMBSDISLAMATTAQWARAWAMANGUNTAHUNAJARAN20272028TKLUAR',
+      daftarUrl: 'spmb-daftar-luar.html',
       panduanUrl: 'PANDUAN-SPMB-TK-LUAR-2027-2028.pdf',
       periode: { mulai: '2026-10-01', selesai: '2026-11-13' },
       ringkas: [['Periode pendaftaran', '1 Oktober – 13 November 2026'], ['Biaya formulir', 'Rp 375.000'], ['Tempat', 'Tata Usaha SDS Islam At-Taqwa']],
       jadwal: [
-        { tanggal: '1 Okt – 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran', isi: 'Formulir Rp 375.000. Senin – Jumat 07.30 – 14.00 WIB, Sabtu 08.00 – 12.00 WIB (dengan perjanjian)' },
+        { tanggal: '1 Okt - 13 Nov 2026', mulai: '2026-10-01', selesai: '2026-11-13', judul: 'Pendaftaran', isi: 'Formulir Rp 375.000. Senin – Jumat 07.30 – 14.00 WIB, Sabtu 08.00 – 12.00 WIB (dengan perjanjian)' },
         { tanggal: '14 Nov 2026', mulai: '2026-11-14', judul: 'Pemantauan calon peserta didik', isi: 'Pukul 08.00 – 11.00 WIB' },
         { tanggal: '23 Nov 2026', mulai: '2026-11-23', judul: 'Pengumuman hasil SPMB', isi: 'Hasil pemantauan calon peserta didik' },
         { tanggal: '23 Nov – 7 Des 2026', mulai: '2026-11-23', selesai: '2026-12-07', judul: 'Daftar ulang dan pelunasan', isi: 'Lunasi pembayaran dan serahkan bukti transfer' },
         { tanggal: '12 – 13 Des 2026', mulai: '2026-12-12', selesai: '2026-12-13', judul: 'Wawancara orang tua dan pengukuran seragam', isi: 'Wawancara wajib dihadiri Bapak dan Ibu; siswa hadir untuk ukur seragam' },
-        { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/2028', isi: 'Tiba paling lambat 06.50 WIB, pulang 10.10 WIB' }
+        { tanggal: '12 Juli 2027', mulai: '2027-07-12', judul: 'Hari pertama tahun ajaran 2027/２０２８', isi: 'Tiba paling lambat 06.５０ WIB, pulang １０.１０ WIB' }
       ],
-      tahapan: tahapan('08.00 – 12.00 WIB (dengan perjanjian)', { teks: 'Isi formulir pendaftaran', url: 'https://bit.ly/FORMULIRPENDAFTARANSPMBSDISLAMATTAQWARAWAMANGUNTAHUNAJARAN20272028TKLUAR' }),
+      tahapan: tahapan('08.00 – 12.00 WIB (dengan perjanjian)', { teks: 'Isi formulir pendaftaran', url: 'spmb-daftar-luar.html' }),
       biaya: {
         judul: 'Rincian Uang Masuk TK Luar (berlaku 7 Oktober 2026)',
         kolom: ['Okt – Des 2026', 'Jan – Juni 2027'],
