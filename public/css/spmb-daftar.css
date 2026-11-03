@@ -1,0 +1,48 @@
+/* Formulir pendaftaran SPMB online (spmb-daftar-dalam.html dan spmb-daftar-luar.html). Dimuat sebelum si-tema.css. */
+:root{--navy:#102a43;--blue:#1677c8;--soft:#eef6fc;--ink:#243b53;--line:#cbd8e6;--ok:#19724d;--danger:#bc3d33;--mute:#627d98}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(135deg,#edf7ff,#f8fbfe 48%,#e6f1fb)}
+.wrap{width:min(720px,calc(100% - 24px));margin:0 auto;padding:28px 0 48px}
+.card{background:#fff;border:1px solid #dbe8f2;border-radius:18px;padding:clamp(14px,3.5vw,22px);box-shadow:0 12px 30px #102a4310;margin-top:12px}
+h2{margin:0;color:var(--navy);font-size:20px}
+h3{margin:16px 0 6px;color:var(--navy);font-size:16px}
+.mut{color:var(--mute);font-size:13px}
+.hint{color:var(--mute);font-size:12px;margin-top:4px;line-height:1.4}
+.req{color:var(--danger)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:12px}
+.sum div{background:var(--soft);border-radius:12px;padding:10px 12px}
+.sum span{display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin-bottom:2px}.sum b{color:var(--navy);font-size:14px}
+.pts{margin:6px 0 0;padding-left:20px;line-height:1.6;font-size:14px}.pts li{margin-bottom:3px}
+details.det{margin-top:8px}details.det summary{cursor:pointer;color:var(--blue);font-weight:700;font-size:14px}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:#eef2f6;color:var(--mute)}
+.pill.ok{background:#eaf5ee;color:var(--ok)}.pill.warn{background:#fdf0e3;color:#a65f00}.pill.bad{background:#fbeceb;color:var(--danger)}
+.alih{margin:10px 0 0;font-size:14px}
+.box{background:var(--soft);border-radius:12px;padding:10px 12px;margin:10px 0;white-space:pre-wrap;font-size:14px}
+.nomor{font-size:26px;font-weight:800;letter-spacing:.02em;color:var(--navy);margin:6px 0}
+form{display:grid;gap:14px;margin-top:6px}
+fieldset{border:1px solid var(--line);border-radius:14px;padding:14px;margin:0;display:grid;gap:12px;min-width:0}
+legend{font-weight:800;color:var(--navy);padding:0 6px;font-size:15px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g2>div,.g3>div,fieldset>div{min-width:0}
+label{display:block;font-weight:700;color:var(--navy);margin:0 0 4px;font-size:14px}
+input,select,textarea{width:100%;padding:11px;border-radius:12px;border:1px solid var(--line);font:inherit;font-size:16px;color:var(--ink);background:#fff}
+input:not([type=checkbox]):not([type=file]){height:48px;padding-top:0;padding-bottom:0}
+input[type=file]{height:auto;padding:10px;font-size:14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px #1677c820}
+textarea{min-height:76px;resize:vertical}
+select{height:48px;-webkit-appearance:none;appearance:none;padding:0 34px 0 12px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:15px;line-height:1.45}
+.chk input{width:22px;height:22px;padding:0;margin:0;flex:none;accent-color:var(--blue)}
+button{border:0;cursor:pointer;font:inherit;font-weight:750;font-size:16px;min-height:48px;padding:12px 24px;border-radius:12px;background:var(--blue);color:#fff}
+button.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+button:disabled{opacity:.6;cursor:wait}
+#kirim{width:100%}@media(min-width:561px){#kirim{width:auto;min-width:240px}}
+button:focus-visible,a:focus-visible{outline:3px solid #1677c850;outline-offset:2px}
+.err{margin-top:8px;color:var(--danger);font-weight:650}
+.ok{color:var(--ok);font-weight:700}
+.hidden{display:none!important}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+a{color:var(--blue)}
+.langkah{margin:8px 0 0;padding-left:20px;line-height:1.6;font-size:14px}
+@media(max-width:560px){.g2,.g3{grid-template-columns:1fr}}
