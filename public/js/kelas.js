@@ -150,13 +150,20 @@ function jalan(f) {
   Promise.resolve().then(() => f()).catch(e => { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan 03-peran.sql sudah dijalankan di Supabase.</p>`; });
 }
 const murid = () => run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid).eq('aktif', true).order('nama'));
+async function profilMurid(ms) {
+  const ids = [...new Set(ms.map(m => m.guest_id).filter(Boolean).map(String))];
+  if (!ids.length) return new Map();
+  const rows = await run(sb.from('murid_profil').select('guest_id,nama_panggilan,jenis_kelamin').in('guest_id', ids));
+  return new Map(rows.map(p => [String(p.guest_id), p]));
+}
 
 /* ---------- murid ---------- */
 async function vMurid() {
   const ms = await murid();
+  const profil = await profilMurid(ms);
   $('#view').innerHTML = `<h2>Data murid (${ms.length})</h2>
-  <table><tr><th>Nama</th><th>Kode akses</th></tr>
-  ${ms.map(m => `<tr><td>${esc(m.nama)}</td><td><b>${esc(m.kode_akses)}</b></td></tr>`).join('') || '<tr><td colspan="2" class="mut">Belum ada murid di kelas ini.</td></tr>'}</table>`;
+  <table><tr><th>No</th><th>Nama</th><th>L/P</th><th>Nama panggilan</th><th>Kode akses</th></tr>
+  ${ms.map((m, i) => { const p = profil.get(String(m.guest_id)) || {}; return `<tr><td>${i + 1}</td><td>${esc(m.nama)}</td><td>${esc(p.jenis_kelamin || '')}</td><td>${esc(p.nama_panggilan || '')}</td><td><b>${esc(m.kode_akses)}</b></td></tr>`; }).join('') || '<tr><td colspan="5" class="mut">Belum ada murid di kelas ini.</td></tr>'}</table>`;
 }
 
 /* ---------- pertemuan: jurnal + presensi ---------- */
@@ -172,7 +179,7 @@ async function vPertemuan(tgl) {
   <div><label for="alt">Alat dan bahan</label><input id="alt" value="${esc(p?.alat_bahan)}"></div></div>
   <label for="jur">Jurnal pembelajaran</label><textarea id="jur">${esc(p?.jurnal)}</textarea>
   <h2 style="margin-top:18px">Presensi</h2>
-  <table>${ms.map(m => `<tr><td>${esc(m.nama)}</td><td class="st">${['H','I','S','A'].map(s => `<label><input type="radio" name="s${m.id}" value="${s}" ${(cur[m.id] || 'H') === s ? 'checked' : ''}>${s}</label>`).join('')}</td></tr>`).join('')}</table>
+  <table><tr><th>No</th><th>Nama</th><th>Presensi</th></tr>${ms.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.nama)}</td><td class="st">${['H','I','S','A'].map(s => `<label><input type="radio" name="s${m.id}" value="${s}" ${(cur[m.id] || 'H') === s ? 'checked' : ''}>${s}</label>`).join('')}</td></tr>`).join('')}</table>
   <p class="mut">H hadir, I izin, S sakit, A alpa.</p>
   <p><button class="p" id="save">Simpan pertemuan</button></p><div id="msg" class="msg"></div>`;
   $('#tgl').onchange = e => vPertemuan(e.target.value);
@@ -188,8 +195,8 @@ async function vPertemuan(tgl) {
 async function vRekap() {
   const [ms, pr] = await Promise.all([murid(), run(sb.from('kelas_presensi').select('murid_id,status,kelas_pertemuan!inner(kelas_id)').eq('kelas_pertemuan.kelas_id', S.kid).eq('kelas_pertemuan.mapel_id', S.mid))]);
   const c = {}; ms.forEach(m => c[m.id] = { H: 0, I: 0, S: 0, A: 0 }); pr.forEach(x => c[x.murid_id] && c[x.murid_id][x.status]++);
-  $('#view').innerHTML = `<h2>Rekap kehadiran: ${esc(mn())}</h2><p><button id="csvR">Unduh CSV</button> <button id="cetakR">Cetak</button></p><table><tr><th>Nama</th><th>H</th><th>I</th><th>S</th><th>A</th><th>Persen hadir</th></tr>
-  ${ms.map(m => { const r = c[m.id], t = r.H + r.I + r.S + r.A; return `<tr><td>${esc(m.nama)}</td><td>${r.H}</td><td>${r.I}</td><td>${r.S}</td><td>${r.A}</td><td>${t ? Math.round(r.H / t * 100) + '%' : '-'}</td></tr>`; }).join('')}</table>`;
+  $('#view').innerHTML = `<h2>Rekap kehadiran: ${esc(mn())}</h2><p><button id="csvR">Unduh CSV</button> <button id="cetakR">Cetak</button></p><table><tr><th>No</th><th>Nama</th><th>H</th><th>I</th><th>S</th><th>A</th><th>Persen hadir</th></tr>
+  ${ms.map((m, i) => { const r = c[m.id], t = r.H + r.I + r.S + r.A; return `<tr><td>${i + 1}</td><td>${esc(m.nama)}</td><td>${r.H}</td><td>${r.I}</td><td>${r.S}</td><td>${r.A}</td><td>${t ? Math.round(r.H / t * 100) + '%' : '-'}</td></tr>`; }).join('')}</table>`;
   $('#csvR').onclick = () => csv('rekap-kehadiran.csv', [['Nama','Hadir','Izin','Sakit','Alpa'], ...ms.map(m => [m.nama, c[m.id].H, c[m.id].I, c[m.id].S, c[m.id].A])]);
   $('#cetakR').onclick = () => {
     const judul = 'Rekap Kehadiran', kls = (S.kelas.find(k => k.id === S.kid) || {}).nama || '';
@@ -208,8 +215,8 @@ async function vTugas() {
   <div><label for="tr">Rubrik penilaian</label><select id="tr"><option value="">Nilai angka biasa</option>${rs.map(r => `<option value="${r.id}">${esc(r.nama)}</option>`).join('')}</select></div></div>
   <label for="ti">Instruksi</label><textarea id="ti"></textarea>
   <p><button class="p" id="addT">Tambah tugas</button> <button id="csvN">Unduh rekap nilai (CSV)</button></p><div id="msg" class="msg"></div>
-  <table><tr><th>Judul</th><th>Tenggat</th><th></th></tr>
-  ${ts.map(t => `<tr><td>${esc(t.judul)}</td><td>${esc(t.tenggat || '-')}</td><td><button data-open="${t.id}">Nilai</button> <button class="d" data-del="${t.id}">Hapus</button></td></tr>`).join('')}</table>`;
+  <table><tr><th>No</th><th>Judul</th><th>Tenggat</th><th></th></tr>
+  ${ts.map((t, i) => `<tr><td>${i + 1}</td><td>${esc(t.judul)}</td><td>${esc(t.tenggat || '-')}</td><td><button data-open="${t.id}">Nilai</button> <button class="d" data-del="${t.id}">Hapus</button></td></tr>`).join('')}</table>`;
   $('#addT').onclick = async () => {
     if (!$('#tj').value.trim()) return msg('Isi judul tugas.', true);
     await run(sb.from('kelas_tugas').insert({ kelas_id: S.kid, mapel_id: S.mid, judul: $('#tj').value.trim(), instruksi: $('#ti').value, tenggat: $('#tt').value || null, rubrik_id: $('#tr').value || null })); vTugas();
@@ -232,8 +239,8 @@ async function vNilai() {
   const foto = id => ks.filter(k => k.murid_id === id).length;
   $('#view').innerHTML = `<p><button id="back">Kembali ke daftar tugas</button></p><h2>${esc(S.tugas.judul)}</h2>
   <p class="mut">${rub ? 'Rubrik: ' + esc(rub.nama) + '. Nilai akhir dihitung otomatis (0 sampai 100).' : 'Nilai angka 0 sampai 100.'} Foto karya yang diunggah muncul di tab Galeri.</p>
-  <table><tr><th>Nama</th><th>Status</th><th>Nilai</th><th>Catatan</th><th>Foto karya</th></tr>
-  ${ms.map(m => { const x = n[m.id] || {}; return `<tr data-m="${m.id}"><td>${esc(m.nama)}</td>
+  <table><tr><th>No</th><th>Nama</th><th>Status</th><th>Nilai</th><th>Catatan</th><th>Foto karya</th></tr>
+  ${ms.map((m, i) => { const x = n[m.id] || {}; return `<tr data-m="${m.id}"><td>${i + 1}</td><td>${esc(m.nama)}</td>
   <td><select class="s">${['belum', 'dikumpulkan', 'dinilai'].map(s => `<option ${(x.status || 'belum') === s ? 'selected' : ''}>${s}</option>`).join('')}</select></td>
   <td>${kr ? kr.map((k, i) => `<label class="kin">${esc(k.nama)} (maks ${k.maks})<input class="k" type="number" min="0" max="${k.maks}" style="width:90px" value="${(x.skor || [])[i] ?? ''}"></label>`).join('') : `<input class="n" type="number" min="0" max="100" style="width:80px" value="${x.nilai ?? ''}">`}</td>
   <td><input class="c" value="${esc(x.catatan)}"></td>
@@ -265,8 +272,8 @@ async function vJadwal() {
   <div class="grid"><div><label for="jh">Hari</label><select id="jh">${HARI.slice(1).map((h, i) => `<option value="${i + 1}">${h}</option>`).join('')}</select></div>
   <div><label for="jm">Mulai</label><input id="jm" type="time"></div><div><label for="js">Selesai</label><input id="js" type="time"></div>
   <div><label for="jr">Ruang</label><input id="jr"></div></div><p><button class="p" id="addJ">Tambah jadwal</button></p>` : '<p class="mut">Pilih kelas dan mapel di atas untuk menambah jadwal.</p>')
-  + `<div id="msg" class="msg"></div><table><tr><th>Hari</th><th>Jam</th><th>Kelas</th><th>Mapel</th><th>Ruang</th><th></th></tr>
-  ${js.map(j => `<tr><td>${HARI[j.hari]}</td><td>${String(j.jam_mulai).slice(0, 5)}${j.jam_selesai ? ' - ' + String(j.jam_selesai).slice(0, 5) : ''}</td><td>${esc(kn(j.kelas_id))}</td><td>${esc(mname(j.mapel_id))}</td><td>${esc(j.ruang)}</td><td><button class="d" data-del="${j.id}">Hapus</button></td></tr>`).join('')}</table>`;
+  + `<div id="msg" class="msg"></div><table><tr><th>No</th><th>Hari</th><th>Jam</th><th>Kelas</th><th>Mapel</th><th>Ruang</th><th></th></tr>
+  ${js.map((j, i) => `<tr><td>${i + 1}</td><td>${HARI[j.hari]}</td><td>${String(j.jam_mulai).slice(0, 5)}${j.jam_selesai ? ' - ' + String(j.jam_selesai).slice(0, 5) : ''}</td><td>${esc(kn(j.kelas_id))}</td><td>${esc(mname(j.mapel_id))}</td><td>${esc(j.ruang)}</td><td><button class="d" data-del="${j.id}">Hapus</button></td></tr>`).join('')}</table>`;
   if (S.mid) $('#addJ').onclick = async () => {
     if (!$('#jm').value) return msg('Isi jam mulai.', true);
     await run(sb.from('kelas_jadwal').insert({ kelas_id: S.kid, mapel_id: S.mid, hari: +$('#jh').value, jam_mulai: $('#jm').value, jam_selesai: $('#js').value || null, ruang: $('#jr').value || null })); vJadwal();
@@ -282,7 +289,7 @@ async function vRubrik() {
   <label for="rk" style="margin-top:10px">Kriteria, satu per baris: nama, skor maksimal</label>
   <textarea id="rk" placeholder="Komposisi, 25&#10;Teknik, 25&#10;Kreativitas, 30&#10;Kerapian, 20"></textarea>
   <p><button class="p" id="addR">Simpan rubrik</button></p><div id="msg" class="msg"></div>
-  <table><tr><th>Rubrik</th><th>Kriteria</th><th></th></tr>${rs.map(r => `<tr><td>${esc(r.nama)}</td><td class="mut">${r.kriteria.map(k => esc(k.nama) + ' (' + k.maks + ')').join(', ')}</td><td><button class="d" data-del="${r.id}">Hapus</button></td></tr>`).join('')}</table>`;
+  <table><tr><th>No</th><th>Rubrik</th><th>Kriteria</th><th></th></tr>${rs.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td class="mut">${r.kriteria.map(k => esc(k.nama) + ' (' + k.maks + ')').join(', ')}</td><td><button class="d" data-del="${r.id}">Hapus</button></td></tr>`).join('')}</table>`;
   $('#addR').onclick = async () => {
     const kriteria = $('#rk').value.split('\n').map(l => l.split(',')).map(([n, m]) => ({ nama: (n || '').trim(), maks: Number(m) || 100 })).filter(k => k.nama);
     if (!$('#rn').value.trim() || !kriteria.length) return msg('Isi nama rubrik dan minimal satu kriteria.', true);
@@ -432,10 +439,10 @@ async function vProfil() {
     </span>`).join('') || '<span class="mut">Belum ada mapel.</span>';
   const tabelMapel = S.mapel.length && S.kelas.length ? `
     <table class="tmapel">
-      <tr><th>Kelas</th>${S.mapel.map(m => `<th class="cbh">${esc(m.nama)}</th>`).join('')}</tr>
-      ${S.kelas.map(k => `
+      <tr><th>No</th><th>Kelas</th>${S.mapel.map(m => `<th class="cbh">${esc(m.nama)}</th>`).join('')}</tr>
+      ${S.kelas.map((k, i) => `
         <tr>
-          <td>${esc(k.nama)}${wali === k.id ? ' <span class="mut">(wali kelas)</span>' : ''}</td>
+          <td>${i + 1}</td><td>${esc(k.nama)}${wali === k.id ? ' <span class="mut">(wali kelas)</span>' : ''}</td>
           ${S.mapel.map(m => `
             <td class="cb">
               <input type="checkbox" data-k="${k.id}" data-m="${m.id}" ${ada(k.id, m.id) ? 'checked' : ''}>

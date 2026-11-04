@@ -43,12 +43,12 @@ function spmbGagal(error) {
 }
 
 function spmbTabel(pendaftar) {
-  return `<div style="overflow:auto"><table><tr><th>No. daftar</th><th>Calon murid</th><th>Jalur</th><th>Orang tua / kontak</th><th>Status</th></tr>
-  ${pendaftar.map(r => `<tr><td><b>${esc(r.no_daftar || '-')}</b><div class="mut">${esc(spmbTgl(r.created_at))}</div></td>
+  return `<div style="overflow:auto"><table><tr><th>No</th><th>No. daftar</th><th>Calon murid</th><th>Jalur</th><th>Orang tua / kontak</th><th>Status</th></tr>
+  ${pendaftar.map((r, i) => `<tr><td>${i + 1}</td><td><b>${esc(r.no_daftar || '-')}</b><div class="mut">${esc(spmbTgl(r.created_at))}</div></td>
     <td><b>${esc(r.nama)}</b><div class="mut">TTL: ${esc(r.tempat_lahir || '-')}, ${esc(spmbTgl(r.tanggal_lahir))}</div></td>
     <td>${r.jalur === 'dalam' ? 'TK At-Taqwa' : 'TK Luar'}</td>
     <td>${esc(r.nama_ayah || r.nama_ibu || '-')}<div class="mut">${esc(r.kontak || '-')}</div></td>
-    <td>${esc(spmbLabelStatus(r.status))}</td></tr>`).join('') || '<tr><td colspan="5" class="mut">Belum ada data pendaftaran.</td></tr>'}</table></div>`;
+    <td>${esc(spmbLabelStatus(r.status))}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">Belum ada data pendaftaran.</td></tr>'}</table></div>`;
 }
 
 function spmbRincian(r) {
@@ -105,8 +105,8 @@ function spmbPembayaran(pembayaran = []) {
       <button type="button" data-spmb-payment-reject="${esc(p.id)}">Tolak bukti</button></p>
     </div>`).join('') : '<p class="mut">Tidak ada bukti pembayaran yang menunggu verifikasi.</p>'}
     ${selesai.length ? `<details><summary>Riwayat verifikasi (${selesai.length})</summary><div style="overflow:auto"><table>
-      <tr><th>Calon murid</th><th>Kontak</th><th>Status</th><th>Catatan</th><th>Dikirim</th></tr>
-      ${selesai.map(p => `<tr><td>${esc(p.nama)}</td><td>${esc(p.kontak)}</td><td>${p.status === 'valid' ? 'Diterima' : p.status === 'ditolak' ? 'Ditolak' : 'Sudah dipakai'}</td><td>${esc(p.catatan || '-')}</td><td>${esc(spmbTgl(p.created_at))}</td></tr>`).join('')}
+      <tr><th>No</th><th>Calon murid</th><th>Kontak</th><th>Status</th><th>Catatan</th><th>Dikirim</th></tr>
+      ${selesai.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.nama)}</td><td>${esc(p.kontak)}</td><td>${p.status === 'valid' ? 'Diterima' : p.status === 'ditolak' ? 'Ditolak' : 'Sudah dipakai'}</td><td>${esc(p.catatan || '-')}</td><td>${esc(spmbTgl(p.created_at))}</td></tr>`).join('')}
     </table></div></details>` : ''}
   </section>`;
 }
