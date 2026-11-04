@@ -537,4 +537,496 @@ ALTER TABLE public.guru_peran ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.guru_peran FROM PUBLIC, anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
-COMMIT;    kelas_id,
+COMMIT;
+
+
+-- perbaikan SQL
+-- 1. Hapus view lama jika ada
+DROP VIEW IF EXISTS public.daftar_tamu_gabungan CASCADE;
+
+-- 2. Buat View daftar_tamu_gabungan dengan nama kolom yang benar
+CREATE VIEW public.daftar_tamu_gabungan AS
+SELECT 
+    id,
+    created_at,
+    nama_tamu AS guest_name,
+    nama_tamu AS nama,
+    id AS guest_id,
+    instansi_atau_ortu AS instansi,
+    tujuan_kunjungan AS tujuan,
+    whatsapp_full AS telepon,
+    whatsapp_tersamar,
+    whatsapp_full,
+    tanda_tangan_url,
+    keperluan,
+    'selesai'::text AS status
+FROM public.buku_tamu;
+
+-- 3. Berikan hak akses ke view
+GRANT ALL ON public.daftar_tamu_gabungan TO anon, authenticated, service_role;
+
+-- 4. Reload Schema Cache Supabase
+NOTIFY pgrst, 'reload schema';
+
+-- SQL lagi tabel daftar tamu gabungan
+-- 1. Hapus view lama agar tidak terjadi konflik struktur
+DROP VIEW IF EXISTS public.daftar_tamu_gabungan CASCADE;
+
+-- 2. Buat ulang View daftar_tamu_gabungan dengan seluruh kolom yang dibutuhkan aplikasi
+CREATE VIEW public.daftar_tamu_gabungan AS
+SELECT 
+    id,
+    created_at,
+    nama_tamu AS guest_name,
+    nama_tamu AS nama,
+    id AS guest_id,
+    instansi_atau_ortu AS instansi,
+    tujuan_kunjungan AS tujuan,
+    whatsapp_full AS telepon,
+    whatsapp_tersamar,
+    whatsapp_full,
+    tanda_tangan_url,
+    keperluan,
+    'Umum'::text AS jenis_undangan,
+    'selesai'::text AS status
+FROM public.buku_tamu;
+
+-- 3. Berikan hak akses ke view
+GRANT ALL ON public.daftar_tamu_gabungan TO anon, authenticated, service_role;
+
+-- 4. Reload Schema Cache Supabase
+NOTIFY pgrst, 'reload schema';
+
+-- GATAU YANG MANA
+
+-- 1. Hapus view lama agar tidak terjadi konflik struktur
+DROP VIEW IF EXISTS public.daftar_tamu_gabungan CASCADE;
+
+-- 2. Buat ulang View daftar_tamu_gabungan dengan semua alias kolom aplikasi
+CREATE VIEW public.daftar_tamu_gabungan AS
+SELECT 
+    id,
+    created_at,
+    nama_tamu AS guest_name,
+    nama_tamu AS nama,
+    id AS guest_id,
+    instansi_atau_ortu AS instansi,
+    instansi_atau_ortu AS instansi_kelas,
+    tujuan_kunjungan AS tujuan,
+    whatsapp_full AS telepon,
+    whatsapp_tersamar,
+    whatsapp_full,
+    tanda_tangan_url,
+    keperluan,
+    'Umum'::text AS jenis_undangan,
+    'selesai'::text AS status
+FROM public.buku_tamu;
+
+-- 3. Berikan hak akses ke view
+GRANT ALL ON public.daftar_tamu_gabungan TO anon, authenticated, service_role;
+
+-- 4. Reload Schema Cache Supabase
+NOTIFY pgrst, 'reload schema';
+
+--- gatau seberapa banyak lagi
+-- 1. Tambahkan kolom nama_panggilan ke tabel murid jika belum ada
+ALTER TABLE public.murid 
+  ADD COLUMN IF NOT EXISTS nama_panggilan TEXT;
+
+-- 2. Hapus View murid_profil lama agar tidak konflik
+DROP VIEW IF EXISTS public.murid_profil CASCADE;
+
+-- 3. Buat ulang View murid_profil dengan kolom nama_panggilan dan pemetaan lengkap
+CREATE VIEW public.murid_profil AS
+SELECT 
+    id,
+    created_at,
+    nama_lengkap AS nama,
+    nama_lengkap,
+    COALESCE(nama_panggilan, nama_lengkap) AS nama_panggilan,
+    nama_lengkap AS guest_name,
+    nisn,
+    nis,
+    kelas_id,
+    guest_id
+FROM public.murid;
+
+-- 4. Berikan hak akses penuh ke View
+GRANT ALL ON public.murid_profil TO anon, authenticated, service_role;
+
+-- 5. Reload Schema Cache Supabase
+NOTIFY pgrst, 'reload schema';
+
+-- KUHARAP KAMU TAU
+-- 1. Tambahkan seluruh kolom biodata yang dibutuhkan aplikasi ke tabel murid
+ALTER TABLE public.murid 
+  ADD COLUMN IF NOT EXISTS nama_panggilan TEXT,
+  ADD COLUMN IF NOT EXISTS jenis_kelamin TEXT DEFAULT 'L',
+  ADD COLUMN IF NOT EXISTS tempat_lahir TEXT,
+  ADD COLUMN IF NOT EXISTS tanggal_lahir DATE,
+  ADD COLUMN IF NOT EXISTS agama TEXT DEFAULT 'Islam',
+  ADD COLUMN IF NOT EXISTS alamat TEXT,
+  ADD COLUMN IF NOT EXISTS nama_ayah TEXT,
+  ADD COLUMN IF NOT EXISTS nama_ibu TEXT,
+  ADD COLUMN IF NOT EXISTS telepon_ortu TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'aktif';
+
+-- 2. Hapus View murid_profil lama
+DROP VIEW IF EXISTS public.murid_profil CASCADE;
+
+-- 3. Buat ulang View murid_profil dengan seluruh kolom biodata
+CREATE VIEW public.murid_profil AS
+SELECT 
+    id,
+    created_at,
+    nama_lengkap AS nama,
+    nama_lengkap,
+    COALESCE(nama_panggilan, nama_lengkap) AS nama_panggilan,
+    nama_lengkap AS guest_name,
+    nisn,
+    nis,
+    kelas_id,
+    guest_id,
+    jenis_kelamin,
+    tempat_lahir,
+    tanggal_lahir,
+    agama,
+    alamat,
+    nama_ayah,
+    nama_ibu,
+    telepon_ortu,
+    status
+FROM public.murid;
+
+-- 4. Berikan hak akses penuh ke View murid_profil
+GRANT ALL ON public.murid_profil TO anon, authenticated, service_role;
+
+-- 5. Reload Schema Cache Supabase
+NOTIFY pgrst, 'reload schema';
+
+-- ENTAHLAH YG KEBERAPA
+-- 1. Tambahkan seluruh kolom tambahan yang dicari frontend ke tabel murid
+ALTER TABLE public.murid 
+  ADD COLUMN IF NOT EXISTS nama_panggilan TEXT,
+  ADD COLUMN IF NOT EXISTS jenis_kelamin TEXT DEFAULT 'L',
+  ADD COLUMN IF NOT EXISTS tempat_lahir TEXT,
+  ADD COLUMN IF NOT EXISTS tanggal_lahir DATE,
+  ADD COLUMN IF NOT EXISTS agama TEXT DEFAULT 'Islam',
+  ADD COLUMN IF NOT EXISTS alamat TEXT,
+  ADD COLUMN IF NOT EXISTS nama_ayah TEXT,
+  ADD COLUMN IF NOT EXISTS nama_ibu TEXT,
+  ADD COLUMN IF NOT EXISTS telepon_ortu TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'aktif',
+  ADD COLUMN IF NOT EXISTS tingkat INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS nama_kelas TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS kartu_diunduh BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS qr_code_url TEXT;
+
+-- 2. Hapus View murid_profil lama
+DROP VIEW IF EXISTS public.murid_profil CASCADE;
+
+-- 3. Buat ulang View murid_profil dengan seluruh kolom tambahan
+CREATE VIEW public.murid_profil AS
+SELECT 
+    id,
+    created_at,
+    nama_lengkap AS nama,
+    nama_lengkap,
+    COALESCE(nama_panggilan, nama_lengkap) AS nama_panggilan,
+    nama_lengkap AS guest_name,
+    nisn,
+    nis,
+    kelas_id,
+    guest_id,
+    jenis_kelamin,
+    tempat_lahir,
+    tanggal_lahir,
+    agama,
+    alamat,
+    nama_ayah,
+    nama_ibu,
+    telepon_ortu,
+    status,
+    tingkat,
+    nama_kelas,
+    kartu_diunduh,
+    qr_code_url
+FROM public.murid;
+
+-- 4. Hak akses dan reload cache schema
+GRANT ALL ON public.murid_profil TO anon, authenticated, service_role;
+NOTIFY pgrst, 'reload schema';
+
+-- LAGII
+
+-- 1. Tambahkan kolom ke tabel dasar murid
+ALTER TABLE public.murid 
+  ADD COLUMN IF NOT EXISTS nama_lengkap TEXT,
+  ADD COLUMN IF NOT EXISTS nama_panggilan TEXT,
+  ADD COLUMN IF NOT EXISTS jenis_kelamin TEXT DEFAULT 'L',
+  ADD COLUMN IF NOT EXISTS tempat_lahir TEXT,
+  ADD COLUMN IF NOT EXISTS tanggal_lahir DATE,
+  ADD COLUMN IF NOT EXISTS agama TEXT DEFAULT 'Islam',
+  ADD COLUMN IF NOT EXISTS alamat TEXT,
+  ADD COLUMN IF NOT EXISTS nama_ayah TEXT,
+  ADD COLUMN IF NOT EXISTS nama_ibu TEXT,
+  ADD COLUMN IF NOT EXISTS telepon_ortu TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'aktif',
+  ADD COLUMN IF NOT EXISTS tingkat INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS nama_kelas TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS kartu_diunduh BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS qr_code_url TEXT;
+
+-- 2. Hapus view murid_profil lama
+DROP VIEW IF EXISTS public.murid_profil CASCADE;
+
+-- 3. Buat View murid_profil dengan SELURUH alias kolom (Indonesia & Inggris)
+CREATE VIEW public.murid_profil AS
+SELECT 
+    id,
+    created_at,
+    -- Identitas Nama
+    nama_lengkap AS nama,
+    nama_lengkap,
+    COALESCE(nama_panggilan, nama_lengkap) AS nama_panggilan,
+    nama_lengkap AS guest_name,
+    id AS guest_id,
+    
+    -- Nomor Induk
+    nisn,
+    nis,
+    
+    -- Kelas & Tingkat
+    kelas_id,
+    tingkat,
+    nama_kelas,
+    nama_kelas AS kelas,
+    
+    -- Biodata
+    jenis_kelamin,
+    jenis_kelamin AS gender,
+    tempat_lahir,
+    tanggal_lahir,
+    agama,
+    alamat,
+    
+    -- Ortu & Kontak
+    nama_ayah,
+    nama_ibu,
+    telepon_ortu,
+    telepon_ortu AS telepon,
+    
+    -- Status & Sistem Kartu
+    status,
+    kartu_diunduh,
+    qr_code_url,
+    qr_code_url AS qr_code
+FROM public.murid;
+
+-- 4. Berikan akses dan reload schema API
+GRANT ALL ON public.murid_profil TO anon, authenticated, service_role;
+NOTIFY pgrst, 'reload schema';
+
+-- gatau deh
+-- Pastikan RLS diizinkan untuk dibaca oleh anon & authenticated
+ALTER TABLE public.murid ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Izinkan baca murid public" ON public.murid;
+CREATE POLICY "Izinkan baca murid public" ON public.murid 
+FOR SELECT 
+USING (true);
+
+-- Berikan hak akses penuh ke View
+GRANT SELECT ON public.murid_profil TO anon, authenticated, service_role;
+
+NOTIFY pgrst, 'reload schema';
+
+-- capeek
+-- 1. Berikan izin baca pada tabel dasar murid
+ALTER TABLE public.murid ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Izinkan baca publik murid" ON public.murid;
+CREATE POLICY "Izinkan baca publik murid" ON public.murid 
+FOR SELECT 
+USING (true);
+
+-- 2. Berikan izin penuh pada View murid_profil untuk semua role
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.murid_profil TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.murid TO anon, authenticated, service_role;
+
+-- 3. Paksa Supabase memuat ulang API Schema Cache
+NOTIFY pgrst, 'reload schema';
+
+-- tau ah
+-- 1. Lengkapi semua kolom fisik di tabel dasar murid
+ALTER TABLE public.murid 
+  ADD COLUMN IF NOT EXISTS nama_lengkap TEXT,
+  ADD COLUMN IF NOT EXISTS nama_panggilan TEXT,
+  ADD COLUMN IF NOT EXISTS nisn TEXT,
+  ADD COLUMN IF NOT EXISTS nis TEXT,
+  ADD COLUMN IF NOT EXISTS kelas_id UUID,
+  ADD COLUMN IF NOT EXISTS jenis_kelamin TEXT DEFAULT 'L',
+  ADD COLUMN IF NOT EXISTS tempat_lahir TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS tanggal_lahir DATE DEFAULT CURRENT_DATE,
+  ADD COLUMN IF NOT EXISTS agama TEXT DEFAULT 'Islam',
+  ADD COLUMN IF NOT EXISTS alamat TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS nama_ayah TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS nama_ibu TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS telepon_ortu TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'aktif',
+  ADD COLUMN IF NOT EXISTS tingkat INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS nama_kelas TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS kartu_diunduh BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS qr_code_url TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS guest_id TEXT;
+
+-- 2. Hapus View lama agar terbarui penuh
+DROP VIEW IF EXISTS public.murid_profil CASCADE;
+
+-- 3. Buat View murid_profil dengan seluruh pemetaan kolom kompatibilitas
+CREATE VIEW public.murid_profil AS
+SELECT 
+    id,
+    created_at,
+    
+    -- Pemetaan Nama
+    COALESCE(nama_lengkap, '') AS nama,
+    COALESCE(nama_lengkap, '') AS nama_lengkap,
+    COALESCE(nama_panggilan, nama_lengkap, '') AS nama_panggilan,
+    COALESCE(nama_lengkap, '') AS guest_name,
+    COALESCE(guest_id, id::text) AS guest_id,
+    
+    -- Induk
+    nisn,
+    nis,
+    
+    -- Kelas & Tingkat
+    kelas_id,
+    tingkat,
+    nama_kelas,
+    nama_kelas AS kelas,
+    
+    -- Biodata
+    jenis_kelamin,
+    jenis_kelamin AS gender,
+    tempat_lahir,
+    tanggal_lahir,
+    agama,
+    alamat,
+    
+    -- Ortu & Kontak
+    nama_ayah,
+    nama_ibu,
+    telepon_ortu,
+    telepon_ortu AS telepon,
+    
+    -- Status & Kartu
+    status,
+    kartu_diunduh,
+    qr_code_url,
+    qr_code_url AS qr_code
+FROM public.murid;
+
+-- 4. Berikan Hak Akses Penuh
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.murid_profil TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.murid TO anon, authenticated, service_role;
+
+-- 5. Reload Schema Cache PostgREST Supabase
+NOTIFY pgrst, 'reload schema';
+
+--lagii
+-- 1. Lengkapi kolom di tabel murid
+ALTER TABLE public.murid 
+  ADD COLUMN IF NOT EXISTS nama_lengkap TEXT,
+  ADD COLUMN IF NOT EXISTS nama_panggilan TEXT,
+  ADD COLUMN IF NOT EXISTS nisn TEXT,
+  ADD COLUMN IF NOT EXISTS nis TEXT,
+  ADD COLUMN IF NOT EXISTS kelas_id UUID,
+  ADD COLUMN IF NOT EXISTS jenis_kelamin TEXT DEFAULT 'L',
+  ADD COLUMN IF NOT EXISTS tempat_lahir TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS tanggal_lahir DATE DEFAULT CURRENT_DATE,
+  ADD COLUMN IF NOT EXISTS agama TEXT DEFAULT 'Islam',
+  ADD COLUMN IF NOT EXISTS alamat TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS nama_ayah TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS nama_ibu TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS telepon_ortu TEXT DEFAULT '-',
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'aktif',
+  ADD COLUMN IF NOT EXISTS tingkat INTEGER DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS nama_kelas TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS kartu_diunduh BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS qr_code_url TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS guest_id TEXT;
+
+-- 2. Buat ulang View murid_profil
+DROP VIEW IF EXISTS public.murid_profil CASCADE;
+CREATE VIEW public.murid_profil AS
+SELECT 
+    id,
+    created_at,
+    COALESCE(nama_lengkap, '') AS nama,
+    COALESCE(nama_lengkap, '') AS nama_lengkap,
+    COALESCE(nama_panggilan, nama_lengkap, '') AS nama_panggilan,
+    COALESCE(nama_lengkap, '') AS guest_name,
+    COALESCE(guest_id, id::text) AS guest_id,
+    nisn,
+    nis,
+    kelas_id,
+    tingkat,
+    nama_kelas,
+    nama_kelas AS kelas,
+    jenis_kelamin,
+    jenis_kelamin AS gender,
+    tempat_lahir,
+    tanggal_lahir,
+    agama,
+    alamat,
+    nama_ayah,
+    nama_ibu,
+    telepon_ortu,
+    telepon_ortu AS telepon,
+    status,
+    kartu_diunduh,
+    qr_code_url,
+    qr_code_url AS qr_code
+FROM public.murid;
+
+-- 3. Buat View murid_gabungan yang dipanggil oleh Network Tab
+DROP VIEW IF EXISTS public.murid_gabungan CASCADE;
+CREATE VIEW public.murid_gabungan AS
+SELECT 
+    id,
+    created_at,
+    COALESCE(nama_lengkap, '') AS nama,
+    COALESCE(nama_lengkap, '') AS nama_lengkap,
+    COALESCE(nama_panggilan, nama_lengkap, '') AS nama_panggilan,
+    COALESCE(nama_lengkap, '') AS guest_name,
+    COALESCE(guest_id, id::text) AS guest_id,
+    nisn,
+    nis,
+    kelas_id,
+    tingkat,
+    nama_kelas,
+    nama_kelas AS kelas,
+    jenis_kelamin,
+    jenis_kelamin AS gender,
+    tempat_lahir,
+    tanggal_lahir,
+    agama,
+    alamat,
+    nama_ayah,
+    nama_ibu,
+    telepon_ortu,
+    telepon_ortu AS telepon,
+    status,
+    kartu_diunduh,
+    qr_code_url,
+    qr_code_url AS qr_code
+FROM public.murid;
+
+-- 4. Berikan Hak Akses Penuh
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.murid_profil TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.murid_gabungan TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.murid TO anon, authenticated, service_role;
+
+-- 5. Reload Schema Cache Supabase
+NOTIFY pgrst, 'reload schema';
