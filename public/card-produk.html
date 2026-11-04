@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Card Produk — Demo Komponen</title>
+  <link rel="stylesheet" href="css/card-produk.css">
+</head>
+<body class="min-h-full bg-slate-50 font-sans text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+  <main class="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-4 py-12 sm:px-6">
+    <div class="mb-7 w-full max-w-sm">
+      <p class="text-[15px] font-semibold tracking-[0.14em] text-slate-600 dark:text-slate-300">TOKO HARIAN <span aria-hidden="true">/</span> PILIHAN EDITOR</p>
+      <h1 class="mt-2 text-2xl font-semibold tracking-tight">Teman untuk dibawa</h1>
+    </div>
+
+    <article class="w-full max-w-sm overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900" data-product-card>
+      <div class="relative m-3 overflow-hidden rounded-2xl bg-[#e9f1ed] dark:bg-slate-800">
+        <div class="aspect-square">
+          <svg class="h-full w-full" viewBox="0 0 400 400" role="img" aria-labelledby="product-image-title product-image-desc">
+            <title id="product-image-title">Tumbler Termal Sora warna hijau sage</title>
+            <desc id="product-image-desc">Ilustrasi botol minum termal dengan tutup dan pegangan berwarna hijau sage.</desc>
+            <defs>
+              <linearGradient id="bottle" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#78988a"/>
+                <stop offset=".22" stop-color="#b5cbbf"/>
+                <stop offset=".52" stop-color="#d5e0d9"/>
+                <stop offset=".78" stop-color="#a1b9ac"/>
+                <stop offset="1" stop-color="#78988a"/>
+              </linearGradient>
+              <linearGradient id="lid" x1="0" x2="1">
+                <stop stop-color="#345d4c"/>
+                <stop offset=".5" stop-color="#638775"/>
+                <stop offset="1" stop-color="#345d4c"/>
+              </linearGradient>
+              <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="9"/>
+                <feOffset dy="12"/>
+                <feComponentTransfer><feFuncA type="linear" slope=".18"/></feComponentTransfer>
+                <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <circle cx="200" cy="190" r="143" fill="#dce8e1"/>
+            <ellipse cx="204" cy="332" rx="88" ry="15" fill="#536f61" opacity=".14"/>
+            <g filter="url(#shadow)">
+              <path d="M253 139h24c22 0 39 17 39 39v50c0 20-16 36-36 36h-27v-19h24c10 0 18-8 18-18v-49c0-11-9-20-20-20h-22z" fill="none" stroke="#688978" stroke-width="15"/>
+              <path d="M166 78h70v40h-70z" fill="url(#lid)"/>
+              <path d="M157 111h88v22h-88z" rx="8" fill="#456c5a"/>
+              <path d="M151 132h100l-8 162c-1 16-14 28-30 28h-24c-16 0-29-12-30-28z" fill="url(#bottle)"/>
+              <path d="M164 151v127c0 12 3 20 9 25" fill="none" stroke="#eff5f1" stroke-linecap="round" stroke-width="8" opacity=".72"/>
+              <path d="M177 209h49" stroke="#688978" stroke-linecap="round" stroke-width="2" opacity=".65"/>
+              <text x="201" y="198" fill="#345d4c" font-family="sans-serif" font-size="12" font-weight="700" letter-spacing="3" text-anchor="middle">SORA</text>
+              <text x="201" y="224" fill="#476b5a" font-family="sans-serif" font-size="8" letter-spacing="2" text-anchor="middle">KEEP IT CLOSE</text>
+            </g>
+            <path d="M102 91c9-17 23-29 40-35" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="5" opacity=".7"/>
+            <circle cx="294" cy="91" r="4" fill="#fff" opacity=".8"/>
+            <circle cx="108" cy="284" r="3" fill="#fff" opacity=".8"/>
+          </svg>
+        </div>
+        <span class="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1.5 text-[15px] font-semibold text-emerald-950 shadow-sm dark:bg-slate-950/90 dark:text-emerald-200">Pilihan editor</span>
+      </div>
+
+      <div class="px-5 pb-5 pt-2">
+        <div class="flex items-center gap-2 text-[15px] text-slate-600 dark:text-slate-300">
+          <span class="flex items-center gap-1" role="img" aria-label="Rating 4,9 dari 5">
+            <svg class="h-4 w-4 fill-amber-500" viewBox="0 0 20 20" aria-hidden="true"><path d="m10 1.8 2.45 4.96 5.47.8-3.96 3.86.94 5.45L10 14.3l-4.9 2.57.94-5.45L2.08 7.56l5.47-.8L10 1.8Z"/></svg>
+            <span class="font-semibold text-slate-900 dark:text-white">4,9</span>
+          </span>
+          <span aria-hidden="true">·</span>
+          <span>128 ulasan</span>
+          <span class="ml-auto">500 ml</span>
+        </div>
+
+        <h2 class="mt-3 text-xl font-semibold tracking-tight">Tumbler Termal Sora</h2>
+        <p class="mt-1 text-base leading-6 text-slate-600 dark:text-slate-300">Stainless steel · Hijau sage</p>
+
+        <div class="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <p class="text-2xl font-bold tracking-tight tabular-nums">Rp189.000</p>
+          <p class="text-base text-slate-600 line-through dark:text-slate-400">Rp249.000</p>
+          <span class="rounded-md bg-emerald-100 px-2 py-1 text-[15px] font-semibold text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200">Hemat 24%</span>
+        </div>
+
+        <div class="mt-5 grid grid-cols-[1fr_auto] gap-2">
+          <button type="button" class="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0b5cab] px-4 text-base font-semibold text-white transition-colors hover:bg-[#084b8c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b5cab] active:bg-[#073d73] motion-reduce:transition-none" data-add-to-cart aria-describedby="cart-status">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8h16l-1.3 12H5.3L4 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9V6a3 3 0 0 1 6 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12v5m-2.5-2.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>Tambah ke keranjang</span>
+          </button>
+          <button type="button" class="group inline-flex min-h-12 min-w-12 items-center justify-center gap-2 rounded-xl border border-slate-300 px-3 text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b5cab] aria-pressed:border-rose-300 aria-pressed:text-rose-700 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:aria-pressed:border-rose-800 dark:aria-pressed:text-rose-300 motion-reduce:transition-none" data-favorite aria-label="Simpan Tumbler Termal Sora ke favorit" aria-pressed="false">
+            <svg class="h-5 w-5 group-aria-pressed:fill-rose-600" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.8 8.8c0 5.1-8.8 10.2-8.8 10.2S3.2 13.9 3.2 8.8A4.6 4.6 0 0 1 12 6.4a4.6 4.6 0 0 1 8.8 2.4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="sr-only">Simpan</span>
+          </button>
+        </div>
+        <p id="cart-status" class="mt-3 min-h-5 text-[15px] text-slate-600 dark:text-slate-300" role="status" aria-live="polite"></p>
+      </div>
+    </article>
+  </main>
+
+  <script>
+    const card = document.querySelector('[data-product-card]');
+    const favorite = card.querySelector('[data-favorite]');
+
+    favorite.addEventListener('click', () => {
+      const saved = favorite.getAttribute('aria-pressed') !== 'true';
+      favorite.setAttribute('aria-pressed', String(saved));
+      favorite.setAttribute('aria-label', `${saved ? 'Hapus' : 'Simpan'} Tumbler Termal Sora ${saved ? 'dari' : 'ke'} favorit`);
+      document.getElementById('cart-status').textContent = saved ? 'Tumbler Termal Sora disimpan ke favorit.' : 'Tumbler Termal Sora dihapus dari favorit.';
+    });
+
+    card.querySelector('[data-add-to-cart]').addEventListener('click', () => {
+      document.getElementById('cart-status').textContent = 'Tumbler Termal Sora ditambahkan ke keranjang.';
+      window.dispatchEvent(new CustomEvent('product:add-to-cart', {
+        detail: { id: 'tumbler-termal-sora', name: 'Tumbler Termal Sora', price: 189000 }
+      }));
+    });
+  </script>
+</body>
+</html>

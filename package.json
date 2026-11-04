@@ -7,11 +7,14 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "build:card-produk": "tailwindcss -i src/card-produk.css -o public/css/card-produk.css --minify",
     "test": "node --test",
     "cek": "node scripts/cek-frontend.mjs",
     "verifikasi": "npm run cek && npm test"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "tailwindcss": "^4.1.17",
     "wrangler": "^4.45.0"
   },
   "engines": { "node": ">=20" }
