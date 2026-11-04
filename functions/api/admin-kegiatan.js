@@ -18,7 +18,6 @@ export async function onRequest({ request, env }) {
       const [ks, ps, mu] = await Promise.all([
         get('/kegiatan?order=tanggal_kegiatan.desc&select=*'),
         get('/pendaftaran_kegiatan?order=created_at.desc&limit=10000&select=id,kegiatan_id,murid_id,status,nama_pengirim,tanggal_transfer,data,catatan_panitia,created_at,verified_at,bukti_path,murid(id,nama_lengkap,kelas(nama_kelas))'),
-        // Disesuaikan: query ke tabel master murid dan kelas
         get('/murid?is_active=eq.true&select=id,nama_lengkap,kelas(nama_kelas)&limit=5000').catch(() => [])
       ]).catch(() => null);
 
@@ -29,7 +28,6 @@ export async function onRequest({ request, env }) {
         if (p.status !== 'ditolak') tp[p.kegiatan_id] = (tp[p.kegiatan_id] || 0) + 1; 
       });
 
-      // Disesuaikan: query ke tabel pendaftaran_ekskul
       const ec = await get('/pendaftaran_ekskul?select=ekskul_id,status&limit=10000').catch(() => []);
       const jumlahEC = {}, jenisK = Object.fromEntries(ks.map(k => [k.id, k.jenis || 'umum']));
       
@@ -166,5 +164,3 @@ export async function onRequest({ request, env }) {
     return json(500, { error: 'Terjadi kesalahan pada server.' });
   }
 }
-
-export const onRequest = () => json(405, { error: 'Metode tidak diizinkan.' });
