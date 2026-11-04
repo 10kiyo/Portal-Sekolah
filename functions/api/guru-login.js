@@ -1,5 +1,5 @@
 // Cloudflare Worker route: POST /api/guru-login { username, pin }
-// Memeriksa username + PIN di tabel Supabase "guru_staf" skema baru.
+// Memeriksa username + PIN di tabel guru_staf yang juga dipakai modul administrasi.
 // Bila cocok, akun Supabase Auth disamakan PIN-nya & email dikembalikan.
 import { json, cfg, dbGet } from '../_lib/util.js';
 import { sudahBatas, catatGagal, hapusBatas } from '../_lib/pembatas.js';
@@ -34,10 +34,10 @@ export async function onRequestPost({ request, env }) {
   if (!c) return json(500, { error: 'SUPABASE_SERVICE_ROLE_KEY belum diatur.' });
 
   let username = '', pin = '';
-  try { 
-    const b = await request.json(); 
-    username = String(b.username || '').trim().toLowerCase().replace(/\s+/g, '.'); 
-    pin = String(b.pin || '').trim(); 
+  try {
+    const b = await request.json();
+    username = String(b.username || '').trim().toLowerCase().replace(/\s+/g, '.');
+    pin = String(b.pin || '').trim();
   } catch (e) {}
 
   const kIp = 'guru:' + (request.headers.get('CF-Connecting-IP') || 'unknown'), kAll = 'guru:*', kUser = 'guru:u:' + username;
@@ -51,9 +51,9 @@ export async function onRequestPost({ request, env }) {
   try {
     let g = null;
     if (/^[a-z0-9.]{2,40}$/.test(username) && /^\d{6}$/.test(pin)) {
-      // Disesuaikan: nama_lengkap, pin_hash, is_active=eq.true, serta join ke guru_peran
-      const rows = await dbGet(c)(`/guru_staf?username=eq.${encodeURIComponent(username)}&is_active=eq.true&select=id,nama_lengkap,username,pin_hash,auth_user_id,guru_peran(role)`);
-      if (rows[0] && rows[0].pin_hash && sama(rows[0].pin_hash, pin)) g = rows[0];
+      // Skema ini mengikuti modul administrasi yang membaca nama, pin, aktif, dan peran.
+      const rows = await dbGet(c)(`/guru_staf?username=eq.${encodeURIComponent(username)}&aktif=eq.true&select=id,nama,jabatan,kelompok,username,pin,peran,peran_tambahan,auth_user_id`);
+      if (rows[0] && rows[0].pin && sama(rows[0].pin, pin)) g = rows[0];
     }
 
     if (!g) {
@@ -63,8 +63,7 @@ export async function onRequestPost({ request, env }) {
     }
     await Promise.all([hapusBatas(env, kIp), hapusBatas(env, kUser)]);
 
-    // Ambil daftar role dari tabel guru_peran
-    const roles = Array.isArray(g.guru_peran) ? g.guru_peran.map(r => r.role) : [];
+    const roles = [...new Set([g.peran, ...(Array.isArray(g.peran_tambahan) ? g.peran_tambahan : [])].filter(Boolean))];
 
     // Pastikan akun Supabase Auth ada dan kata sandinya = PIN saat ini.
     let id = g.auth_user_id, email = '';
@@ -87,7 +86,7 @@ export async function onRequestPost({ request, env }) {
           email, 
           password: pin, 
           email_confirm: true, 
-          user_metadata: { nama: g.nama_lengkap, roles: roles } 
+          user_metadata: { nama: g.nama, roles }
         }) 
       });
       
@@ -103,11 +102,12 @@ export async function onRequestPost({ request, env }) {
         if (!p.ok) return json(502, { error: 'Akun belum bisa disiapkan. Hubungi operator sekolah.' });
       }
 
-      await fetch(`${c.REST}/guru_staf?id=eq.${g.id}`, { 
+      const linked = await fetch(`${c.REST}/guru_staf?id=eq.${g.id}`, {
         method: 'PATCH', 
-        headers: { ...c.h, 'Content-Type': 'application/json' }, 
+        headers: { ...c.h, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify({ auth_user_id: id }) 
       });
+      if (!linked.ok) return json(502, { error: 'Akun berhasil dibuat, tetapi tautan akun staf belum tersimpan. Coba login lagi.' });
     }
 
     return json(200, { email, roles });

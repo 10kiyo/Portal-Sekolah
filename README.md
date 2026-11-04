@@ -207,6 +207,18 @@ npm run deploy
 
 Selesai. Website langsung aktif di alamat `*.workers.dev` atau domain sekolah Anda.
 
+### 5. Buat akun Operator pertama
+
+Setelah deploy dan memastikan tabel `guru_staf` Supabase memakai kolom `nama`, `username`, `pin`, `aktif`,
+`peran`, dan `peran_tambahan`, buka `https://alamat-situs/setup-operator.html`. Masukkan nama Operator dan
+`ADMIN_PIN` yang sudah disimpan sebagai secret Cloudflare. Halaman ini membuat akun Operator pertama,
+menampilkan username dan PIN login satu kali, lalu menutup setup setelah akun Operator tersimpan.
+Simpan kredensial itu, lalu masuk melalui **SI-TAQWA → Administrasi Guru dan Staf**. Akun Supabase Auth
+untuk Operator disiapkan otomatis saat login pertama kali.
+
+Jika setup melaporkan skema `guru_staf` belum cocok, jangan menebak atau mengubah kolom secara manual:
+skema SQL yang dipakai aplikasi harus disiapkan terlebih dahulu.
+
 ---
 
 ## <img src="docs/icons/sliders.svg" width="22" alt=""> Mengubah Isi Tanpa Menyentuh Kode Rumit

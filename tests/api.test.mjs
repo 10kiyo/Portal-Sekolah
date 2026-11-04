@@ -21,6 +21,31 @@ test('guru-login: tanpa kunci Supabase -> 500 yang jelas', async () => {
   assert.equal(r.status, 500);
 });
 
+test('guru-login: memakai kolom pin/peran yang sama dengan modul administrasi', async t => {
+  const asli = globalThis.fetch, panggilan = [];
+  t.after(() => { globalThis.fetch = asli; });
+  globalThis.fetch = async (url, options = {}) => {
+    url = String(url);
+    panggilan.push({ url, options });
+    if (url.includes('/guru_staf?username=eq.operator')) return Response.json([{
+      id: 'operator-1', nama: 'Operator Awal', username: 'operator.awal', pin: '123456',
+      peran: 'operator', peran_tambahan: [], auth_user_id: null
+    }]);
+    if (url.endsWith('/auth/v1/admin/users') && options.method === 'POST') return Response.json({ id: 'auth-1' });
+    if (url.includes('/rest/v1/guru_staf?id=eq.operator-1') && options.method === 'PATCH') return new Response(null, { status: 204 });
+    throw new Error(`Permintaan tak terduga: ${url}`);
+  };
+
+  const r = await guruLogin({
+    request: post({ username: 'operator.awal', pin: '123456' }, '8.8.4.4'),
+    env: { ...env, GURU_EMAIL_DOMAIN: 'sekolah.test' }
+  });
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), { email: 'operator.awal@sekolah.test', roles: ['operator'] });
+  assert.ok(panggilan.some(x => x.url.includes('aktif=eq.true') && x.url.includes('select=id,nama,')));
+  assert.ok(panggilan.some(x => x.options.method === 'PATCH'), 'auth_user_id harus disimpan di akun staf');
+});
+
 test('ortu-lookup: kode salah -> 404, lalu 429 setelah 5 percobaan', async () => {
   const s = [];
   for (let i = 0; i < 7; i++) s.push((await ortuLookup({ request: post({ kode: 'ABCD1234' }, '7.7.7.7'), env })).status);

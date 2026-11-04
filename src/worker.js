@@ -24,6 +24,8 @@ import * as daftarTamu from '../functions/api/daftar-tamu.js';
 import * as spmbDaftar from '../functions/api/spmb-daftar.js';
 import * as spmbBayar from '../functions/api/spmb-bayar.js';
 import * as adminSpmb from '../functions/api/admin-spmb.js';
+import * as slimsMember from '../functions/api/slims-member.js';
+import * as bootstrapOperator from '../functions/api/bootstrap-operator.js';
 import { cfg, dbGet } from '../functions/_lib/util.js';
 
 const routes = {
@@ -50,7 +52,9 @@ const routes = {
   '/api/daftar-tamu': daftarTamu,
   '/api/spmb-daftar': spmbDaftar,
   '/api/spmb-bayar': spmbBayar,
-  '/api/admin-spmb': adminSpmb
+  '/api/admin-spmb': adminSpmb,
+  '/api/slims-member': slimsMember,
+  '/api/bootstrap-operator': bootstrapOperator
 };
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
