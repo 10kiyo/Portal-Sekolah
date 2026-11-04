@@ -951,8 +951,9 @@ const bacaCsv = teks => {
 function htmlCetakMurid(judul, l) {
   const lk = l.filter(x => x.p.jenis_kelamin === 'L').length, pr = l.filter(x => x.p.jenis_kelamin === 'P').length, kosong = l.length - lk - pr;
   const tabel = cetakTabel([
-    { h: 'No', c: 'c', v: (x, i) => i + 1 }, { h: 'Nama', v: x => esc(x.nama) }, { h: 'Panggilan', v: x => esc(x.p.nama_panggilan || '') },
-    { h: 'L/P', c: 'c', v: x => esc(x.p.jenis_kelamin || '') }, { h: 'Kelas', v: x => esc(x.kelas) }, { h: 'Tempat lahir', v: x => esc(x.p.tempat_lahir || '') },
+    { h: 'No', c: 'c', v: (x, i) => i + 1 }, { h: 'Nama', v: x => esc(x.nama) },
+    { h: 'L/P', c: 'c', v: x => esc(x.p.jenis_kelamin || '') }, { h: 'Nama panggilan', v: x => esc(x.p.nama_panggilan || '') },
+    { h: 'Kelas', v: x => esc(x.kelas) }, { h: 'Tempat lahir', v: x => esc(x.p.tempat_lahir || '') },
     { h: 'Tanggal lahir', c: 'n', v: x => x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : '' }, { h: 'NIS', v: x => esc(x.p.nis || '') },
     { h: 'NISN', v: x => esc(x.p.nisn || '') }, { h: 'Status', v: x => x.aktif ? 'Aktif' : 'Nonaktif' }], l);
   return cetakDokumen(judul, tabel + cetakRingkas([['Jumlah murid', l.length], ['Laki-laki', lk], ['Perempuan', pr], ...(kosong ? [['Belum diisi', kosong]] : [])]));
@@ -997,8 +998,8 @@ MODUL.data = async function () {
       <tr${x.aktif ? '' : ' style="opacity:.6"'}>
         <td>${i + 1}</td>
         <td>${esc(x.nama)}${x.p.sumber === 'operator' ? ' <span class="mut">(input operator)</span>' : ''}</td>
-        <td>${esc(x.p.nama_panggilan || '')}</td>
         <td>${esc(x.p.jenis_kelamin || '')}</td>
+        <td>${esc(x.p.nama_panggilan || '')}</td>
         <td>${esc(x.kelas)}</td>
         <td>${esc(x.p.tempat_lahir || '')}</td>
         <td>${x.p.tanggal_lahir ? tglID(x.p.tanggal_lahir) : ''}</td>
@@ -1013,7 +1014,7 @@ MODUL.data = async function () {
     $('#dl').innerHTML = `
       <p class="mut">${l.length} murid</p>
       <table>
-        <tr><th>No</th><th>Nama</th><th>Panggilan</th><th>L/P</th><th>Kelas</th><th>Tempat lahir</th><th>Tanggal lahir</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>
+        <tr><th>No</th><th>Nama</th><th>L/P</th><th>Nama Panggilan</th><th>Kelas</th><th>Tempat lahir</th><th>Tanggal lahir</th><th>NIS</th><th>NISN</th><th>Status</th><th class="noprint"></th></tr>
         ${baris}
       </table>`;
     return l;
