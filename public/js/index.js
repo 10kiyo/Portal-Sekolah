@@ -51,8 +51,38 @@ function showLoading(show) {
 
 // ===== Dropdown "Profil" dan "Kegiatan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
 const DDS = [['ddBtnP', 'ddpP'], ['ddBtnK', 'ddpK']].map(([b, p]) => ({ btn: document.getElementById(b), pnl: document.getElementById(p) }));
+// Dropdown SI-TAQWA baru dengan fitur Pantau Anak, Buku Tamu, Guru/Staff, Panitia Kegiatan
+const DDSI = { btn: document.getElementById('siDropdown'), pnl: document.getElementById('ddpSI') };
 function ddClose() { DDS.forEach(d => { d.pnl.hidden = true; d.btn.setAttribute('aria-expanded', 'false'); }); }
 DDS.forEach(d => {
+  d.btn.onclick = e => {
+    e.stopPropagation();
+    const buka = d.pnl.hidden;
+    ddClose();
+    if (!buka) return;
+    d.pnl.hidden = false;
+    const r = d.btn.getBoundingClientRect(), w = d.pnl.offsetWidth;
+    d.pnl.style.top = (r.bottom + 6) + 'px';
+    d.pnl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+    d.btn.setAttribute('aria-expanded', 'true');
+  };
+});
+DDSI.btn.onclick = e => {
+  e.stopPropagation();
+  const buka = DDSI.pnl.hidden;
+  ddClose();
+  if (!buka) return;
+  DDSI.pnl.hidden = false;
+  const r = DDSI.btn.getBoundingClientRect(), w = DDSI.pnl.offsetWidth;
+  DDSI.pnl.style.top = (r.bottom + 6) + 'px';
+  DDSI.pnl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  DDSI.btn.setAttribute('aria-expanded', 'true');
+};
+document.addEventListener('click', e => { if (!DDS.some(d => d.pnl.contains(e.target)) && !DDSI.btn.contains(e.target)) ddClose(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') { const o = DDS.find(d => !d.pnl.hidden); ddClose(); if (o) o.btn.focus(); } });
+addEventListener('resize', ddClose);
+addEventListener('blur', ddClose);
+document.querySelector('.menu').addEventListener('scroll', ddClose);
   d.btn.onclick = e => {
     e.stopPropagation();
     const buka = d.pnl.hidden;
@@ -72,11 +102,16 @@ addEventListener('blur', ddClose);                       // klik ke dalam iframe
 document.querySelector('.menu').addEventListener('scroll', ddClose);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, KATS = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'];
-let adminMasuk = false, rAktif = '';
+let adminMasuk = false, rAktif = '', pustakawanMasuk = false;
 function terapkanAdmin() { document.body.classList.toggle('admin-penuh', adminMasuk && rAktif === 'kelas'); }
 addEventListener('message', e => {
   if (e.origin !== location.origin || !e.data || typeof e.data.adminMode !== 'boolean') return;
   adminMasuk = e.data.adminMode; terapkanAdmin();
+});
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || typeof e.data.pustakawanMode !== 'boolean') return;
+  pustakawanMasuk = e.data.pustakawanMode;
+  toggleSlimsAkses();
 });
 function route() {
   const [r0, seg = '', mode = ''] = (location.hash.slice(1) || 'beranda').split('/');
@@ -91,6 +126,7 @@ function route() {
   document.querySelector('.menu a.si').classList.toggle('on', ['si-taqwa', 'ortu', 'buku-tamu', 'kelas', 'kegiatan'].includes(r));
   document.getElementById('ddBtnK').classList.toggle('on', ['jurnal', 'ekskul', 'club', 'unggulan'].includes(r));
   document.getElementById('ddBtnP').classList.toggle('on', ['profil', 'guru', 'fasilitas', 'lulusan', 'kalender'].includes(r));
+  document.getElementById('ddpSI').hidden = !['si-taqwa', 'ortu', 'buku-tamu', 'guru', 'kegiatan'].includes(r);
   ddClose();
   document.getElementById('cta').classList.toggle('on', r === 'spmb');
   document.getElementById('beranda').hidden = r !== 'beranda';
@@ -313,6 +349,24 @@ function showLoading(show) {
   }
 }
 
+function toggleSlimsAkses() {
+  const slimsLink = document.querySelector('a[href="http://localhost:8888/slims/"]');
+  const syncBtn = document.getElementById('syncSlimsBtn');
+  if (pustakawanMasuk) {
+    // Show SLiMS access for Pustakawan
+    if (slimsLink) slimsLink.hidden = false;
+    if (syncBtn) syncBtn.hidden = false;
+    // Enable the sync button
+    syncBtn.disabled = false;
+  } else {
+    // Hide SLiMS access for non-Pustakawan
+    if (slimsLink) slimsLink.hidden = true;
+    if (syncBtn) syncBtn.hidden = true;
+    syncBtn.disabled = true;
+  }
+}
+
 // Initialize
 showLoading(false);
+toggleSlimsAkses();
 }
