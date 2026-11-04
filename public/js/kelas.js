@@ -149,21 +149,21 @@ function jalan(f) {
   $('#view').innerHTML = '<p class="mut">Memuat...</p>';
   Promise.resolve().then(() => f()).catch(e => { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan 03-peran.sql sudah dijalankan di Supabase.</p>`; });
 }
-const murid = () => run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid).eq('aktif', true).order('nama'));
-async function profilMurid(ms) {
+async function murid(sertakanProfil = false) {
+  const ms = await run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid).eq('aktif', true).order('nama'));
+  if (!sertakanProfil) return ms;
   const ids = [...new Set(ms.map(m => m.guest_id).filter(Boolean).map(String))];
-  if (!ids.length) return new Map();
-  const rows = await run(sb.from('murid_profil').select('guest_id,nama_panggilan,jenis_kelamin').in('guest_id', ids));
-  return new Map(rows.map(p => [String(p.guest_id), p]));
+  const rows = ids.length ? await run(sb.from('murid_profil').select('guest_id,nama_panggilan,jenis_kelamin').in('guest_id', ids)) : [];
+  const profil = new Map(rows.map(p => [String(p.guest_id), p]));
+  return ms.map(m => ({ ...m, profil: profil.get(String(m.guest_id)) || {} }));
 }
 
 /* ---------- murid ---------- */
 async function vMurid() {
-  const ms = await murid();
-  const profil = await profilMurid(ms);
+  const ms = await murid(true);
   $('#view').innerHTML = `<h2>Data murid (${ms.length})</h2>
   <table><tr><th>No</th><th>Nama</th><th>L/P</th><th>Nama panggilan</th><th>Kode akses</th></tr>
-  ${ms.map((m, i) => { const p = profil.get(String(m.guest_id)) || {}; return `<tr><td>${i + 1}</td><td>${esc(m.nama)}</td><td>${esc(p.jenis_kelamin || '')}</td><td>${esc(p.nama_panggilan || '')}</td><td><b>${esc(m.kode_akses)}</b></td></tr>`; }).join('') || '<tr><td colspan="5" class="mut">Belum ada murid di kelas ini.</td></tr>'}</table>`;
+  ${ms.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.nama)}</td><td>${esc(m.profil.jenis_kelamin || '')}</td><td>${esc(m.profil.nama_panggilan || '')}</td><td><b>${esc(m.kode_akses)}</b></td></tr>`).join('') || '<tr><td colspan="5" class="mut">Belum ada murid di kelas ini.</td></tr>'}</table>`;
 }
 
 /* ---------- pertemuan: jurnal + presensi ---------- */
