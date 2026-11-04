@@ -63,6 +63,7 @@ async function start() {
   $('#app').classList.remove('hidden'); document.body.classList.add('in-app'); kabar(true);
   await loadProfil();
   await loadPeran();
+  kabar(true, S.peran === 'pustakawan' || S.peranTambahan.includes('pustakawan'));
   if (!(S.prof && S.prof.nama)) await isiNamaDariDaftar();
   buildMenu();
   const adaKelas = ['guru', 'admin'].includes(S.peran);
@@ -108,7 +109,11 @@ $('#menu').onclick = e => {
   S.tab = t; S.tugas = null; show();
   if (matchMedia('(max-width:860px)').matches) setMenu(false);
 };
-function kabar(v) { try { if (parent !== window) parent.postMessage({ adminMode: v }, location.origin); } catch (e) {} }
+function kabar(v, pustakawan = false) {
+  try {
+    if (parent !== window) parent.postMessage({ adminMode: v, pustakawanMode: v && pustakawan }, location.origin);
+  } catch (e) {}
+}
 $('#btnHome').onclick = () => { if (parent !== window) { try { parent.location.hash = '#beranda'; return; } catch (e) {} } location.href = 'index.html'; };
 function setMenu(open) { document.body.dataset.menu = open ? '1' : '0'; $('#shell').dataset.open = open ? '1' : '0'; $('#btnMenu').setAttribute('aria-expanded', open); try { localStorage.setItem('menuAdminTerbuka', open ? '1' : '0'); } catch (e) {} }
 $('#btnMenu').onclick = () => setMenu($('#shell').dataset.open !== '1');

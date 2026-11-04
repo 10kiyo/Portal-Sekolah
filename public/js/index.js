@@ -40,65 +40,49 @@ const TITLES = {
   'si-taqwa': 'SI-TAQWA — Sistem Informasi Terpadu At-Taqwa'
 };
 // ===== Sinkronisasi ke SLiMS =====
-const SLIMS_SYNC_URL = ''; // Isi dengan URL tunnel: https://<url>.trycloudflare.com/slims/slims_sync.php?pass=rahasia123
-
-function showLoading(show) {
+function showLoadingLegacy(show) {
   const btn = document.getElementById('syncSlimsBtn');
   if (show) {
     btn.disabled = true;
     btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="margin-right: 0.5rem;"><path d="M12 5.75v12.17l-3.21 2.06a1 1 0 0 1-1.63-.95l.93-2.86a1 1 0 0 1 1.52-.6l2.55 1.06a1 1 0 0 1 .81.41l-1.88 5.28a1 1 0 0 1-.55.87l-2.86-1.91a1 1 0 0 1-.98-.6l-.93 2.86a1 1 0 0 1-.6 1.52l-2.06 3.21a1 1 0 0 1-.41.81l-1.06 2.55a1 1 0 0 1-.6.81l-5.28-1.88a1 1 0 0 1-.87-.55l-1.91-2.86a1 1 0 0 1-.6-.98l-2.86 1.91a1 1 0 0 1-.98-.6l-2.86-1.91a1 1 0 0 1-1.52-.6l-.93 2.86a1 1 0 0 1-.41.81l-2.55-1.06a1 1 0 0 1-.81-.41l5.28 1.88a1 1 0 0 1 .41.81l1.91 2.86a1 1 0 0 1 .6.98l2.86-1.91a1 1 0 0 1 .6-.98l2.86 1.91a1 1 0 0 1 1.52.6l.93-2.86a1 1 0 0 1 1.52.6l2.06-3.21a1 1 0 0 1 .41-.81l1.06-2.55a1 1 0 0 1 .6-.81l5.28-1.88a1 1 0 0 1 .81-.41l1.91-2.86a1 1 0 0 1 .6-.98l2.86 1.91a1 1 0 0 1 1.52.6l.93-2.86a1 1 0 0 1 1.52.6l2.06-3.21a1 1 0 0 1 .41-.81l-1.06-2.55a1 1 0 0 1-.6-.81l-5.28 1.88a1 1 0 0 1-.81-.41l-1.91 2.86a1 1 0 0 1-.6.98l-2.86-1.91a1 1 0 0 1-.98-.6l-2.86 1.91a1 1 0 0 1-.6-.98l-2.86-1.91a1 1 0 0 1-1.52-.6l-.93 2.86a1 1 0 0 1-.41.81l-2.55 1.06a1 1 0 0 1-.81.41l5.28-1.88a1 1 0 0 1-.41-.81l-1.91-2.86a1 1 0 0 1-.6-.98l-2.86-1.91a1 1 0 0 1-1.52-.6l-.93-2.86a1 1 0 0 1-1.52-.6l-2.06 3.21a1 1 0 0 1-.41.81l1.06 2.55a1 1 0 0 1 .6.81l5.28 1.88a1 1 0 0 1 .81.41l1.91 2.86a1 1 0 0 1 .6.98l2.86-1.91a1 1 0 0 1 .6-.98l2.86 1.91a1 1 0 0 1 1.52.6l.93-2.86a1 1 0 0 1 1.52.6l2.06-3.21a1 1 0 0 1 .41-.81l-1.06-2.55a1 1 0 0 1-.6-.81l-5.28-1.88a1 1 0 0 1-.81-.41l-1.91 2.86a1 1 0 0 1-.6.98l-2.86-1.91a1 1 0 0 1-.98-.6l-2.86 1.91a1 1 0 0 1-.6-.98l-2.86-1.91a1 1 0 0 1-1.52-.6z';
 
 
-// ===== Dropdown "Profil" dan "Kegiatan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
-const DDS = [['ddBtnP', 'ddpP'], ['ddBtnK', 'ddpK']].map(([b, p]) => ({ btn: document.getElementById(b), pnl: document.getElementById(p) }));
-// Dropdown SI-TAQWA baru dengan fitur Pantau Anak, Buku Tamu, Guru/Staff, Panitia Kegiatan
-const DDSI = { btn: document.getElementById('siDropdown'), pnl: document.getElementById('ddpSI') };
-function ddClose() { DDS.forEach(d => { d.pnl.hidden = true; d.btn.setAttribute('aria-expanded', 'false'); }); }
-DDS.forEach(d => {
-  d.btn.onclick = e => {
+  }
+}
+
+// Dropdown panel memakai posisi fixed agar tetap terlihat saat menu digulir.
+const DDS = [['ddBtnP', 'ddpP'], ['ddBtnK', 'ddpK'], ['ddBtnI', 'ddpI']]
+  .map(([b, p]) => ({ btn: document.getElementById(b), pnl: document.getElementById(p) }));
+function ddClose() {
+  DDS.forEach(({ btn, pnl }) => {
+    pnl.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  });
+}
+DDS.forEach(({ btn, pnl }) => {
+  btn.addEventListener('click', e => {
     e.stopPropagation();
-    const buka = d.pnl.hidden;
+    const buka = pnl.hidden;
     ddClose();
     if (!buka) return;
-    d.pnl.hidden = false;
-    const r = d.btn.getBoundingClientRect(), w = d.pnl.offsetWidth;
-    d.pnl.style.top = (r.bottom + 6) + 'px';
-    d.pnl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
-    d.btn.setAttribute('aria-expanded', 'true');
-  };
+    pnl.hidden = false;
+    const r = btn.getBoundingClientRect(), w = pnl.offsetWidth;
+    pnl.style.top = `${r.bottom + 6}px`;
+    pnl.style.left = `${Math.max(8, Math.min(r.left, innerWidth - w - 8))}px`;
+    btn.setAttribute('aria-expanded', 'true');
+  });
 });
-DDSI.btn.onclick = e => {
-  e.stopPropagation();
-  const buka = DDSI.pnl.hidden;
+document.addEventListener('click', e => {
+  if (!DDS.some(({ btn, pnl }) => pnl.contains(e.target) || btn.contains(e.target))) ddClose();
+});
+addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const opened = DDS.find(({ pnl }) => !pnl.hidden);
   ddClose();
-  if (!buka) return;
-  DDSI.pnl.hidden = false;
-  const r = DDSI.btn.getBoundingClientRect(), w = DDSI.pnl.offsetWidth;
-  DDSI.pnl.style.top = (r.bottom + 6) + 'px';
-  DDSI.pnl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
-  DDSI.btn.setAttribute('aria-expanded', 'true');
-};
-document.addEventListener('click', e => { if (!DDS.some(d => d.pnl.contains(e.target)) && !DDSI.btn.contains(e.target)) ddClose(); });
-addEventListener('keydown', e => { if (e.key === 'Escape') { const o = DDS.find(d => !d.pnl.hidden); ddClose(); if (o) o.btn.focus(); } });
+  if (opened) opened.btn.focus();
+});
 addEventListener('resize', ddClose);
 addEventListener('blur', ddClose);
-document.querySelector('.menu').addEventListener('scroll', ddClose);
-  d.btn.onclick = e => {
-    e.stopPropagation();
-    const buka = d.pnl.hidden;
-    ddClose();
-    if (!buka) return;
-    d.pnl.hidden = false;
-    const r = d.btn.getBoundingClientRect(), w = d.pnl.offsetWidth;
-    d.pnl.style.top = (r.bottom + 6) + 'px';
-    d.pnl.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
-    d.btn.setAttribute('aria-expanded', 'true');
-  };
-});
-document.addEventListener('click', e => { if (!DDS.some(d => d.pnl.contains(e.target))) ddClose(); });
-addEventListener('keydown', e => { if (e.key === 'Escape') { const o = DDS.find(d => !d.pnl.hidden); ddClose(); if (o) o.btn.focus(); } });
-addEventListener('resize', ddClose);
-addEventListener('blur', ddClose);                       // klik ke dalam iframe
 document.querySelector('.menu').addEventListener('scroll', ddClose);
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, KATS = ['pengumuman', 'agenda', 'surat', 'kegiatan', 'prestasi', 'lainnya'];
@@ -126,7 +110,7 @@ function route() {
   document.querySelector('.menu a.si').classList.toggle('on', ['si-taqwa', 'ortu', 'buku-tamu', 'kelas', 'kegiatan'].includes(r));
   document.getElementById('ddBtnK').classList.toggle('on', ['jurnal', 'ekskul', 'club', 'unggulan'].includes(r));
   document.getElementById('ddBtnP').classList.toggle('on', ['profil', 'guru', 'fasilitas', 'lulusan', 'kalender'].includes(r));
-  document.getElementById('ddpSI').hidden = !['si-taqwa', 'ortu', 'buku-tamu', 'guru', 'kegiatan'].includes(r);
+  document.getElementById('ddBtnI').classList.toggle('on', ['info', 'galeri'].includes(r));
   ddClose();
   document.getElementById('cta').classList.toggle('on', r === 'spmb');
   document.getElementById('beranda').hidden = r !== 'beranda';
@@ -310,22 +294,20 @@ route();
 const SLIMS_SYNC_URL = ''; // Isi dengan URL tunnel: https://<url>.trycloudflare.com/slims/slims_sync.php?pass=rahasia123
 
 const syncSlimsBtn = document.getElementById('syncSlimsBtn');
-
-syncSlimsBtn.addEventListener('click', async (e) => {
+syncSlimsBtn.addEventListener('click', async e => {
   e.preventDefault();
   if (!confirm('Yakin ingin melakukan sinkronisasi data ke SLiMS?')) return;
-  
+  if (!SLIMS_SYNC_URL) {
+    alert('URL sinkronisasi SLiMS belum dikonfigurasi.');
+    return;
+  }
   showLoading(true);
   try {
     const response = await fetch(SLIMS_SYNC_URL, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      }
+      headers: { Accept: 'application/json' }
     });
-    
     const data = await response.json();
-    
     if (response.ok) {
       alert('Sinkronisasi berhasil!\n\n' + (data.message || 'Data berhasil disinkronkan ke SLiMS'));
     } else {
@@ -340,6 +322,7 @@ syncSlimsBtn.addEventListener('click', async (e) => {
 
 function showLoading(show) {
   const btn = document.getElementById('syncSlimsBtn');
+  if (!btn) return;
   if (show) {
     btn.disabled = true;
     btn.innerHTML = 'Loading <span class="spinner"></span>';
@@ -350,23 +333,11 @@ function showLoading(show) {
 }
 
 function toggleSlimsAkses() {
-  const slimsLink = document.querySelector('a[href="http://localhost:8888/slims/"]');
+  const slimsLink = document.getElementById('slimsLoginBtn');
   const syncBtn = document.getElementById('syncSlimsBtn');
-  if (pustakawanMasuk) {
-    // Show SLiMS access for Pustakawan
-    if (slimsLink) slimsLink.hidden = false;
-    if (syncBtn) syncBtn.hidden = false;
-    // Enable the sync button
-    syncBtn.disabled = false;
-  } else {
-    // Hide SLiMS access for non-Pustakawan
-    if (slimsLink) slimsLink.hidden = true;
-    if (syncBtn) syncBtn.hidden = true;
-    syncBtn.disabled = true;
-  }
+  if (slimsLink) slimsLink.hidden = !pustakawanMasuk;
+  if (syncBtn) syncBtn.hidden = !pustakawanMasuk;
 }
 
-// Initialize
 showLoading(false);
 toggleSlimsAkses();
-}
