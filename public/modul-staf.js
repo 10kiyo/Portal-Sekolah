@@ -959,6 +959,24 @@ function htmlCetakMurid(judul, l) {
   return cetakDokumen(judul, tabel + cetakRingkas([['Jumlah murid', l.length], ['Laki-laki', lk], ['Perempuan', pr], ...(kosong ? [['Belum diisi', kosong]] : [])]));
 }
 const idBaru = () => 'OP-' + Array.from(crypto.getRandomValues(new Uint8Array(6)), b => (b % 36).toString(36)).join('').toUpperCase();
+async function unduhKodeAksesMurid(daftar) {
+  const aktif = daftar.filter(x => x.aktif);
+  if (!aktif.length) return msg('Tidak ada murid aktif untuk diunduh.', true);
+  const kode = [];
+  for (let i = 0; i < aktif.length; i += 200) {
+    const ids = aktif.slice(i, i + 200).map(x => x.id);
+    kode.push(...await semua(() => sb.from('operator_kode_akses').select('guest_id,kode_akses_ortu').in('guest_id', ids).order('guest_id')));
+  }
+  if (!kode.length) return msg('Kode akses belum tersedia. Pastikan migrasi tambahan.sql sudah dijalankan.', true);
+  const berdasarkanId = new Map(aktif.map(x => [x.id, x]));
+  const baris = kode.map(k => {
+    const m = berdasarkanId.get(String(k.guest_id));
+    return m ? [m.nama, m.kelas, k.kode_akses_ortu] : null;
+  }).filter(Boolean);
+  csv('kode-akses-orang-tua.csv', [['Nama murid', 'Kelas', 'Kode akses orang tua'], ...baris]);
+  const belum = aktif.length - baris.length;
+  msg(`CSV kode akses diunduh untuk ${baris.length} murid.${belum ? ` ${belum} murid belum memiliki kode akses.` : ''}${belum ? ' Pastikan jenis data murid dan migrasi sinkronisasi sudah benar.' : ' Bagikan kode kepada orang tua melalui kanal yang aman.'}`, !!belum);
+}
 MODUL.data = async function () {
   $('#view').innerHTML = '<p>Memuat data murid...</p>';
   _siswa = null; _profil = null;
@@ -1019,16 +1037,22 @@ MODUL.data = async function () {
       </table>`;
     return l;
   };
-  const selesai = async (t) => { await MODUL.data(); msg(t + ' Daftar murid di akun guru ikut berubah otomatis dalam sekitar satu menit. Nilai & presensi yang sudah ada tidak berubah.'); };
+  const selesai = async (t) => { await MODUL.data(); msg(t + ' Kode akses orang tua tersedia lewat tombol Unduh kode akses orang tua. Daftar murid di akun guru ikut berubah otomatis dalam sekitar satu menit; nilai & presensi yang sudah ada tidak berubah.'); };
 
   $('#view').innerHTML = `<h2>Data murid (${aktif.length} aktif${mati.length ? `, ${mati.length} nonaktif` : ''})</h2><p class="mut">${hitung}</p>
   <p class="noprint"><select id="dk" style="max-width:150px"><option value="">Semua kelas</option>${kls.map(k => `<option>${esc(k)}</option>`).join('')}</select> <select id="ds" style="max-width:150px"><option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option><option value="semua">Semua</option></select>
   <input id="dq" type="search" placeholder="Cari nama" style="max-width:220px"></p>
-  <p class="noprint"><button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button id="dUnggah">Unggah CSV</button><input id="dfile" type="file" accept=".csv,text/csv,text/plain" hidden> <button id="dCetak">Cetak</button></p>
+  <p class="noprint"><button class="p" id="dTambah">+ Tambah murid</button> <button id="dTempel">Tempel dari Excel</button> <button id="dCsv">Unduh CSV</button> <button id="dKode">Unduh kode akses orang tua</button> <button id="dUnggah">Unggah CSV</button><input id="dfile" type="file" accept=".csv,text/csv,text/plain" hidden> <button id="dCetak">Cetak</button></p>
   <div id="msg" class="msg"></div><div id="dform"></div>
   <div id="dtempel" class="noprint" hidden><label for="dta">Tempel baris dari Excel: Nama, Kelas, NIS, NISN, Nama panggilan, Tempat lahir, Tanggal lahir, Jenis kelamin L/P (dipisah tab atau titik koma; kolom setelah Kelas boleh kosong; tanggal: 27/03/2015 atau 2015-03-27)</label><textarea id="dta" rows="6" placeholder="Budi Santoso&#9;3A&#9;1234&#9;0012345678&#9;Budi&#9;Jakarta&#9;27/03/2015&#9;L"></textarea><p><button class="p" id="dImpor">Impor murid</button> <span id="dprev" class="mut"></span></p></div>
   <div id="dl"></div>`;
   $('#dk').onchange = $('#ds').onchange = tabel; $('#dq').oninput = tabel; tabel();
+  $('#dKode').onclick = () => {
+    const l = semuaM.filter(x => x.aktif);
+    if (confirm(`Unduh kode akses orang tua untuk ${l.length} murid aktif? Simpan file dengan aman dan bagikan kodenya hanya kepada orang tua terkait.`)) {
+      unduhKodeAksesMurid(l).catch(e => msg('Kode akses gagal diunduh: ' + (e.message || e), true));
+    }
+  };
   $('#dCsv').onclick = () => csv('data-murid.csv', [['Nama', 'Nama panggilan', 'Jenis kelamin', 'Kelas', 'ID', 'NIS', 'NISN', 'Tempat lahir', 'Tanggal lahir', 'Alamat', 'Status'], ...tabel().map(x => [x.nama, x.p.nama_panggilan, x.p.jenis_kelamin, x.kelas, x.id, x.p.nis, x.p.nisn, x.p.tempat_lahir, x.p.tanggal_lahir, x.p.alamat, x.aktif ? 'aktif' : 'nonaktif'])]);
   const bukaForm = id => { edit = { id }; $('#dform').innerHTML = formHtml(); $('#mn').focus(); $('#mBatal').onclick = () => { edit = null; $('#dform').innerHTML = ''; };
     $('#mSimpan').onclick = async () => {
@@ -1041,12 +1065,12 @@ MODUL.data = async function () {
           const m = semuaM.find(x => x.id === id), row = { guest_id: id, ...profil };
           if (nama !== m.nama) row.nama = nama;          // hanya yang berubah yang disimpan sebagai penimpa
           if (kelas !== m.kelas) row.kelas = kelas;
-          if (!m.p.guest_id) row.nama_ref = m.nama;
+          if (!m.p.guest_id) { row.nama_ref = m.nama; row.jenis = m.jenis || 'Murid'; row.sumber = 'operator'; }
           await run(sb.from('murid_profil').upsert(row, { onConflict: 'guest_id' }));
           await selesai('Data murid tersimpan.');
         } else {
           if (semuaM.some(x => x.aktif && x.nama.toLowerCase() === nama.toLowerCase() && x.kelas === kelas)) { $('#mSimpan').disabled = false; return msg('Murid dengan nama dan kelas yang sama sudah ada.', true); }
-          await run(sb.from('murid_profil').insert({ guest_id: idBaru(), nama_ref: nama, nama, kelas, jenis: $('#mj').value || jenisUtama, sumber: 'operator', ...profil }));
+          await run(sb.from('murid_profil').insert({ guest_id: idBaru(), nama_ref: nama, nama, kelas, jenis: $('#mj').value || jenisUtama || 'Murid', sumber: 'operator', ...profil }));
           await selesai('Murid baru ditambahkan.');
         }
       } catch (e) { $('#mSimpan').disabled = false; }
@@ -1076,6 +1100,7 @@ MODUL.data = async function () {
       const nm = (ambil(r, 'nama') || '').replace(/\s+/g, ' '), kl = ambil(r, 'kelas') || '';
       // semua baris memakai himpunan kolom yang sama agar upsert massal tidak menimpa kolom lain dengan null
       const row = { guest_id: id, nama_ref: p.nama_ref || m.nama, nonaktif: !!p.nonaktif, nama: p.nama ?? null, kelas: p.kelas ?? null }; let ubah = false;
+      if (!p.guest_id) { row.jenis = m.jenis || 'Murid'; row.sumber = 'operator'; }
       if (nm && nm !== m.nama) { row.nama = nm; ubah = true; }
       if (kl && kl !== m.kelas) { row.kelas = kl; ubah = true; }
       for (const k of ['nama_panggilan', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'nis', 'nisn', 'alamat']) {
@@ -1096,7 +1121,7 @@ MODUL.data = async function () {
   $('#dImpor').onclick = async () => {
     const baris = baca(); if (!baris.length) return msg('Tidak ada baris yang terbaca. Pastikan kolom pertama nama dan kolom kedua kelas.', true);
     const ada = new Set(semuaM.filter(x => x.aktif).map(x => x.nama.toLowerCase() + '|' + x.kelas)), baru = [];
-    baris.forEach(r => { const k = r.nama.toLowerCase() + '|' + r.kelas; if (!ada.has(k)) { ada.add(k); baru.push({ guest_id: idBaru(), nama_ref: r.nama, nama: r.nama, kelas: r.kelas, jenis: jenisUtama, sumber: 'operator', nis: r.nis, nisn: r.nisn, nama_panggilan: r.nama_panggilan, tempat_lahir: r.tempat_lahir, tanggal_lahir: r.tanggal_lahir, jenis_kelamin: r.jenis_kelamin }); } });
+    baris.forEach(r => { const k = r.nama.toLowerCase() + '|' + r.kelas; if (!ada.has(k)) { ada.add(k); baru.push({ guest_id: idBaru(), nama_ref: r.nama, nama: r.nama, kelas: r.kelas, jenis: jenisUtama || 'Murid', sumber: 'operator', nis: r.nis, nisn: r.nisn, nama_panggilan: r.nama_panggilan, tempat_lahir: r.tempat_lahir, tanggal_lahir: r.tanggal_lahir, jenis_kelamin: r.jenis_kelamin }); } });
     if (!baru.length) return msg('Semua baris sudah ada di data murid.', true);
     if (!confirm(`Tambahkan ${baru.length} murid baru${baris.length - baru.length ? ` (${baris.length - baru.length} baris dilewati karena sudah ada)` : ''}?`)) return;
     $('#dImpor').disabled = true;
@@ -1109,7 +1134,7 @@ MODUL.data = async function () {
     if (d.tg) {
       const m = semuaM.find(x => x.id === d.tg); if (!m) return;
       if (m.aktif && !confirm(`Nonaktifkan ${m.nama} (${m.kelas})?\nMurid disembunyikan dari daftar guru. Presensi dan nilainya tetap tersimpan dan kembali bila diaktifkan lagi.`)) return;
-      const row = { guest_id: m.id, nonaktif: m.aktif }; if (!m.p.guest_id) row.nama_ref = m.nama;
+      const row = { guest_id: m.id, nonaktif: m.aktif }; if (!m.p.guest_id) { row.nama_ref = m.nama; row.jenis = m.jenis || 'Murid'; row.sumber = 'operator'; }
       await run(sb.from('murid_profil').upsert(row, { onConflict: 'guest_id' }));
       await selesai(m.aktif ? 'Murid dinonaktifkan.' : 'Murid diaktifkan kembali.');
     }

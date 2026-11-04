@@ -52,6 +52,44 @@ test('ortu-lookup: kode salah -> 404, lalu 429 setelah 5 percobaan', async () =>
   assert.deepEqual(s, [404, 404, 404, 404, 404, 429, 429]);
 });
 
+test('ortu-lookup: memakai kolom murid, kehadiran, nilai, dan BK dari migrasi', async t => {
+  const asli = globalThis.fetch, urlDipanggil = [];
+  t.after(() => { globalThis.fetch = asli; });
+  globalThis.fetch = async url => {
+    url = String(url);
+    urlDipanggil.push(url);
+    if (url.includes('/murid?')) return Response.json([{
+      id: 'murid-1', nama_lengkap: 'Nina', nis: '001', nisn: '002',
+      kelas_id: null, kelas_label: '1-A', kelas: null
+    }]);
+    if (url.includes('/guru_staf?')) return Response.json([{ nama_lengkap: 'Bu Guru' }]);
+    if (url.includes('/kehadiran?')) return Response.json([{
+      tanggal: '2026-07-01', status: 'Hadir', catatan: 'Tepat waktu'
+    }]);
+    if (url.includes('/nilai?')) return Response.json([{
+      id: 'nilai-1', mata_pelajaran: 'Matematika', jenis_penilaian: 'Ulangan', nilai: 90, tanggal: '2026-07-02'
+    }]);
+    if (url.includes('/bk_catatan?')) return Response.json([{
+      created_at: '2026-07-03T08:00:00Z', kategori: 'Prestasi', deskripsi: 'Membantu teman', poin: 5, tindakan: null
+    }]);
+    throw new Error(`Permintaan tak terduga: ${url}`);
+  };
+
+  const response = await ortuLookup({ request: post({ kode: 'ABCD1234' }, '7.7.7.8'), env });
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.equal(data.nama, 'Nina');
+  assert.equal(data.kelas, '1-A');
+  assert.deepEqual(data.kehadiran, [{ tanggal: '2026-07-01', status: 'Hadir', keterangan: 'Tepat waktu' }]);
+  assert.deepEqual(data.nilai, [{ mapel: 'Matematika', jenis: 'Ulangan', nilai: 90, catatan: '' }]);
+  assert.equal(data.disiplin.prestasi, 5);
+  assert.ok(urlDipanggil.some(url => url.includes('status=eq.aktif')));
+  assert.ok(urlDipanggil.some(url => url.includes('select=id,nama_lengkap,nisn,nis,kelas_id,kelas_label')));
+  assert.ok(urlDipanggil.some(url => url.includes('select=tanggal,status,catatan')));
+  assert.ok(urlDipanggil.some(url => url.includes('select=id,mata_pelajaran,jenis_penilaian,nilai,tanggal')));
+  assert.ok(urlDipanggil.some(url => url.includes('select=created_at,kategori,deskripsi,poin,tindakan')));
+});
+
 test('admin-auth: PIN salah 401, benar menghasilkan token', async () => {
   const e = { ADMIN_PIN: '654321' };
   assert.equal((await adminAuth({ request: post({ pin: '000000' }, '1.2.3.4'), env: e })).status, 401);

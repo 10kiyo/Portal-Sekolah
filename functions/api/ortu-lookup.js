@@ -23,8 +23,7 @@ export async function onRequestPost({ request, env }) {
   try {
     let rows = [];
     if (/^[A-Z0-9]{4,12}$/.test(kode)) {
-      // Disesuaikan: query langsung ke tabel murid dengan kode_akses_ortu
-      rows = await get(`/murid?kode_akses_ortu=eq.${encodeURIComponent(kode)}&is_active=eq.true&select=id,nama_lengkap,nisn,nis,kelas_id,kelas(id,nama_kelas,wali_kelas_id)`);
+      rows = await get(`/murid?kode_akses_ortu=eq.${encodeURIComponent(kode)}&status=eq.aktif&select=id,nama_lengkap,nisn,nis,kelas_id,kelas_label,kelas(id,nama_kelas,wali_kelas_id)`);
     }
 
     if (!rows.length) {
@@ -47,32 +46,33 @@ export async function onRequestPost({ request, env }) {
       if (walasRow[0]) namaWalas = walasRow[0].nama_lengkap;
     }
 
-    // Ambil data presensi & nilai dari skema 03_akademik.sql
+    // Kolom mengikuti 03_academic_module.sql.
     const [presensi, nilai] = await Promise.all([
-      get(`/kehadiran?murid_id=eq.${muridId}&select=tanggal_presensi,status_kehadiran,keterangan&order=tanggal_presensi.desc&limit=100`),
-      get(`/nilai?murid_id=eq.${muridId}&select=id,mata_pelajaran,jenis_penilaian,nilai,catatan,created_at&order=created_at.desc&limit=100`)
+      get(`/kehadiran?murid_id=eq.${muridId}&select=tanggal,status,catatan&order=tanggal.desc&limit=100`),
+      get(`/nilai?murid_id=eq.${muridId}&select=id,mata_pelajaran,jenis_penilaian,nilai,tanggal&order=tanggal.desc&limit=100`)
     ]);
 
-    // Modul Kesiswaan: BK & Catatan Kedisiplinan (04_kesiswaan.sql)
+    // Kolom mengikuti 04_student_services.sql.
     let disiplin = null;
     try {
       const hari = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10), y = +hari.slice(0, 4), month = +hari.slice(5, 7);
       const ganjil = month >= 7, sem = ganjil ? `${y}/${y + 1} Ganjil` : `${y - 1}/${y} Genap`;
       const a = ganjil ? `${y}-07-01` : `${y}-01-01`, b = ganjil ? `${y}-12-31` : `${y}-06-30`;
+      const mulai = encodeURIComponent(`${a}T00:00:00+07:00`), selesai = encodeURIComponent(`${b}T23:59:59+07:00`);
 
-      const cs = await get(`/bk_catatan?murid_id=eq.${muridId}&tanggal=gte.${a}&tanggal=lte.${b}&select=tanggal,kategori,jenis_pelanggaran,poin,tindak_lanjut&order=tanggal.desc&limit=200`);
+      const cs = await get(`/bk_catatan?murid_id=eq.${muridId}&created_at=gte.${mulai}&created_at=lte.${selesai}&select=created_at,kategori,deskripsi,poin,tindakan&order=created_at.desc&limit=200`);
       
       if (cs && cs.length) {
         disiplin = {
           semester: sem,
-          poin: cs.filter(c => c.kategori !== 'prestasi').reduce((t, c) => t + (c.poin || 0), 0),
-          prestasi: cs.filter(c => c.kategori === 'prestasi').reduce((t, c) => t + (c.poin || 0), 0),
+          poin: cs.filter(c => String(c.kategori).toLowerCase() !== 'prestasi').reduce((t, c) => t + (c.poin || 0), 0),
+          prestasi: cs.filter(c => String(c.kategori).toLowerCase() === 'prestasi').reduce((t, c) => t + (c.poin || 0), 0),
           riwayat: cs.map(c => ({ 
-            tanggal: c.tanggal, 
+            tanggal: c.created_at,
             kategori: c.kategori, 
-            jenis: c.jenis_pelanggaran || c.kategori, 
+            jenis: c.deskripsi || c.kategori,
             poin: c.poin || 0,
-            tindak: c.tindak_lanjut || '-'
+            tindak: c.tindakan || '-'
           }))
         };
       }
@@ -82,8 +82,8 @@ export async function onRequestPost({ request, env }) {
       nama: m.nama_lengkap,
       nisn: m.nisn || '',
       nis: m.nis || '',
-      kelas: m.kelas ? m.kelas.nama_kelas : '',
-      kehadiran: presensi.map(p => ({ tanggal: p.tanggal_presensi, status: p.status_kehadiran, keterangan: p.keterangan || '' })),
+      kelas: m.kelas ? m.kelas.nama_kelas : (m.kelas_label || ''),
+      kehadiran: presensi.map(p => ({ tanggal: p.tanggal, status: p.status, keterangan: p.catatan || '' })),
       disiplin,
       adaWalas: Boolean(waliKelasId),
       walas: namaWalas,
@@ -91,7 +91,7 @@ export async function onRequestPost({ request, env }) {
         mapel: x.mata_pelajaran,
         jenis: x.jenis_penilaian,
         nilai: x.nilai,
-        catatan: x.catatan || ''
+        catatan: ''
       }))
     });
   } catch (e) {

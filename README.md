@@ -64,7 +64,7 @@ Login memakai **username + PIN**. Menu yang muncul menyesuaikan **peran** masing
 | <img src="docs/icons/book.svg" width="18" alt=""> **Pustakawan** | Desain & cetak **kartu pelajar** (PDF), peminjaman buku, seleksi pendaftar ekskul & club |
 | <img src="docs/icons/coin.svg" width="18" alt=""> **Keuangan** | Kas, laporan, proposal, dan LPJ |
 | <img src="docs/icons/mail.svg" width="18" alt=""> **Persuratan** | Surat masuk, surat keluar, agenda, dan **pembuat surat otomatis** |
-| <img src="docs/icons/monitor.svg" width="18" alt=""> **Operator** | Kelola akun guru & staf, data murid (termasuk tempel dari Excel), dan pekerjaan |
+| <img src="docs/icons/monitor.svg" width="18" alt=""> **Operator** | Kelola akun guru & staf, data murid (termasuk tempel dari Excel), unduh kode akses orang tua, dan pekerjaan |
 | <img src="docs/icons/chat.svg" width="18" alt=""> **BK** | Kedisiplinan + poin + Surat Peringatan, konseling rahasia, surat panggilan orang tua |
 | <img src="docs/icons/building.svg" width="18" alt=""> **Sarpras** | Kelola katalog fasilitas sekolah |
 | <img src="docs/icons/newspaper.svg" width="18" alt=""> **Admin Info** | Kelola Info Terbaru, Galeri Prestasi, dan verifikasi Jurnal Murid |

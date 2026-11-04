@@ -18,7 +18,7 @@ export async function onRequest({ request, env }) {
       const [ks, ps, mu] = await Promise.all([
         get('/kegiatan?order=tanggal_kegiatan.desc&select=*'),
         get('/pendaftaran_kegiatan?order=created_at.desc&limit=10000&select=id,kegiatan_id,murid_id,status,nama_pengirim,tanggal_transfer,data,catatan_panitia,created_at,verified_at,bukti_path,murid(id,nama_lengkap,kelas(nama_kelas))'),
-        get('/murid?is_active=eq.true&select=id,nama_lengkap,kelas(nama_kelas)&limit=5000').catch(() => [])
+        get('/murid?status=eq.aktif&select=id,nama_lengkap,kelas(nama_kelas)&limit=5000').catch(() => [])
       ]).catch(() => null);
 
       if (!ks) return json(500, { error: 'Tabel kegiatan belum ada atau tidak terbaca di Supabase.' });
