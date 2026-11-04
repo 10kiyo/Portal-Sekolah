@@ -1,31 +1,38 @@
-# Skrip database (Supabase)
+# Skema Database & Migrasi — SI-TAQWA
 
-Jalankan di **Supabase → SQL Editor**, **berurutan sesuai nomor**. Urutan penting karena sebagian skrip memakai
-tabel/fungsi dari skrip sebelumnya. Semua skrip aman dijalankan ulang, kecuali pengecualian di bawah.
+Folder ini berisi seluruh skrip DDL (Data Definition Language) dan aturan migrasi database PostgreSQL untuk **Portal Sekolah SDS Islam At-Taqwa Rawamangun** yang di-host di **Supabase**.
 
-| No | Berkas | Isi | Butuh |
-|:-:|---|---|---|
-| 00 | `00-info.sql` | Tabel Info sekolah (pengumuman, agenda, surat) + bucket lampiran | – |
-| 00 | `00-kegiatan.sql` | Tabel Kegiatan & pendaftaran + bucket bukti transfer | – |
-| 01 | `01-jurnal.sql` | Jurnal Murid | 00-info |
-| 02 | `02-guru.sql` | Tabel guru & staf, username + PIN otomatis | – |
-| 03 | `03-peran.sql` | Peran & aturan akses per peran | 02, 00-kegiatan |
-| 04 | `04-foto-guru.sql` | Unggah foto profil guru | 02, 03 |
-| 05 | `05-kartu.sql` | Profil murid & desain kartu pelajar | 03 |
-| 06 | `06-kegiatan-tingkat.sql` | Kegiatan per tingkat & pendaftaran umum | 05, 00-kegiatan |
-| 07 | `07-ekskul-club.sql` | Pendaftaran ekskul & club | 03, 06 |
-| 08 | `08-fasilitas.sql` | Katalog fasilitas | 03 |
-| 09 | `09-bk.sql` | Bimbingan Konseling | 08 |
-| 10 | `10-peran-info.sql` | Peran Admin Info | 09 |
-| 11 | `11-galeri.sql` | Galeri Prestasi | bebas urutan |
-| 12 | `12-surat-generator.sql` | Pembuat surat | 03 |
+---
 
-> **Belum ada di repo:** skema dasar yang dibuat di luar repo ini (tabel `kelas_*` untuk Administrasi Kelas,
-> `daftar_tamu_gabungan`, `kehadiran`, `distribusi_tamu`, `pengaturan_admin`) dan `supabase-hapus-akun-email.sql`.
-> Ekspor dari database yang sudah jalan (lihat README utama > Yang Perlu Diketahui) dan simpan sebagai
-> `00-skema-dasar.sql`, jalankan paling awal.
+## 🛠️ Urutan Migrasi Database
 
-**Jangan jalankan ulang** `03-peran.sql`, `08-fasilitas.sql`, dan `10-peran-info.sql` setelah `09-bk.sql`
-(ketiganya menulis ulang aturan peran dan akan menolak nilai `bk`). Bila terlanjur, jalankan ulang `09-bk.sql`.
+Saat membangun database dari nol (*start from scratch*), jalankan skrip SQL di dalam folder `migrations/` **sesuai urutan penomoran berikut** via **Supabase SQL Editor**:
 
-Skrip baru: beri nomor berikutnya (`13-...sql`) dan tambahkan baris di tabel ini.
+| No | File | Deskripsi / Modul |
+|:--:|---|---|
+| **01** | `migrations/01_master_core.sql` | Enum global, tabel master `guru_staf`, `kelas`, dan `murid` |
+| **02** | `migrations/02_auth_and_roles.sql` | Tabel `guru_peran` & aturan keamanan dasar (Row Level Security / RLS) |
+| **03** | `migrations/03_akademik.sql` | Modul Akademik: tabel `kehadiran`, `nilai`, dan `jurnal_murid` |
+| **04** | `migrations/04_kesiswaan.sql` | Modul Kesiswaan: tabel `bk_catatan`, `ekskul`, `pendaftaran_ekskul`, dan `spmb_pendaftar` |
+| **05** | `migrations/05_operasional.sql` | Modul Operasional: tabel `buku_tamu`, `surat`, `fasilitas`, dan `info_sekolah` |
+
+> ⚠️ **Penting:** Urutan di atas sangat krusial karena tabel-tabel transaksi pada skrip selanjutnya bergantung pada *Foreign Key* dari tabel master (`guru_staf`, `kelas`, `murid`) di skrip `01_master_core.sql`.
+
+---
+
+## 🔐 Hak Akses & Keamanan (RLS)
+
+- Seluruh tabel utama telah dilengkapi dengan **Row Level Security (RLS)**.
+- Akses publik hanya diberikan untuk data non-sensitif (Info Sekolah, Fasilitas, Profil Umum Guru).
+- Hak akses administrasi (BK, Keuangan, Persuratan, dll.) diverifikasi berdasarkan peran (*roles*) yang terdaftar di tabel `guru_peran`.
+- *Service Role Key* Supabase hanya boleh digunakan pada lingkungan aman (Cloudflare Workers Backend) dan **tidak boleh dipublish** ke frontend statis.
+
+---
+
+## 🚀 Langkah Seeding Data Awal
+
+Setelah menjalankan migrasi `01` sampai `05`:
+
+1. Buat minimal satu akun administrator di tabel `guru_staf`.
+2. Masukkan ID guru tersebut ke tabel `guru_peran` dengan `role = 'admin'`.
+3. Import data master siswa dan guru dari file CSV/Excel via **Supabase Dashboard → Table Editor → Import CSV**.
