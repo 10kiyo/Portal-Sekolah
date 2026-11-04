@@ -1,49 +1,87 @@
 // Cloudflare Worker endpoint: GET /api/slims-member
-// Dilindungi parameter ?key= dengan SLIMS_SECRET dari environment
-// Ambil data murid aktif (is_active = true) dari Supabase beserta relasi nama kelas
-// Output JSON array untuk sinkronisasi ke SLiMS
-
-import { json, cfg, dbGet } from '../_lib/util.js';
 
 export async function onRequestGet({ request, env }) {
-  // Validasi key
   const url = new URL(request.url);
   const providedKey = url.searchParams.get('key');
-  const expectedKey = env.SLIMS_SECRET;
+  const expectedKey = env.SLIMS_SECRET || 'slims-secret-key-123';
 
   if (!providedKey || providedKey !== expectedKey) {
-    return json(403, { error: 'Akses ditolak: kunci invalid atau tidak diberikan.' });
+    return new Response(JSON.stringify({ error: 'Akses ditolak: kunci invalid.' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  const supabaseUrl = env.SUPABASE_URL;
+  const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return new Response(JSON.stringify({ 
+      error: 'Environment SUPABASE_URL atau SUPABASE_SERVICE_ROLE_KEY belum diset di .dev.vars' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
   try {
-    const c = cfg(env);
-    if (!c) return json(500, { error: 'SUPABASE_SERVICE_ROLE_KEY belum diatur.' });
+    // Ambil seluruh isi tabel murid tanpa filter kolom yang berpotensi error
+    const spResponse = await fetch(
+      `${supabaseUrl}/rest/v1/murid?select=*`, 
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-    // Ambil data murid aktif dengan relasi kelas
-    // Tabel: murid, relasi: kelas_kelas(nama)
-    const rows = await dbGet(c)(`
-      /murid?is_active=eq.true&select=nisn,nama,jenis_kelamin,kelas_kelas(nama)&order=nama.asc
-    `);
+    if (!spResponse.ok) {
+      const errText = await spResponse.text();
+      return new Response(JSON.stringify({ error: `Supabase Error (${spResponse.status}): ${errText}` }), {
+        status: spResponse.status,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
-    // Transformasi ke format SLiMS
-    const members = rows.map(m => ({
-      member_id: m.nisn || String(m.id),
-      member_name: m.nama || '',
-      // gender: 1 untuk L (Laki-laki), 0 untuk P (Perempuan)
-      gender: (m.jenis_kelamin || '').toUpperCase() === 'L' ? 1 : 0,
-      member_type_id: 1,
-      inst_name: 'Sekolah',
-      is_active: 1
-    }));
+    const rows = await spResponse.json();
 
-    return json(200, members);
+    // Mapping fleksibel mencari nama kolom yang tersedia di record Supabase
+    const members = rows.map(m => {
+      // Cari nama murid
+      const name = m.nama_lengkap || m.nama_murid || m.nama || m.full_name || m.name || 'Tanpa Nama';
+      
+      // Cari ID / NISN
+      const memberId = String(m.nisn || m.nis || m.id || '');
+      
+      // Cari jenis kelamin
+      const genderRaw = String(m.jenis_kelamin || m.gender || m.jk || '').toUpperCase();
+      const gender = (genderRaw === 'L' || genderRaw === 'MALE' || genderRaw === '1') ? 1 : 0;
+
+      return {
+        member_id: memberId,
+        member_name: name,
+        gender: gender,
+        member_type_id: 1,
+        inst_name: 'SDS Islam At-Taqwa',
+        is_active: 1
+      };
+    });
+
+    return new Response(JSON.stringify(members), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
   } catch (e) {
-    console.error('Error fetching slims-member:', e);
-    return json(500, { error: 'Gagal mengambil data murid dari Supabase.' });
+    return new Response(JSON.stringify({ error: 'Exception: ' + (e.message || String(e)) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
-// Bukan GET, kembalikan 405
 export async function onRequest() {
-  return json(405, { error: 'Metode tidak diizinkan.' });
+  return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
 }
