@@ -147,5 +147,3 @@ export async function onRequest({ request, env }) {
     return json(500, { error: 'Terjadi kesalahan pada server.' });
   }
 }
-
-export const onRequest = () => json(405, { error: 'Metode tidak diizinkan.' });
