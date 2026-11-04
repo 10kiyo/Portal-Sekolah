@@ -39,6 +39,14 @@ const TITLES = {
   ortu: 'Pantau Belajar Anak',
   'si-taqwa': 'SI-TAQWA — Sistem Informasi Terpadu At-Taqwa'
 };
+// ===== Sinkronisasi ke SLiMS =====
+const SLIMS_SYNC_URL = ''; // Isi dengan URL tunnel: https://<url>.trycloudflare.com/slims/slims_sync.php?pass=rahasia123
+
+function showLoading(show) {
+  const btn = document.getElementById('syncSlimsBtn');
+  if (show) {
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="margin-right: 0.5rem;"><path d="M12 5.75v12.17l-3.21 2.06a1 1 0 0 1-1.63-.95l.93-2.86a1 1 0 0 1 1.52-.6l2.55 1.06a1 1 0 0 1 .81.41l-1.88 5.28a1 1 0 0 1-.55.87l-2.86-1.91a1 1 0 0 1-.98-.6l-.93 2.86a1 1 0 0 1-.6 1.52l-2.06 3.21a1 1 0 0 1-.41.81l-1.06 2.55a1 1 0 0 1-.6.81l-5.28-1.88a1 1 0 0 1-.87-.55l-1.91-2.86a1 1 0 0 1-.6-.98l-2.86 1.91a1 1 0 0 1-.98-.6l-2.86-1.91a1 1 0 0 1-1.52-.6l-.93 2.86a1 1 0 0 1-.41.81l-2.55-1.06a1 1 0 0 1-.81-.41l5.28 1.88a1 1 0 0 1 .41.81l1.91 2.86a1 1 0 0 1 .6.98l2.86-1.91a1 1 0 0 1 .6-.98l2.86 1.91a1 1 0 0 1 1.52.6l.93-2.86a1 1 0 0 1 1.52.6l2.06-3.21a1 1 0 0 1 .41-.81l1.06-2.55a1 1 0 0 1 .6-.81l5.28-1.88a1 1 0 0 1 .81-.41l1.91-2.86a1 1 0 0 1 .6-.98l2.86 1.91a1 1 0 0 1 1.52.6l.93-2.86a1 1 0 0 1 1.52.6l2.06-3.21a1 1 0 0 1 .41-.81l-1.06-2.55a1 1 0 0 1-.6-.81l-5.28 1.88a1 1 0 0 1-.81-.41l-1.91 2.86a1 1 0 0 1-.6.98l-2.86-1.91a1 1 0 0 1-.98-.6l-2.86 1.91a1 1 0 0 1-.6-.98l-2.86-1.91a1 1 0 0 1-1.52-.6l-.93 2.86a1 1 0 0 1-.41.81l-2.55 1.06a1 1 0 0 1-.81.41l5.28-1.88a1 1 0 0 1-.41-.81l-1.91-2.86a1 1 0 0 1-.6-.98l-2.86-1.91a1 1 0 0 1-1.52-.6l-.93-2.86a1 1 0 0 1-1.52-.6l-2.06 3.21a1 1 0 0 1-.41.81l1.06 2.55a1 1 0 0 1 .6.81l5.28 1.88a1 1 0 0 1 .81.41l1.91 2.86a1 1 0 0 1 .6.98l2.86-1.91a1 1 0 0 1 .6-.98l2.86 1.91a1 1 0 0 1 1.52.6l.93-2.86a1 1 0 0 1 1.52.6l2.06-3.21a1 1 0 0 1 .41-.81l-1.06-2.55a1 1 0 0 1-.6-.81l-5.28-1.88a1 1 0 0 1-.81-.41l-1.91 2.86a1 1 0 0 1-.6.98l-2.86-1.91a1 1 0 0 1-.98-.6l-2.86 1.91a1 1 0 0 1-.6-.98l-2.86-1.91a1 1 0 0 1-1.52-.6z';
 
 
 // ===== Dropdown "Profil" dan "Kegiatan" (panel fixed agar tidak terpotong menu yang bisa digulir) =====
@@ -262,3 +270,49 @@ route();
     io.observe(document.querySelector('.hx .st'));
   } else go();
 })();
+// ===== Sinkronisasi ke SLiMS =====
+const SLIMS_SYNC_URL = ''; // Isi dengan URL tunnel: https://<url>.trycloudflare.com/slims/slims_sync.php?pass=rahasia123
+
+const syncSlimsBtn = document.getElementById('syncSlimsBtn');
+
+syncSlimsBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  if (!confirm('Yakin ingin melakukan sinkronisasi data ke SLiMS?')) return;
+  
+  showLoading(true);
+  try {
+    const response = await fetch(SLIMS_SYNC_URL, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      alert('Sinkronisasi berhasil!\n\n' + (data.message || 'Data berhasil disinkronkan ke SLiMS'));
+    } else {
+      alert('Error: ' + (data.error || data.message || 'Gagal sinkronisasi'));
+    }
+  } catch (error) {
+    alert('Terjadi error: ' + error.message);
+  } finally {
+    showLoading(false);
+  }
+});
+
+function showLoading(show) {
+  const btn = document.getElementById('syncSlimsBtn');
+  if (show) {
+    btn.disabled = true;
+    btn.innerHTML = 'Loading <span class="spinner"></span>';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="margin-right: 0.5rem;"><path d="M2 3h20v2H2V3zm2-1h16v11H4V2zm4 5c5.523 0 10 4.477 10 10s-4.477 10-10 10S4 18.523 4 13s4.477-10 10-10zm-2.1 6.1l1.415 1.415 1.722-1.722-1.415-1.415-1.722 1.722zM 9.984 9.984l1.414 1.414 2.125-2.125-1.414-1.414L9.984 7.868 8.262 6.146z"/></svg> Sinkronkan SLiMS';
+  }
+}
+
+// Initialize
+showLoading(false);
+}
