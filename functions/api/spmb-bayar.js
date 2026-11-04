@@ -9,29 +9,38 @@ const tokenPalsu = () => crypto.randomUUID();
 export async function onRequestPost({ request, env }) {
   const c = cfg(env);
   if (!c) return json(500, { error: 'Layanan belum siap.' });
-  if ((request.headers.get('content-type') || '').includes('application/json'))
+
+  if ((request.headers.get('content-type') || '').includes('application/json')) {
     return cekStatus(request, env, c);
-  if (!(request.headers.get('content-type') || '').includes('multipart/form-data'))
+  }
+  if (!(request.headers.get('content-type') || '').includes('multipart/form-data')) {
     return json(400, { error: 'Kirim formulir pembayaran dengan format yang benar.' });
+  }
 
   let f;
   try { f = await request.formData(); }
   catch (e) { return json(400, { error: 'Data pembayaran tidak terbaca. Coba kirim ulang.' }); }
-  if (f.get('website')) return json(200, { ok: true, token: tokenPalsu() });
-  if (await terlaluSering(env, request, 'spmb-bayar', 8))
-    return json(429, { error: 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.' });
 
-  if (f.get('jalur') !== 'luar')
+  if (f.get('website')) return json(200, { ok: true, token: tokenPalsu() });
+  if (await terlaluSering(env, request, 'spmb-bayar', 8)) {
+    return json(429, { error: 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.' });
+  }
+
+  if (f.get('jalur') !== 'luar') {
     return json(400, { error: 'Pembayaran formulir hanya tersedia untuk jalur TK Luar.' });
+  }
+
   const nama = String(f.get('nama') || '').replace(/\s+/g, ' ').trim().slice(0, 80);
   const kontak = String(f.get('kontak') || '').trim().slice(0, 40);
   const hp = kontak.replace(/\D/g, '');
-  if (!nama || hp.length < 9 || hp.length > 15)
+  if (!nama || hp.length < 9 || hp.length > 15) {
     return json(400, { error: 'Isi nama calon murid dan nomor WhatsApp dengan benar.' });
+  }
 
   const p = await pengaturan(dbGet(c));
-  if (fase(p.luar, 'luar', hariIni()) !== 'dibuka')
+  if (fase(p.luar, 'luar', hariIni()) !== 'dibuka') {
     return json(400, { error: 'Pendaftaran jalur TK Luar tidak sedang dibuka.' });
+  }
 
   const parsed = await bacaBerkas(f.get('bukti'), { pdf: true, maks: MAX_BUKTI });
   if (parsed.err) return json(400, { error: `Bukti transfer ${parsed.err}` });
@@ -40,12 +49,14 @@ export async function onRequestPost({ request, env }) {
   const id = crypto.randomUUID();
   const path = `${id}/bukti.${parsed.ext}`;
   let uploaded = false;
+
   try {
     const upload = await fetch(`${c.URL}/storage/v1/object/bukti-bayar/${path}`, {
       method: 'POST',
       headers: { ...c.h, 'Content-Type': parsed.mime },
-      body: parsed.file
+      body: parsed.bytes || parsed.file
     });
+
     if (!upload.ok) return json(500, { error: 'Gagal mengunggah bukti pembayaran. Coba lagi beberapa saat.' });
     uploaded = true;
 
@@ -54,11 +65,13 @@ export async function onRequestPost({ request, env }) {
       headers: { ...headerTulis(c), Prefer: 'return=representation' },
       body: JSON.stringify({ id, nama, kontak, file_path: path })
     });
+
     if (!saved.ok) {
       await fetch(`${c.URL}/storage/v1/object/bukti-bayar/${path}`, { method: 'DELETE', headers: c.h });
       uploaded = false;
-      if (saved.status === 404 || saved.status === 400)
-        return json(500, { error: 'Tabel pembayaran belum tersedia. Jalankan supabase/16-spmb-bukti-bayar.sql di Supabase SQL Editor.' });
+      if (saved.status === 404 || saved.status === 400) {
+        return json(500, { error: 'Tabel pembayaran belum tersedia di database.' });
+      }
       return json(500, { error: 'Gagal menyimpan data pembayaran. Coba lagi beberapa saat.' });
     }
 
@@ -75,10 +88,14 @@ export async function onRequestPost({ request, env }) {
 async function cekStatus(request, env, c) {
   let b = {};
   try { b = await request.json(); } catch (e) {}
-  if (b.action !== 'cek' || !UUID.test(String(b.token || '')))
+
+  if (b.action !== 'cek' || !UUID.test(String(b.token || ''))) {
     return json(400, { error: 'Token pembayaran tidak valid.' });
-  if (await terlaluSering(env, request, 'spmb-bayar-cek', 30))
+  }
+  if (await terlaluSering(env, request, 'spmb-bayar-cek', 30)) {
     return json(429, { error: 'Terlalu banyak pemeriksaan. Coba lagi beberapa saat.' });
+  }
+
   try {
     const rows = await dbGet(c)(`/spmb_bukti_bayar?token=eq.${b.token}&select=status,catatan,dipakai_oleh&limit=1`);
     const row = rows[0];
