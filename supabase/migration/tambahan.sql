@@ -537,4 +537,4 @@ ALTER TABLE public.guru_peran ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.guru_peran FROM PUBLIC, anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
-COMMIT;
+COMMIT;    kelas_id,
