@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fase, tingkatDari, bolehTingkat, bacaFoto, hmac, same, adminOk, cfg, supabaseUrl, SUPABASE_URL_BAWAAN, kunciUmum, json } from '../functions/_lib/util.js';
+import { fase, tingkatDari, bolehTingkat, bacaFoto, hmac, same, adminOk, cfg, cariAnak, supabaseUrl, SUPABASE_URL_BAWAAN, kunciUmum, json } from '../functions/_lib/util.js';
 
 test('fase(): urutan aturan pendaftaran kegiatan', () => {
   const k = { aktif: true, buka_daftar: '2026-07-01', tutup_daftar: '2026-07-10', tanggal_kegiatan: '2026-07-12', kuota: 10 };
@@ -72,6 +72,38 @@ test('adminOk(): token valid, kedaluwarsa, dan palsu', async () => {
 test('kunciUmum(): nama+sekolah yang sama (beda huruf/spasi) = kunci sama', async () => {
   assert.equal(await kunciUmum('Budi  Santoso', 'SDI At-Taqwa'), await kunciUmum('budi santoso', 'sdi at taqwa'));
   assert.notEqual(await kunciUmum('Budi', 'A'), await kunciUmum('Budi', 'B'));
+});
+
+test('cariAnak(): memakai ID murid kanonis untuk kode akses orang tua', async () => {
+  const fetchLama = globalThis.fetch;
+  globalThis.fetch = async url => {
+    const u = new URL(url);
+    assert.equal(u.pathname, '/rest/v1/murid');
+    assert.equal(u.searchParams.get('kode_akses_ortu'), 'eq.ABCD1234');
+    return new Response(JSON.stringify([{
+      id: 'murid-uuid',
+      guest_id: 'roster-17',
+      nama_lengkap: 'Ayu',
+      kelas_label: '2A',
+      kelas: null
+    }]), { status: 200 });
+  };
+  try {
+    const result = await cariAnak(new Request('https://portal.test/api/ortu', {
+      headers: { 'CF-Connecting-IP': '192.0.2.1' }
+    }), 'abcd1234', cfg({ SUPABASE_SERVICE_ROLE_KEY: 'sb_test' }), {});
+    assert.deepEqual(result.anak, {
+      key: 'roster-17',
+      id: 'murid-uuid',
+      nama: 'Ayu',
+      nama_lengkap: 'Ayu',
+      kelas: '2A',
+      nama_kelas: '2A',
+      tingkat: [2]
+    });
+  } finally {
+    globalThis.fetch = fetchLama;
+  }
 });
 
 test('json(): status, tipe, dan tanpa cache', async () => {

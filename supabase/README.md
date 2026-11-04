@@ -11,16 +11,17 @@ skrip berikut satu per satu melalui Supabase SQL Editor:
 | 4 | `migration/04_student_services.sql` | BK, ekskul, pendaftaran ekskul, SPMB |
 | 5 | `migration/05_admin_operations.sql` | buku tamu, surat, fasilitas, info sekolah |
 | 6 | `migration/tambahan.sql` | kolom kompatibilitas aplikasi, profil murid, tugas operator, dan kebijakan RLS |
+| 7 | `migration/07_legacy_app_compat.sql` | tabel modul `kelas_*`, BK, keuangan, kegiatan, SPMB, daftar murid, dan kebijakan RLS sesuai Worker/JS |
 
 `tambahan.sql` menyesuaikan `guru_staf` dengan login dan Administrasi Guru & Staf
 tanpa menyalin `pin_hash` ke PIN teks biasa. Jalankan skrip itu setelah migrasi
-01–05. Pada database yang sudah berisi data, buat cadangan terlebih dahulu dan
+01–05. Jalankan migration 07 setelah `tambahan.sql`. Pada database yang sudah berisi data, buat cadangan terlebih dahulu dan
 tinjau perubahan sebelum menjalankannya. Jangan jalankan ulang migrasi dasar
 01–05 pada database yang sudah terpasang.
 
 ## Akun Operator pertama
 
-1. Terapkan migrasi 01–06 dan isi binding Cloudflare Worker `ADMIN_PIN` serta
+1. Terapkan migrasi 01–07 dan isi binding Cloudflare Worker `ADMIN_PIN` serta
    konfigurasi Supabase sesuai panduan deployment di README utama.
 2. Buka halaman setup Operator, masukkan `ADMIN_PIN`, lalu simpan username dan
    PIN yang ditampilkan. Endpoint setup hanya membuat akun awal jika belum ada
@@ -32,23 +33,30 @@ Jangan mengisi `pin_hash` dengan PIN dan jangan memublikasikan
 `SUPABASE_SERVICE_ROLE_KEY`. Endpoint login memakai service role di Worker;
 frontend tetap memakai kunci anon/publishable.
 
-## Batas cakupan migrasi saat ini
+## Kontrak aplikasi lama
 
-Migrasi ini belum membentuk seluruh tabel yang dipakai kode lama. Di antaranya
-`kelas_kelas`, `kelas_murid`, tabel akademik `kelas_*`, `daftar_tamu_gabungan`,
-`kegiatan`, dan `pendaftaran_kegiatan`. Modul yang memerlukan tabel tersebut
-belum dapat digunakan hanya dengan menjalankan enam file di atas. Buat atau
-terapkan migrasi khususnya sebelum mengaktifkan modul terkait.
+Migration 07 melengkapi tabel dan kolom yang dipakai Worker dan JS lama,
+termasuk `kelas_*`, BK, keuangan, fasilitas, surat, perpustakaan, kegiatan,
+SPMB, dan buku tamu. Tabel-tabel sensitif memakai RLS berbasis peran; data
+pendaftaran publik diakses melalui Worker dengan service role, bukan dari
+browser.
 
-Impor Operator menyimpan data tambahan ke `murid_profil`. Trigger pada migrasi
-06 membuat atau memperbarui baris `murid` inti dan membuat kode akses orang tua.
+Impor roster awal ke tabel `daftar_tamu_gabungan` dengan kolom wajib
+`guest_id`, `guest_name`, `jenis_undangan`, dan `instansi_kelas`. Kolom
+`nomor_whatsapp` opsional. `guest_id` harus stabil dan unik. Tabel ini bukan
+view dari `buku_tamu`; buku tamu operasional tetap berada di tabel terpisah.
+Jika migration tambahan versi lama sebelumnya sudah membuat view bernama
+`daftar_tamu_gabungan`, migration 07 menghapus view itu lalu membuat tabel roster
+yang benar, sehingga roster perlu diimpor kembali.
+
+Impor Operator menyimpan data tambahan ke `murid_profil`. Trigger pada
+`tambahan.sql` membuat atau memperbarui baris `murid` inti dan membuat kode akses orang tua.
 Kode tidak ditaruh di `murid_profil`: Operator dapat mengunduh CSV-nya dari
 tombol **Unduh kode akses orang tua** agar kode tidak ikut terbaca oleh akun
-guru. CSV hanya mencakup murid aktif. Jika ada baris kelas cocok di `kelas`,
-murid ditautkan ke kelas itu; kalau tidak, nama kelas disimpan sebagai label
-dan tetap muncul di pantau belajar.
+guru. Migration 07 mengisi `kelas_murid.kode_akses` dari kode kanonis itu dan
+menghubungkan impor kelas dengan tabel murid inti, sehingga pantau belajar dan
+pendaftaran kegiatan memakai ID murid yang sama.
 
-Beberapa endpoint sudah diselaraskan dengan skema bernomor, tetapi belum semua
-modul aplikasi menggunakan skema yang sama. Sebelum impor data produksi, uji
-alur login, pengelolaan akun, impor profil murid, dan baca data orang tua pada
-proyek Supabase uji.
+Jalankan seluruh urutan terlebih dahulu di proyek Supabase uji. Uji login,
+pengelolaan akun, impor roster, kode akses orang tua, presensi kelas, pendaftaran
+kegiatan, BK, serta fasilitas sebelum memakai database produksi.

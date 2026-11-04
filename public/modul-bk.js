@@ -3,7 +3,7 @@
    Ringkasan | Catat kedisiplinan | Rekap & poin | Tindak lanjut & SP | Konseling (rahasia) | Orang tua & surat | Kelas saya | Pengaturan.
    Dimuat SETELAH modul-staf.js; memakai $, esc, sb, S, run, msg, csv, today, show dari kelas.html dan
    MODUL, dataSiswa, kelasDari, kelasX, semua, urut, opsi, tglID, tglPanjang, BLN, KARTU_BAWAAN dari modul-staf.js.
-   Tabel & aturan akses: 09-bk.sql.
+   Tabel & aturan akses: migration/07_legacy_app_compat.sql.
    ============================================================ */
 const BKS = { t: 0, guruId: null, nama: '', saya: new Set(), semua: false, pegangan: [], jenis: [], atur: {}, murid: [] };
 const BK_KAT = { terlambat: 'Terlambat', atribut: 'Atribut tidak lengkap', pelanggaran: 'Pelanggaran', prestasi: 'Prestasi' };
@@ -55,7 +55,7 @@ async function bkInit(paksa) {
 }
 const bkJalan = f => async (...a) => {
   try { await bkInit(); await f(...a); }
-  catch (e) { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan 09-bk.sql sudah dijalankan di Supabase dan akunmu berperan bk (atau peran tambahan bk).</p>`; }
+  catch (e) { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan migration 07_legacy_app_compat.sql sudah dijalankan di Supabase dan akunmu berperan bk (atau peran tambahan bk).</p>`; }
 };
 const bkMurid = () => BKS.murid.filter(x => BKS.semua || !BKS.saya.size || BKS.saya.has(kelasX(x)));
 const bkKelasList = () => kelasDari(bkMurid());

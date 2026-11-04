@@ -5,11 +5,11 @@
    Persuratan: surat masuk, surat keluar, agenda surat.
    Operator  : akun guru & staf, data murid, daftar pekerjaan.
    Dimuat SEBELUM skrip utama kelas.html; memakai $, esc, sb, S, run, msg, csv, allGuests, today, resize dari sana.
-   Tabel & aturan akses: 03-peran.sql.
+   Tabel & aturan akses: migration/07_legacy_app_compat.sql.
    ============================================================ */
 const MODUL = {};
 // Foto profil guru/staf: diunggah sendiri oleh orangnya ke bucket publik "foto-guru" (<uid>.jpg), lalu kolom guru_staf.foto-nya
-// diisi lewat fungsi simpan_foto_saya() sehingga langsung tampil di halaman Guru & Staff. Lihat 04-foto-guru.sql.
+// diisi lewat fungsi simpan_foto_saya() pada migration/07_legacy_app_compat.sql.
 async function unggahFotoGuru(file) {
   const u = (await sb.auth.getUser()).data.user.id, path = u + '.jpg';
   const up = await sb.storage.from('foto-guru').upload(path, await resizeProfil(file, 600), { contentType: 'image/jpeg', upsert: true, cacheControl: '3600' });
@@ -77,7 +77,7 @@ function pratinjauBerkas(url, judul, pdf = false) {
 /* ================= PUSTAKAWAN ================= */
 /* ================= PUSTAKAWAN: KARTU PELAJAR =================
    Data dasar (nama, kelas, ID) dari daftar_tamu_gabungan; data tambahan (NIS, NISN, tempat/tanggal lahir, alamat, foto, dst)
-   dari tabel murid_profil; tampilan kartu disimpan di kartu_desain. Semua tabel: 05-kartu.sql.
+   dari tabel murid_profil; tampilan kartu disimpan di kartu_desain. Skema kartu ada di migration/07_legacy_app_compat.sql.
    Kolom BARU di murid_profil otomatis muncul sebagai pilihan bagian kartu. PDF dibuat di browser (html2canvas + jsPDF). */
 const KARTU_W = 85.6, KARTU_H = 54;                        // mm (ukuran CR80)
 const KARTU_SISTEM = ['guest_id', 'nama_ref', 'foto_path', 'created_at', 'updated_at', 'nama', 'kelas', 'jenis', 'nonaktif', 'sumber'];   // kolom murid_profil yang bukan bagian kartu
@@ -217,7 +217,7 @@ MODUL.kartu = async function (bawaan) {
   const y = new Date().getFullYear(), ta = new Date().getMonth() >= 6 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
   let kel = kls[0], cari = '', d = susunDesain(saved), pilih = new Set(), tok = 0;
   const info = _profilErr
-    ? `<p class="msg err">Data tambahan murid (NIS, NISN, tempat/tanggal lahir, alamat) belum bisa dibaca: ${esc(_profilErr)}. Jalankan <b>05-kartu.sql</b> di Supabase > SQL Editor, lalu klik "Muat ulang data".</p>`
+    ? `<p class="msg err">Data tambahan murid (NIS, NISN, tempat/tanggal lahir, alamat) belum bisa dibaca: ${esc(_profilErr)}. Jalankan <b>migration/tambahan.sql</b> di Supabase > SQL Editor, lalu klik "Muat ulang data".</p>`
     : !_profil.size ? '<p class="msg err">Tabel murid_profil masih kosong, atau akun ini tidak punya akses membacanya. Bagian selain nama, kelas, dan ID akan tampil "-".</p>' : '';
 
   $('#view').innerHTML = `<div class="noprint"><h2>Kartu pelajar</h2>
@@ -295,7 +295,7 @@ MODUL.kartu = async function (bawaan) {
   };
   $('#kSave').onclick = async () => {
     const { error } = await sb.from('kartu_desain').upsert({ id: 'utama', config: d, updated_at: new Date().toISOString() });
-    msg(error ? `Gagal menyimpan: ${error.message}. Jalankan 05-kartu.sql bila tabel kartu_desain belum ada.` : 'Tampilan kartu tersimpan dan dipakai semua pustakawan.', !!error);
+    msg(error ? `Gagal menyimpan: ${error.message}. Jalankan migration/07_legacy_app_compat.sql bila tabel kartu_desain belum ada.` : 'Tampilan kartu tersimpan dan dipakai semua pustakawan.', !!error);
   };
   $('#kReset').onclick = () => { if (confirm('Kembalikan tampilan kartu ke pengaturan standar? (Belum disimpan sampai Anda klik Simpan tampilan.)')) MODUL.kartu(true); };
   $('#kReload').onclick = () => { _siswa = null; _profil = null; _fotoUrl.clear(); MODUL.kartu(); };
@@ -429,7 +429,7 @@ MODUL.ekskul = async function () {
 
 /* ================= SARANA & PRASARANA: KELOLA FASILITAS (Waka SarPras) =================
    Data tabel "fasilitas" + foto di bucket publik "fasilitas". Tampil di halaman publik fasilitas.html lewat /api/fasilitas.
-   Tabel & aturan akses: 08-fasilitas.sql. */
+   Tabel & aturan akses: migration/07_legacy_app_compat.sql. */
 const KAT_FAS = ['Ruang belajar', 'Ibadah', 'Olahraga & bermain', 'Perpustakaan & laboratorium', 'Kesehatan & sanitasi', 'Penunjang', 'Lainnya'];
 const KOND_FAS = { baik: ['Baik', '#19724d', '#eaf5ee'], perlu_perbaikan: ['Perlu perbaikan', '#a65f00', '#fdf0e3'], dalam_perbaikan: ['Sedang diperbaiki', '#bc3d33', '#fbeceb'] };
 const pathFasilitas = u => { const i = String(u).indexOf('/object/public/fasilitas/'); return i < 0 ? null : decodeURIComponent(String(u).slice(i + 25).split('?')[0]); };
@@ -522,7 +522,7 @@ MODUL.fasilitas = async function () {
         await run(sb.from('fasilitas').update({ foto: [...foto, ...baru] }).eq('id', id));
         if (hapus.length) await sb.storage.from('fasilitas').remove(hapus);
         dlg.close(); dlg.remove(); MODUL.fasilitas();
-      } catch (ex) { err.textContent = 'Gagal menyimpan: ' + (ex.message || ex) + '. Pastikan 08-fasilitas.sql sudah dijalankan dan akun berperan sarpras.'; b.disabled = false; b.textContent = 'Simpan'; }
+      } catch (ex) { err.textContent = 'Gagal menyimpan: ' + (ex.message || ex) + '. Pastikan migration/07_legacy_app_compat.sql sudah dijalankan dan akun berperan sarpras.'; b.disabled = false; b.textContent = 'Simpan'; }
     };
   }
 };
@@ -910,7 +910,7 @@ MODUL.akun = async function () {
 };
 
 /* Data murid: operator dapat melihat, mengubah, menambah, menonaktifkan, dan menempel banyak murid sekaligus dari Excel.
-   Perubahan disimpan sebagai lapisan di tabel murid_profil (06-kegiatan-tingkat.sql); daftar_tamu_gabungan tidak diubah.
+   Perubahan disimpan sebagai lapisan di tabel murid_profil (migration/tambahan.sql); daftar_tamu_gabungan tidak diubah.
    Guru menerima perubahan lewat sinkron murid otomatis di Administrasi Kelas: baris murid yang sama (guest_id) diperbarui di tempat,
    sehingga presensi, nilai, dan kode akses murid tidak hilang. Murid yang dinonaktifkan hanya disembunyikan, datanya tetap tersimpan. */
 const kosongNull = v => { v = String(v ?? '').trim(); return v === '' ? null : v; };
@@ -982,10 +982,10 @@ MODUL.data = async function () {
   _siswa = null; _profil = null;
   let g, prof;
   try { [g, prof] = await Promise.all([dataSiswa(), semua(() => sb.from('murid_profil').select('*').order('guest_id'))]); }
-  catch (e) { $('#view').innerHTML = `<p class="msg err">Data murid tidak bisa dibaca: ${esc((e && e.message) || e)}</p><p class="mut">Pastikan 05-kartu.sql dan 06-kegiatan-tingkat.sql sudah dijalankan.</p>`; return; }
+  catch (e) { $('#view').innerHTML = `<p class="msg err">Data murid tidak bisa dibaca: ${esc((e && e.message) || e)}</p><p class="mut">Pastikan migration tambahan.sql dan 07_legacy_app_compat.sql sudah dijalankan.</p>`; return; }
   if (prof[0] && !('nama_panggilan' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom nama_panggilan belum ada di tabel murid_profil. Jalankan 13-nama-panggilan.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
   if (prof[0] && !('jenis_kelamin' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom jenis_kelamin belum ada di tabel murid_profil. Jalankan 14-jenis-kelamin.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
-  if (prof[0] && !('nonaktif' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom baru belum ada di tabel murid_profil. Jalankan 06-kegiatan-tingkat.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
+  if (prof[0] && !('nonaktif' in prof[0])) { $('#view').innerHTML = '<p class="msg err">Kolom baru belum ada di tabel murid_profil. Jalankan migration/tambahan.sql di Supabase SQL Editor, lalu muat ulang halaman ini.</p>'; return; }
   const pm = new Map(prof.map(p => [String(p.guest_id), p]));
   const aktif = g.map(x => ({ id: String(x.guest_id), nama: String(x.guest_name).trim(), kelas: String(x.instansi_kelas || '').trim(), jenis: x.jenis_undangan, p: pm.get(String(x.guest_id)) || {}, aktif: true }));
   const idAktif = new Set(aktif.map(x => x.id));
@@ -1177,7 +1177,7 @@ MODUL.profilStaf = async function () {
   };
   $('#view').onchange = async e => {
     if (e.target.id !== 'pf' || !e.target.files[0]) return;
-    try { await unggahFotoGuru(e.target.files[0]); } catch (err) { return msg('Foto gagal diunggah: ' + (err.message || err) + '. Pastikan 04-foto-guru.sql sudah dijalankan.', true); }
+    try { await unggahFotoGuru(e.target.files[0]); } catch (err) { return msg('Foto gagal diunggah: ' + (err.message || err) + '. Pastikan migration 07_legacy_app_compat.sql sudah dijalankan.', true); }
     await loadProfil(); MODUL.profilStaf(); msg('Foto diganti dan langsung tampil di halaman Guru & Staff.');
   };
 };

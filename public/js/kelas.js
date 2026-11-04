@@ -152,7 +152,7 @@ function show() {
 // Menjalankan modul staf; bila gagal (mis. tabel belum dibuat) tampilkan pesan yang jelas.
 function jalan(f) {
   $('#view').innerHTML = '<p class="mut">Memuat...</p>';
-  Promise.resolve().then(() => f()).catch(e => { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan 03-peran.sql sudah dijalankan di Supabase.</p>`; });
+  Promise.resolve().then(() => f()).catch(e => { if (e && e.message) $('#view').innerHTML = `<p class="msg err">Gagal memuat: ${esc(e.message)}</p><p class="mut">Pastikan migration 07_legacy_app_compat.sql sudah dijalankan di Supabase.</p>`; });
 }
 async function murid(sertakanProfil = false) {
   const ms = await run(sb.from('kelas_murid').select('*').eq('kelas_id', S.kid).eq('aktif', true).order('nama'));
@@ -368,7 +368,7 @@ async function vGaleri() {
 }
 
 /* ---------- impor murid dari database tamu ---------- */
-// Daftar murid/tamu dari database. Memakai fungsi murid_gabungan() (daftar tamu + perubahan operator, 06-kegiatan-tingkat.sql);
+// Daftar murid/tamu dari database. Memakai fungsi murid_gabungan() dari migration 07.
 // bila fungsinya belum ada, memakai daftar_tamu_gabungan apa adanya seperti sebelumnya.
 let _pakaiGabungan = true;
 async function allGuests() {
@@ -471,7 +471,7 @@ async function vProfil() {
   $('#view').onchange = async e => {
     const t = e.target;
     if (t.id === 'pf' && t.files[0]) {
-      try { await unggahFotoGuru(t.files[0]); } catch (err) { return msg('Foto gagal diunggah: ' + (err.message || err) + '. Pastikan 04-foto-guru.sql sudah dijalankan.', true); }
+      try { await unggahFotoGuru(t.files[0]); } catch (err) { return msg('Foto gagal diunggah: ' + (err.message || err) + '. Pastikan migration 07_legacy_app_compat.sql sudah dijalankan.', true); }
       await again(); msg('Foto diganti dan langsung tampil di halaman Guru & Staff.');
     } else if (t.dataset.k) {
       await run(t.checked ? sb.from('kelas_ajar').insert({ kelas_id: t.dataset.k, mapel_id: t.dataset.m }) : sb.from('kelas_ajar').delete().eq('kelas_id', t.dataset.k).eq('mapel_id', t.dataset.m));

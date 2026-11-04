@@ -126,8 +126,10 @@ export async function onRequestPost({ request, env }) {
           body: JSON.stringify({ 
             ekskul_id: kid, 
             murid_id: anak.id, 
+            nama_anak: anak.nama_lengkap || anak.nama,
+            kelas: anak.nama_kelas || anak.kelas,
             status: 'menunggu', 
-            catatan: JSON.stringify(data) 
+            data
           }) 
         });
 
@@ -169,6 +171,11 @@ export async function onRequestPost({ request, env }) {
         created_at: new Date().toISOString(), 
         [ec ? 'catatan' : 'catatan_panitia']: null 
       };
+      if (ec) {
+        row.nama_anak = anak.nama_lengkap || anak.nama;
+        row.kelas = anak.nama_kelas || anak.kelas;
+        row.anak_key = anak.key;
+      }
 
       const w = old
         ? await fetch(`${c.REST}/${TB}?id=eq.${old.id}`, { method: 'PATCH', headers: jh0, body: JSON.stringify(row) })

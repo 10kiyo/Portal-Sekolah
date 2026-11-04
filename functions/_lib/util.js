@@ -87,11 +87,19 @@ export async function cariAnak(request, kode, c, env) {
   kode = String(kode || '').trim().toUpperCase();
   let anak = null;
   if (/^[A-Z0-9]{4,12}$/.test(kode)) {
-    const cand = await dbGet(c)(`/kelas_murid?kode_akses=eq.${kode}&aktif=eq.true&select=id,guest_id,nama,kelas_kelas(nama)`);
-    const g = cand[0] && cand[0].guest_id;
-    if (cand.length === 1 || (g && cand.every(x => x.guest_id === g))) {
-      const kelas = [...new Set(cand.map(x => x.kelas_kelas && x.kelas_kelas.nama).filter(Boolean))].join(', ');
-      anak = { key: g || 'm:' + cand[0].id, nama: cand[0].nama, kelas, tingkat: tingkatDari(kelas) };
+    const murid = await dbGet(c)(`/murid?kode_akses_ortu=eq.${encodeURIComponent(kode)}&status=eq.aktif&select=id,guest_id,nama_lengkap,kelas_label,kelas(nama_kelas)`);
+    if (murid.length === 1) {
+      const m = murid[0];
+      const kelas = m.kelas?.nama_kelas || m.kelas_label || '';
+      anak = {
+        key: m.guest_id || `m:${m.id}`,
+        id: m.id,
+        nama: m.nama_lengkap,
+        nama_lengkap: m.nama_lengkap,
+        kelas,
+        nama_kelas: kelas,
+        tingkat: tingkatDari(kelas)
+      };
     }
   }
   if (!anak) {

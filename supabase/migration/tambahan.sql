@@ -201,16 +201,11 @@ SET search_path = public, pg_temp
 AS $$
 DECLARE
   boleh BOOLEAN := FALSE;
-  staf_id UUID;
 BEGIN
   IF public.portal_punya_peran(ARRAY['operator', 'admin', 'pustakawan']) THEN
     RETURN TRUE;
   END IF;
-  SELECT id INTO staf_id
-  FROM public.guru_staf
-  WHERE auth_user_id = auth.uid() AND aktif = TRUE
-  LIMIT 1;
-  IF staf_id IS NULL THEN
+  IF auth.uid() IS NULL THEN
     RETURN FALSE;
   END IF;
   IF to_regclass('public.kelas_murid') IS NULL THEN
@@ -222,7 +217,7 @@ BEGIN
        WHERE guru_id = $1 AND guest_id = $2 AND aktif = TRUE
      )'
     INTO boleh
-    USING staf_id, id_tamu;
+    USING auth.uid(), id_tamu;
   RETURN COALESCE(boleh, FALSE);
 END;
 $$;
